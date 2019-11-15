@@ -1,0 +1,345 @@
+/*
+ * Copyright (C) 2019 ConsenSys AG.
+ *
+ * The source code is provided to licensees of PegaSys Plus for their convenience and internal
+ * business use. These files may not be copied, translated, and/or distributed without the express
+ * written permission of an authorized signatory for ConsenSys AG.
+ */
+
+import net.ltgt.gradle.errorprone.CheckSeverity
+
+plugins {
+  id 'com.diffplug.gradle.spotless' version '3.19.0'
+  id 'com.jfrog.bintray' version '1.8.4'
+  id 'com.github.ben-manes.versions' version '0.21.0'
+  id 'com.github.hierynomus.license' version '0.15.0'
+  id 'io.spring.dependency-management' version '1.0.7.RELEASE'
+  id 'net.ltgt.errorprone' version '0.7.1'
+  id 'net.researchgate.release' version '2.7.0'
+  id "de.undercouch.download" version '4.0.0'
+}
+
+if (!JavaVersion.current().java11Compatible) {
+  throw new GradleException("Java 11 or later is required.\n" +
+          "  Detected version ${JavaVersion.current()}")
+}
+
+group = 'tech.pegasys.peeps'
+
+
+allprojects {
+  apply plugin: 'java-library'
+  apply plugin: 'io.spring.dependency-management'
+  apply plugin: 'net.ltgt.errorprone'
+  apply plugin: 'jacoco'
+  apply from: "${rootDir}/gradle/versions.gradle"
+  apply from: "${rootDir}/gradle/check-licenses.gradle"
+
+  //////
+  // Default tasks and build aliases
+
+  defaultTasks 'checkLicenses', 'assemble', 'javadoc', 'test', 'acceptanceTest'
+
+  def buildAliases = ['dev': [
+          'spotlessApply',
+          'checkLicenses',
+          'assemble',
+          'javadoc',
+          'test',
+  ]]
+
+  def expandedTaskList = []
+  gradle.startParameter.taskNames.each {
+    expandedTaskList << (buildAliases[it] ? buildAliases[it] : it)
+  }
+  gradle.startParameter.taskNames = expandedTaskList.flatten()
+
+  version = rootProject.version
+
+
+  task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+  }
+
+  task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+  }
+
+  sourceCompatibility = 11
+  targetCompatibility = 11
+
+  repositories {
+    jcenter()
+    mavenCentral()
+    mavenLocal()
+  }
+
+  dependencies { errorprone("com.google.errorprone:error_prone_core") }
+
+  apply plugin: 'com.diffplug.gradle.spotless'
+  spotless {
+    java {
+      // This path needs to be relative to each project
+      target fileTree('.') {
+        include '**/*.java'
+        exclude '**/.gradle/**'
+      }
+      removeUnusedImports()
+      googleJavaFormat('1.7')
+      importOrder 'tech.pegasys', 'java', ''
+      trimTrailingWhitespace()
+      endWithNewline()
+      licenseHeaderFile "${rootDir}/gradle/spotless.java.license"
+    }
+    groovyGradle {
+      target '*.gradle'
+      greclipse().configFile(rootProject.file('gradle/formatter.properties'))
+      endWithNewline()
+      paddedCell()
+    }
+
+    // Below this line are currently only license header tasks
+    format 'groovy', {
+      target '**/*.groovy'
+      licenseHeaderFile "${rootDir}/gradle/spotless.java.license", 'import'
+    }
+  }
+
+  tasks.withType(JavaCompile) {
+    options.compilerArgs += [
+            '-Xlint:unchecked',
+            '-Xlint:cast',
+            '-Xlint:rawtypes',
+            '-Xlint:overloads',
+            '-Xlint:divzero',
+            '-Xlint:finally',
+            '-Xlint:static',
+            '-Werror',
+    ]
+
+    options.errorprone {
+      excludedPaths '.*/(generated/*.*|.*ReferenceTest_.*)'
+
+      // Our equals need to be symmetric, this checker doesn't respect that.
+      check('EqualsGetClass', CheckSeverity.OFF)
+      // We like to use futures with no return values.
+      check('FutureReturnValueIgnored', CheckSeverity.OFF)
+      // We use the JSR-305 annotations instead of the Google annotations.
+      check('ImmutableEnumChecker', CheckSeverity.OFF)
+      // This is a style check instead of an error-prone pattern.
+      check('UnnecessaryParentheses', CheckSeverity.OFF)
+      // Lazy impl causes excess CPU usage O(n) of non-final fiield when it should be O(1).
+      check('FieldCanBeFinal', CheckSeverity.OFF)
+
+      check('InsecureCryptoUsage', CheckSeverity.WARN)
+      check('WildcardImport', CheckSeverity.WARN)
+    }
+
+    options.encoding = 'UTF-8'
+  }
+
+  /*
+   * Pass some system properties provided on the gradle command line to test executions for
+   * convenience.
+   *
+   * The properties passed are:
+   * - 'test.ethereum.include': allows to run a single Ethereum reference tests. For instance,
+   *   running a single general state test can be done with:
+   *    ./gradlew :ethereum:tech.pegasys.ethsigner.ethereum.vm:test -Dtest.single=GeneralStateTest -Dtest.ethereum.include=callcodecallcallcode_101-Frontier
+   *   The meaning being that will be run only the tests for which the value passed as "include"
+   *   (which can be a java pattern) matches parts of the test name. Knowing that tests names for
+   *   reference tests are of the form:
+   *     <name>(-<milestone>([<variant>])?)?
+   *   where <name> is the test name as defined in the json file (usually the name of the json file
+   *   as well), <milestone> is the Ethereum milestone tested (not all test use it) and <variant>
+   *   is only use in some general state tests where for the same json file and same milestone,
+   *   multiple variant of that test are run. The variant is a simple number.
+   * - 'root.log.level' and 'evm.log.level': allow to control the log level used during the tests.
+   */
+  test {
+    jvmArgs = [
+            '-Xmx4g',
+            '-XX:-UseGCOverheadLimit',
+            // Mockito and jackson-databind do some strange reflection during tests.
+            // This suppresses an illegal access warning.
+            '--add-opens',
+            'java.base/java.util=ALL-UNNAMED',
+            '--add-opens',
+            'java.base/java.util.concurrent=ALL-UNNAMED'
+    ]
+    Set toImport = [
+            'root.log.level',
+            'evm.log.level'
+    ]
+    for (String name : toImport) {
+      if (System.getProperty(name) != null) {
+        systemProperty name, System.getProperty(name)
+      }
+    }
+
+    useJUnitPlatform()
+  }
+
+  javadoc {
+    options.addStringOption('Xdoclint:all', '-quiet')
+    options.addStringOption('Xwerror', '-html5')
+    options.encoding = 'UTF-8'
+  }
+}
+
+test {
+  jvmArgs = [
+          '-Xmx4g',
+          '-XX:-UseGCOverheadLimit',
+          // Mockito and jackson-databind do some strange reflection during tests.
+          // This suppresses an illegal access warning.
+          '--add-opens',
+          'java.base/java.util=ALL-UNNAMED',
+          '--add-opens',
+          'java.base/java.util.concurrent=ALL-UNNAMED'
+  ]
+  useJUnitPlatform()
+}
+
+// Normalise Xdoclint behaviour across JDKs (OpenJDK 8 is more lenient than Oracle JDK by default).
+javadoc {
+  options.addStringOption('Xdoclint:all', '-quiet')
+  options.addStringOption('Xwerror', '-html5')
+  options.encoding = 'UTF-8'
+}
+
+configurations { installedJars{ transitive = false } }
+
+apply plugin: 'net.researchgate.release'
+
+release {
+  preTagCommitMessage = '[Gradle Release Plugin] - pre tag commit: '
+  tagCommitMessage = '[Gradle Release Plugin] - creating tag: '
+  newVersionCommitMessage = '[Gradle Release Plugin] - new version commit: '
+  buildTasks = [
+          'build',
+          'checkLicenses',
+          'javadoc'
+  ]
+
+  git {
+    requireBranch = project.hasProperty('release.branch') ? project.property('release.branch') : 'master'
+  }
+}
+
+def pegasysPlusIdentifier = distributionIdentifier + "-" + version
+
+task distTar(type: Tar) {
+  dependsOn jar
+}
+
+task installDist(type: Copy) {
+  dependsOn distTar
+
+  from(tarTree(distTar.outputs.getFiles().getSingleFile()), {
+    eachFile { path = path.replaceFirst(pegasysPlusIdentifier, distributionIdentifier) }
+    includeEmptyDirs = false
+  })
+  into "$buildDir/distributions/install"
+}
+
+task distZip(type: Zip) {
+  dependsOn installDist
+
+  archiveBaseName = distributionIdentifier
+  from installDist.outputs.getFiles()
+  archiveBaseName
+  extension 'zip'
+}
+
+// Takes the version, and if -SNAPSHOT is part of it replaces SNAPSHOT
+// with the git commit version.
+def calculateVersion() {
+  String version = rootProject.version
+  if (version.endsWith("-SNAPSHOT")) {
+    version = version.replace("-SNAPSHOT", "-dev-" + getCheckedOutGitCommitHash())
+  }
+  return version
+}
+
+def getCheckedOutGitCommitHash() {
+  def gitFolder = "$projectDir/.git/"
+  if (!file(gitFolder).isDirectory()) {
+    // We are in a submodule.  The file's contents are `gitdir: <gitFolder>\n`.
+    // Read the file, cut off the front, and trim the whitespace.
+    gitFolder = file(gitFolder).text.substring(8).trim() + "/"
+  }
+  def takeFromHash = 8
+  /*
+   * '.git/HEAD' contains either
+   *      in case of detached head: the currently checked out commit hash
+   *      otherwise: a reference to a file containing the current commit hash
+   */
+  def head = new File(gitFolder + "HEAD").text.split(":") // .git/HEAD
+  def isCommit = head.length == 1 // e5a7c79edabbf7dd39888442df081b1c9d8e88fd
+
+  if(isCommit) return head[0].trim().take(takeFromHash) // e5a7c79edabb
+
+  def refHead = new File(gitFolder + head[1].trim()) // .git/refs/heads/master
+  refHead.text.trim().take takeFromHash
+}
+
+apply plugin: 'com.jfrog.bintray'
+def bintrayUser = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+def bintrayKey = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_KEY')
+def bintrayPackage = bintray.pkg {
+  repo = 'pegasys-enterprise-repo'
+  name = 'peeps'
+  userOrg = 'consensys'
+
+  version {
+    name = project.version
+    released = new Date()
+  }
+}
+
+task deploy() {}
+deploy.dependsOn bintrayUpload
+
+tasks.register("verifyDistributions") {
+  dependsOn distTar
+  dependsOn distZip
+  def distTarFile = distTar.outputs.files.singleFile
+  def distZipFile = distZip.outputs.files.singleFile
+  def minDistributionSize = 20000000
+
+  // Sanity check the distributions by checking they are at least a reasonable size
+  doFirst {
+    if (distTarFile.length() < minDistributionSize) {
+      throw new GradleException("Distribution tar is suspiciously small: " + distTarFile.length() + " bytes")
+    }
+    if (distZipFile.length() < minDistributionSize) {
+      throw new GradleException("Distribution zip is suspiciously small: " + distZipFile.length() + " bytes")
+    }
+  }
+}
+
+bintray {
+  user = bintrayUser
+  key = bintrayKey
+
+  filesSpec {
+    from ('build/distributions') {
+      exclude 'install/*'
+    }
+    into '.'
+  }
+
+  override = true
+  publish = true
+
+  pkg = bintrayPackage
+}
+
+afterReleaseBuild.dependsOn bintrayUpload
+bintrayUpload.dependsOn verifyDistributions
+bintrayUpload.mustRunAfter(distTar)
+bintrayUpload.mustRunAfter(distZip)
+apply plugin: 'groovy'
