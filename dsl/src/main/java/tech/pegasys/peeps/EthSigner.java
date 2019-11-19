@@ -10,12 +10,22 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package tech.pegasys.peeps;
 
-dependencies {
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+public class EthSigner {
 
-  testImplementation project(':dsl')
+  public String deployContract(final String binary) {
 
-  testImplementation 'org.assertj:assertj-core'
-  testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    final String receiptHash = null;
+    // TODO code
+
+    return receiptHash;
+  }
+
+  public String getTransactionReceipt(final String receiptHash) {
+    final String receipt = null;
+    // TODO code
+
+    return receipt;
+  }
 }

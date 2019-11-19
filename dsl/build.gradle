@@ -12,4 +12,11 @@
  */
 
 dependencies {
+  implementation 'com.google.guava:guava'
+  implementation 'org.apache.logging.log4j:log4j-api'
+  implementation 'org.web3j:abi'
+  implementation 'org.web3j:core'
+  implementation "org.testcontainers:testcontainers"
+
+  runtimeOnly 'org.apache.logging.log4j:log4j-core'
 }

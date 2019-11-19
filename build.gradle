@@ -21,7 +21,7 @@ plugins {
 
 if (!JavaVersion.current().java11Compatible) {
   throw new GradleException("Java 11 or later is required.\n" +
-          "  Detected version ${JavaVersion.current()}")
+  "  Detected version ${JavaVersion.current()}")
 }
 
 group = 'tech.pegasys.peeps'
@@ -41,12 +41,12 @@ allprojects {
   defaultTasks 'checkLicenses', 'assemble', 'javadoc', 'test', 'acceptanceTest'
 
   def buildAliases = ['dev': [
-          'spotlessApply',
-          'checkLicenses',
-          'assemble',
-          'javadoc',
-          'test',
-  ]]
+      'spotlessApply',
+      'checkLicenses',
+      'assemble',
+      'javadoc',
+      'test',
+    ]]
 
   def expandedTaskList = []
   gradle.startParameter.taskNames.each {
@@ -109,14 +109,14 @@ allprojects {
 
   tasks.withType(JavaCompile) {
     options.compilerArgs += [
-            '-Xlint:unchecked',
-            '-Xlint:cast',
-            '-Xlint:rawtypes',
-            '-Xlint:overloads',
-            '-Xlint:divzero',
-            '-Xlint:finally',
-            '-Xlint:static',
-            '-Werror',
+      '-Xlint:unchecked',
+      '-Xlint:cast',
+      '-Xlint:rawtypes',
+      '-Xlint:overloads',
+      '-Xlint:divzero',
+      '-Xlint:finally',
+      '-Xlint:static',
+      '-Werror',
     ]
 
     options.errorprone {
@@ -160,18 +160,18 @@ allprojects {
    */
   test {
     jvmArgs = [
-            '-Xmx4g',
-            '-XX:-UseGCOverheadLimit',
-            // Mockito and jackson-databind do some strange reflection during tests.
-            // This suppresses an illegal access warning.
-            '--add-opens',
-            'java.base/java.util=ALL-UNNAMED',
-            '--add-opens',
-            'java.base/java.util.concurrent=ALL-UNNAMED'
+      '-Xmx4g',
+      '-XX:-UseGCOverheadLimit',
+      // Mockito and jackson-databind do some strange reflection during tests.
+      // This suppresses an illegal access warning.
+      '--add-opens',
+      'java.base/java.util=ALL-UNNAMED',
+      '--add-opens',
+      'java.base/java.util.concurrent=ALL-UNNAMED'
     ]
     Set toImport = [
-            'root.log.level',
-            'evm.log.level'
+      'root.log.level',
+      'evm.log.level'
     ]
     for (String name : toImport) {
       if (System.getProperty(name) != null) {
@@ -191,14 +191,14 @@ allprojects {
 
 test {
   jvmArgs = [
-          '-Xmx4g',
-          '-XX:-UseGCOverheadLimit',
-          // Mockito and jackson-databind do some strange reflection during tests.
-          // This suppresses an illegal access warning.
-          '--add-opens',
-          'java.base/java.util=ALL-UNNAMED',
-          '--add-opens',
-          'java.base/java.util.concurrent=ALL-UNNAMED'
+    '-Xmx4g',
+    '-XX:-UseGCOverheadLimit',
+    // Mockito and jackson-databind do some strange reflection during tests.
+    // This suppresses an illegal access warning.
+    '--add-opens',
+    'java.base/java.util=ALL-UNNAMED',
+    '--add-opens',
+    'java.base/java.util.concurrent=ALL-UNNAMED'
   ]
   useJUnitPlatform()
 }
@@ -219,9 +219,9 @@ release {
   tagCommitMessage = '[Gradle Release Plugin] - creating tag: '
   newVersionCommitMessage = '[Gradle Release Plugin] - new version commit: '
   buildTasks = [
-          'build',
-          'checkLicenses',
-          'javadoc'
+    'build',
+    'checkLicenses',
+    'javadoc'
   ]
 
   git {
@@ -231,9 +231,7 @@ release {
 
 def pegasysPlusIdentifier = distributionIdentifier + "-" + version
 
-task distTar(type: Tar) {
-  dependsOn jar
-}
+task distTar(type: Tar) { dependsOn jar }
 
 task installDist(type: Copy) {
   dependsOn distTar
@@ -326,9 +324,7 @@ bintray {
   key = bintrayKey
 
   filesSpec {
-    from ('build/distributions') {
-      exclude 'install/*'
-    }
+    from ('build/distributions') { exclude 'install/*' }
     into '.'
   }
 

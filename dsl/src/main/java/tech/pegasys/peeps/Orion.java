@@ -10,12 +10,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package tech.pegasys.peeps;
 
-dependencies {
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+public class Orion {
 
-  testImplementation project(':dsl')
-
-  testImplementation 'org.assertj:assertj-core'
-  testImplementation 'org.junit.jupiter:junit-jupiter-api'
+  public void awaitConnectivity(final Orion peer) {
+    // TODO assert that connection to peer within say 10s occurs
+  }
 }
