@@ -10,17 +10,21 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package tech.pegasys.peeps.node.rpc;
 
-dependencies {
-  implementation 'org.assertj:assertj-core'
-  implementation 'org.awaitility:awaitility'
-  implementation 'com.google.guava:guava'
-  implementation 'org.apache.logging.log4j:log4j-api'
-  implementation 'org.web3j:abi'
-  implementation 'org.web3j:core'
-  implementation "org.testcontainers:testcontainers"
-  implementation 'io.vertx:vertx-core'
-  implementation 'io.vertx:vertx-web-client'
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-  runtimeOnly 'org.apache.logging.log4j:log4j-core'
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class ConnectedPeersResponse {
+
+  private final ConnectedPeer[] result;
+
+  public ConnectedPeersResponse(@JsonProperty("result") final ConnectedPeer[] result) {
+    this.result = result;
+  }
+
+  public ConnectedPeer[] getResult() {
+    return result;
+  }
 }

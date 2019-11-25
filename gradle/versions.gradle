@@ -16,6 +16,9 @@ dependencyManagement {
     // AssertJ
     dependency 'org.assertj:assertj-core:3.14.0'
 
+    // Awaitility
+    dependency 'org.awaitility:awaitility:4.0.1'
+
     // Error prone
     dependency 'com.google.errorprone:error_prone_check_api:2.3.3'
     dependency 'com.google.errorprone:error_prone_core:2.3.3'
@@ -38,9 +41,13 @@ dependencyManagement {
     // TestContainers (Docker client wrapper)
     dependency "org.testcontainers:testcontainers:1.12.3"
 
-    // Web3
+    // Web3j
     dependency 'org.web3j:abi:4.5.1'
     dependency 'org.web3j:core:4.5.1'
     dependency 'org.web3j:crypto:4.5.1'
+
+    // Vertx
+    dependency 'io.vertx:vertx-core:3.8.3'
+    dependency 'io.vertx:vertx-web-client:3.8.3'
   }
 }

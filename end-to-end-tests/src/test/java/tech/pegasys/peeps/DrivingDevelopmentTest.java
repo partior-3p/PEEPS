@@ -15,8 +15,6 @@ package tech.pegasys.peeps;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import tech.pegasys.peeps.contract.SimpleStorage;
-import tech.pegasys.peeps.node.Besu;
-import tech.pegasys.peeps.node.NodeConfigurationBuilder;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -25,14 +23,13 @@ import org.junit.jupiter.api.Test;
 public class DrivingDevelopmentTest {
 
   // TODO start node A
-  static final Besu besuA = new Besu(new NodeConfigurationBuilder().build());
-  static final EthSigner signerA = new EthSigner();
-  static final Orion orionA = new Orion();
+  private static final EthSigner signerA = new EthSigner();
 
   // TODO start node B
-  static final Besu besuB = new Besu(new NodeConfigurationBuilder().build());
-  static final EthSigner signerB = new EthSigner();
-  static final Orion orionB = new Orion();
+  private static final EthSigner signerB = new EthSigner();
+
+  // TODO static?
+  private static final Network network = new Network();
 
   // TODO ensure clean up even on crash
   // Runtime.getRuntime().addShutdownHook(new Thread(AcceptanceTestBase::tearDownBase));
@@ -40,22 +37,13 @@ public class DrivingDevelopmentTest {
   @AfterAll
   public static void tearDown() {
     // TODO wrap up elsewhere
-    besuA.stop();
-    besuB.stop();
+    network.stop();
   }
 
   @Test
   public void a() {
 
-    // TODO network config / port discovery & bootnodes
-    besuA.start();
-    besuB.start();
-
-    // TODO assert connectivity (peeps)
-    besuA.awaitConnectivity(besuB);
-    besuB.awaitConnectivity(besuA);
-    orionA.awaitConnectivity(orionB);
-    orionB.awaitConnectivity(orionA);
+    network.start();
 
     // TODO send unsigned transaction to EhSigner of node A, store receipt hash
     final String receiptHash = signerA.deployContract(SimpleStorage.BINARY);
