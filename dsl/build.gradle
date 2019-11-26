@@ -11,6 +11,18 @@
  * specific language governing permissions and limitations under the License.
  */
 
+jar {
+  baseName 'dsl'
+  manifest {
+    attributes(
+      'Specification-Title': getArchiveBaseName(),
+      'Specification-Version': project.version,
+      'Implementation-Title': getArchiveBaseName(),
+      'Implementation-Version': calculateVersion()
+      )
+  }
+}
+
 dependencies {
   implementation 'org.assertj:assertj-core'
   implementation 'org.awaitility:awaitility'

@@ -12,7 +12,7 @@
  */
 package tech.pegasys.peeps.node;
 
-import tech.pegasys.peeps.util.Resources;
+import tech.pegasys.peeps.util.MountableResources;
 
 import java.util.Optional;
 
@@ -36,8 +36,8 @@ public class NodeConfiguration {
       final String ipAddress,
       final String nodePrivateKeyFile,
       final String bootnodeEnodeAddress) {
-    this.genesisFile = Resources.getCanonicalPath(genesisFile);
-    this.enclavePublicKeyFile = Resources.getCanonicalPath(enclavePublicKeyFile);
+    this.genesisFile = MountableResources.getCanonicalPath(genesisFile);
+    this.enclavePublicKeyFile = MountableResources.getCanonicalPath(enclavePublicKeyFile);
     this.cors = cors;
     this.containerNetwork = containerNetwork;
     this.ipAddress = ipAddress;

@@ -1,0 +1,85 @@
+---
+version: 2.1
+executors:
+  executor_med:  # 2cpu, 4G ram
+    docker:
+      - image: circleci/openjdk:11.0.4-jdk-stretch
+    resource_class: medium
+    working_directory: ~/project
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx2048m
+      GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.workers.max=2 -Xmx2048m
+
+  executor_large: # 4cpu, 8G ram
+    docker:
+      - image: circleci/openjdk:11.0.4-jdk-stretch
+    resource_class: large
+    working_directory: ~/project
+
+  executor_machine:
+    machine:
+      image: ubuntu-1604:201903-01 #Ubuntu 16.04, docker 18.09.3, docker-compose 1.23.1
+      docker_layer_caching: true
+    working_directory: ~/project
+
+commands:
+  prepare:
+    description: "Prepare"
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore cached gradle dependencies
+          keys:
+            - deps-{{ checksum "build.gradle" }}-{{ .Branch }}-{{ .Revision }}
+            - deps-{{ checksum "build.gradle" }}
+            - deps-
+
+  capture_test_results:
+    description: "Capture test results"
+    steps:
+      - run:
+          name: Gather test results
+          when: always
+          command: |
+            FILES=`find . -name test-results`
+            for FILE in $FILES
+            do
+              MODULE=`echo "$FILE" | sed -e 's@./\(.*\)/build/test-results@\1@'`
+              TARGET="build/test-results/$MODULE"
+              mkdir -p "$TARGET"
+              cp -rf ${FILE}/*/* "$TARGET"
+            done
+      - store_test_results:
+          path: build/test-results
+
+jobs:
+  build:
+    executor: executor_large
+    steps:
+      - prepare
+      - run:
+          name: Build
+          command: |
+            ./gradlew --no-daemon --parallel build
+      - run:
+          name: Test
+          no_output_timeout: 20m
+          command: |
+            ./gradlew --no-daemon --parallel test
+      - capture_test_results
+      - save_cache:
+          name: Caching gradle dependencies
+          key: deps-{{ checksum "build.gradle" }}-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - .gradle
+            - ~/.gradle
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - ./
+
+workflows:
+  version: 2
+  default:
+    jobs:
+      - build

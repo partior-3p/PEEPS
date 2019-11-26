@@ -12,12 +12,12 @@
  */
 package tech.pegasys.peeps;
 
-import tech.pegasys.peeps.util.Resources;
+import tech.pegasys.peeps.util.MountableResources;
 
 // TODO comment expectations of how directories/files under resources are structured
 // TODO may don't use an enum?
 public enum NodeKeys {
-  BOOTNODE("keys/bootnode");
+  BOOTNODE("../mountable/keys/bootnode");
 
   private static final String PRIVATE_KEY_FILENAME = "/key.priv";
   private static final String PUBLIC_KEY_FILENAME = "/key.pub";
@@ -27,8 +27,8 @@ public enum NodeKeys {
 
   NodeKeys(final String keysDirectory) {
 
-    this.pubKey = Resources.readHexDroppingPrefix(keysDirectory + PUBLIC_KEY_FILENAME);
-    this.privKeyFile = Resources.getCanonicalPath(keysDirectory + PRIVATE_KEY_FILENAME);
+    this.pubKey = MountableResources.readHexDroppingAnyPrefix(keysDirectory + PUBLIC_KEY_FILENAME);
+    this.privKeyFile = MountableResources.getCanonicalPath(keysDirectory + PRIVATE_KEY_FILENAME);
   }
 
   public String getEnodeAddress(final String hostIp, final String port) {

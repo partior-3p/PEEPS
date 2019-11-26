@@ -19,4 +19,8 @@ public class HexFormatter {
   public static String ensureHexPrefix(final String content) {
     return content.startsWith(PREFIX) ? content : PREFIX + content;
   }
+
+  public static String removeAnyHexPrefix(final String content) {
+    return content.startsWith(PREFIX) ? content.substring(PREFIX.length()) : PREFIX;
+  }
 }
