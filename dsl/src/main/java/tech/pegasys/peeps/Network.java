@@ -32,10 +32,14 @@ public class Network {
   private final EthSigner signerB = new EthSigner();
   private final Orion orionB = new Orion();
 
+  private final org.testcontainers.containers.Network network;
+
   // TODO IP management
 
   public Network() {
-    final org.testcontainers.containers.Network network =
+
+    // TODO subnet with substitution for static IPs
+    network =
         org.testcontainers.containers.Network.builder()
             .createNetworkCmdModifier(
                 modifier ->
@@ -78,6 +82,12 @@ public class Network {
   public void stop() {
     besuA.stop();
     besuB.stop();
+  }
+
+  public void close() {
+    besuA.stop();
+    besuB.stop();
+    network.close();
   }
 
   private void awaitConnectivity() {

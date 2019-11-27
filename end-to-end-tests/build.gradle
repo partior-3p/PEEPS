@@ -19,3 +19,13 @@ dependencies {
   testImplementation 'org.assertj:assertj-core'
   testImplementation 'org.junit.jupiter:junit-jupiter-api'
 }
+
+test.enabled = false
+
+task endToEndTest(type: Test) {
+  mustRunAfter rootProject.subprojects*.test
+  description = 'Runs the End to End tests.'
+  group = 'verification'
+
+  useJUnitPlatform()
+}

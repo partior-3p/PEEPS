@@ -17,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import tech.pegasys.peeps.contract.SimpleStorage;
 
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 // TODO rename & move after
@@ -32,12 +33,16 @@ public class DrivingDevelopmentTest {
   private static final Network network = new Network();
 
   // TODO ensure clean up even on crash
-  // Runtime.getRuntime().addShutdownHook(new Thread(AcceptanceTestBase::tearDownBase));
+
+  @BeforeAll
+  public static void startUpOnce() {
+    Runtime.getRuntime().addShutdownHook(new Thread(DrivingDevelopmentTest::tearDownOnce));
+  }
 
   @AfterAll
-  public static void tearDown() {
+  public static void tearDownOnce() {
     // TODO wrap up elsewhere
-    network.stop();
+    network.close();
   }
 
   @Test
