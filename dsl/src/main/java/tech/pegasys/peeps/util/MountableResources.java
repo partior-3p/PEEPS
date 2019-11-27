@@ -12,42 +12,43 @@
  */
 package tech.pegasys.peeps.util;
 
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static tech.pegasys.peeps.util.HexFormatter.removeAnyHexPrefix;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.io.ByteSource;
 
 public class MountableResources {
-
-  // TODO move knowledge of the path to the MountableResources into here
-
-  public static String getCanonicalPath(final String path) {
-    final File resource = new File(path);
-    checkState(resource.exists(), String.format("'%s' is not found", resource.getAbsolutePath()));
-
-    try {
-      return resource.getCanonicalPath();
-    } catch (final IOException e) {
-      throw new IllegalArgumentException(e);
-    }
-  }
 
   public static String readHexDroppingAnyPrefix(final String path) {
     return removeAnyHexPrefix(readString(path));
   }
 
   private static String readString(final String path) {
-    final File resource = new File(path);
-    checkState(resource.exists(), String.format("'%s' is not found", resource.getAbsolutePath()));
+    final InputStream input = classpathLoader().getResourceAsStream(path);
+    checkNotNull(input, String.format("'%s' is not found", path));
+
+    final ByteSource byteSource =
+        new ByteSource() {
+          @Override
+          public InputStream openStream() {
+            return input;
+          }
+        };
 
     try {
-      return Files.readString(Path.of(path), StandardCharsets.UTF_8);
+      return byteSource.asCharSource(StandardCharsets.UTF_8).read();
     } catch (final IOException e) {
       throw new IllegalArgumentException("Cannot read file: " + path, e);
     }
+  }
+
+  private static ClassLoader classpathLoader() {
+    return MoreObjects.firstNonNull(
+        Thread.currentThread().getContextClassLoader(), MountableResources.class.getClassLoader());
   }
 }

@@ -16,10 +16,10 @@ import org.testcontainers.containers.Network;
 
 public class NodeConfigurationBuilder {
 
-  private static final String DEFAULT_GENESIS_FILE = "../mountable/genesis/eth_hash_4004.json";
+  private static final String DEFAULT_GENESIS_FILE = "genesis/eth_hash_4004.json";
 
   // TODO enclave key.priv to be passed (without default)
-  private static final String DEFAULT_ENCLAVE_PUBLIC_KEY_FILE = "../mountable/node/enclave_key.pub";
+  private static final String DEFAULT_ENCLAVE_PUBLIC_KEY_FILE = "node/enclave_key.pub";
 
   private String genesisFile;
   private String enclaveKeyFile;

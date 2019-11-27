@@ -102,7 +102,7 @@ public class Besu {
         .getNodePrivateKeyFile()
         .ifPresent(
             file -> {
-              container.withFileSystemBind(
+              container.withClasspathResourceMapping(
                   file, CONTAINER_NODE_PRIVATE_KEY_FILE, BindMode.READ_ONLY);
               commandLineOptions.addAll(
                   Lists.newArrayList("--node-private-key-file", CONTAINER_NODE_PRIVATE_KEY_FILE));
@@ -276,8 +276,9 @@ public class Besu {
     return new GenericContainer<>(BESU_IMAGE)
         .withNetwork(config.getContainerNetwork().orElse(null))
         .withExposedPorts(CONTAINER_HTTP_RPC_PORT, CONTAINER_WS_RPC_PORT, CONTAINER_P2P_PORT)
-        .withFileSystemBind(config.getGenesisFile(), CONTAINER_GENESIS_FILE, BindMode.READ_ONLY)
-        .withFileSystemBind(
+        .withClasspathResourceMapping(
+            config.getGenesisFile(), CONTAINER_GENESIS_FILE, BindMode.READ_ONLY)
+        .withClasspathResourceMapping(
             config.getEnclavePublicKeyFile(),
             CONTAINER_PRIVACY_PUBLIC_KEY_FILE,
             BindMode.READ_ONLY);
