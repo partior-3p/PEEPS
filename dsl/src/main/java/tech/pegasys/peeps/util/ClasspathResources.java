@@ -13,7 +13,6 @@
 package tech.pegasys.peeps.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static tech.pegasys.peeps.util.HexFormatter.removeAnyHexPrefix;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,13 +21,9 @@ import java.nio.charset.StandardCharsets;
 import com.google.common.base.MoreObjects;
 import com.google.common.io.ByteSource;
 
-public class MountableResources {
+public class ClasspathResources {
 
-  public static String readHexDroppingAnyPrefix(final String path) {
-    return removeAnyHexPrefix(readString(path));
-  }
-
-  private static String readString(final String path) {
+  public static String read(final String path) {
     final InputStream input = classpathLoader().getResourceAsStream(path);
     checkNotNull(input, String.format("'%s' is not found", path));
 
@@ -49,6 +44,6 @@ public class MountableResources {
 
   private static ClassLoader classpathLoader() {
     return MoreObjects.firstNonNull(
-        Thread.currentThread().getContextClassLoader(), MountableResources.class.getClassLoader());
+        Thread.currentThread().getContextClassLoader(), ClasspathResources.class.getClassLoader());
   }
 }

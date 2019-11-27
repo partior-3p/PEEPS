@@ -10,20 +10,25 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.node.rpc;
+package tech.pegasys.peeps.json;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class NodeInfo {
-  private final String id;
+public class JsonEncoder {
 
-  public NodeInfo(@JsonProperty("id") final String id) {
-    this.id = id;
+  private final ObjectMapper mapper;
+
+  public JsonEncoder(final ObjectMapper mapper) {
+    this.mapper = mapper;
   }
 
-  public String getId() {
-    return id;
+  public String convert(final Object pojo) {
+
+    try {
+      return mapper.writeValueAsString(pojo);
+    } catch (final JsonProcessingException e) {
+      throw new IllegalArgumentException("Failed encoding JSON from POJO: " + pojo, e);
+    }
   }
 }

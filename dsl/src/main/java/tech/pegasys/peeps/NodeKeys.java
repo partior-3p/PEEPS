@@ -12,7 +12,9 @@
  */
 package tech.pegasys.peeps;
 
-import tech.pegasys.peeps.util.MountableResources;
+import static tech.pegasys.peeps.util.HexFormatter.removeAnyHexPrefix;
+
+import tech.pegasys.peeps.util.ClasspathResources;
 
 // TODO comment expectations of how directories/files under resources are structured
 // TODO may don't use an enum?
@@ -27,7 +29,7 @@ public enum NodeKeys {
 
   NodeKeys(final String keysDirectory) {
 
-    this.pubKey = MountableResources.readHexDroppingAnyPrefix(keysDirectory + PUBLIC_KEY_FILENAME);
+    this.pubKey = removeAnyHexPrefix(ClasspathResources.read(keysDirectory + PUBLIC_KEY_FILENAME));
     this.privKeyFile = keysDirectory + PRIVATE_KEY_FILENAME;
   }
 
