@@ -12,10 +12,12 @@
  */
 package tech.pegasys.peeps.node;
 
+import io.vertx.core.Vertx;
 import org.testcontainers.containers.Network;
 
 public class NodeConfigurationBuilder {
 
+  // TODO move these into the test
   private static final String DEFAULT_GENESIS_FILE = "genesis/eth_hash_4004.json";
 
   // TODO enclave key.priv to be passed (without default)
@@ -24,10 +26,13 @@ public class NodeConfigurationBuilder {
   private String genesisFile;
   private String enclaveKeyFile;
   private String cors;
-  private Network containerNetwork;
   private String ipAddress;
   private String nodePrivateKeyFile;
   private String bootnodeEnodeAddress;
+
+  // TODO these into their own builder, not node related but test container related
+  private Network containerNetwork;
+  private Vertx vertx;
 
   public NodeConfigurationBuilder() {
     this.genesisFile = DEFAULT_GENESIS_FILE;
@@ -64,6 +69,11 @@ public class NodeConfigurationBuilder {
     return this;
   }
 
+  public NodeConfigurationBuilder withVertx(final Vertx vertx) {
+    this.vertx = vertx;
+    return this;
+  }
+
   public NodeConfiguration build() {
     // TODO assert mandatory parameters are not null
 
@@ -72,6 +82,7 @@ public class NodeConfigurationBuilder {
         enclaveKeyFile,
         cors,
         containerNetwork,
+        vertx,
         ipAddress,
         nodePrivateKeyFile,
         bootnodeEnodeAddress);

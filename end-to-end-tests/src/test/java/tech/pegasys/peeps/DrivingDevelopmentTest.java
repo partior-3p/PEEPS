@@ -50,7 +50,9 @@ public class DrivingDevelopmentTest {
 
     network.start();
 
-    // TODO send unsigned transaction to EhSigner of node A, store receipt hash
+    // TODO create privacy group between OrionA and OrionB
+
+    // TODO send unsigned transaction to privacy group using EhSigner of node A,, store receipt hash
     final String receiptHash = signerA.deployContract(SimpleStorage.BINARY);
 
     // TODO get transaction receipt for private transaction from node B

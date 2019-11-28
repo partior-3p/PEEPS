@@ -10,18 +10,16 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.node;
+package tech.pegasys.peeps.node.rpc;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import tech.pegasys.peeps.json.Json;
-import tech.pegasys.peeps.node.rpc.ConnectedPeer;
-import tech.pegasys.peeps.node.rpc.ConnectedPeersResponse;
-import tech.pegasys.peeps.node.rpc.JsonRpcRequest;
-import tech.pegasys.peeps.node.rpc.JsonRpcRequestId;
-import tech.pegasys.peeps.node.rpc.NodeInfo;
-import tech.pegasys.peeps.node.rpc.NodeInfoResponse;
+import tech.pegasys.peeps.node.rpc.admin.ConnectedPeer;
+import tech.pegasys.peeps.node.rpc.admin.ConnectedPeersResponse;
+import tech.pegasys.peeps.node.rpc.admin.NodeInfo;
+import tech.pegasys.peeps.node.rpc.admin.NodeInfoResponse;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -36,7 +34,7 @@ import io.vertx.ext.web.client.WebClientOptions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class BesuRpcClient {
+public class NodeJsonRpcClient {
 
   private static final Logger LOG = LogManager.getLogger();
 
@@ -47,20 +45,14 @@ public class BesuRpcClient {
   private final Vertx vertx;
 
   private HttpClient jsonRpc;
-  private String besuId;
-  private String besuIpAddress;
-  private int besuHttpJsonRpcPort;
+  private String containerId;
 
-  public BesuRpcClient(final Vertx vertx) {
+  public NodeJsonRpcClient(final Vertx vertx) {
     this.vertx = vertx;
   }
 
   public Set<String> connectedPeerIds() {
     return Arrays.stream(connectedPeers()).map(ConnectedPeer::getId).collect(Collectors.toSet());
-  }
-
-  private ConnectedPeer[] connectedPeers() {
-    return post("admin_peers", ConnectedPeersResponse.class).getResult();
   }
 
   public NodeInfo nodeInfo() {
@@ -75,25 +67,24 @@ public class BesuRpcClient {
     final String json = Json.encode(jsonRpcRequest);
 
     final HttpClientRequest request =
-        jsonRpcClient()
-            .post(
-                JSON_RPC_CONTEXT_PATH,
-                result -> {
-                  if (result.statusCode() == HTTP_STATUS_OK) {
-                    result.bodyHandler(
-                        body -> {
-                          LOG.info("Container {}, {}: {}", besuId, method, body);
-                          future.complete(Json.decode(body, clazz));
-                        });
-                  } else {
-                    final String errorMessage =
-                        String.format(
-                            "Querying %s failed: %s, %s",
-                            method, result.statusCode(), result.statusMessage());
-                    LOG.error(errorMessage);
-                    future.completeExceptionally(new IllegalStateException(errorMessage));
-                  }
-                });
+        jsonRpc.post(
+            JSON_RPC_CONTEXT_PATH,
+            result -> {
+              if (result.statusCode() == HTTP_STATUS_OK) {
+                result.bodyHandler(
+                    body -> {
+                      LOG.info("Container {}, {}: {}", containerId, method, body);
+                      future.complete(Json.decode(body, clazz));
+                    });
+              } else {
+                final String errorMessage =
+                    String.format(
+                        "Querying %s failed: %s, %s",
+                        method, result.statusCode(), result.statusMessage());
+                LOG.error(errorMessage);
+                future.completeExceptionally(new IllegalStateException(errorMessage));
+              }
+            });
 
     request.setChunked(true);
     request.end(json);
@@ -105,24 +96,27 @@ public class BesuRpcClient {
     }
   }
 
-  public void besuStarted(final String id, final String ipAddress, final int httpJsonRpcPort) {
-    this.besuId = id;
-    this.besuIpAddress = ipAddress;
-    this.besuHttpJsonRpcPort = httpJsonRpcPort;
-  }
+  public void bind(final String containerId, final String ipAddress, final int httpJsonRpcPort) {
+    this.containerId = containerId;
 
-  private HttpClient jsonRpcClient() {
-    if (jsonRpc == null) {
-      checkNotNull(besuIpAddress, "Besu IP address must be set");
-      checkState(besuHttpJsonRpcPort > 0, "Besu HTTP PRC port must be set");
-
-      jsonRpc =
-          vertx.createHttpClient(
-              new WebClientOptions()
-                  .setDefaultPort(besuHttpJsonRpcPort)
-                  .setDefaultHost(besuIpAddress));
+    if (jsonRpc != null) {
+      jsonRpc.close();
     }
 
-    return jsonRpc;
+    checkNotNull(ipAddress, "Container IP address must be set");
+    checkState(httpJsonRpcPort > 0, "Container HTTP PRC port must be set");
+    jsonRpc =
+        vertx.createHttpClient(
+            new WebClientOptions().setDefaultPort(httpJsonRpcPort).setDefaultHost(ipAddress));
+  }
+
+  public void close() {
+    if (jsonRpc != null) {
+      jsonRpc.close();
+    }
+  }
+
+  private ConnectedPeer[] connectedPeers() {
+    return post("admin_peers", ConnectedPeersResponse.class).getResult();
   }
 }

@@ -14,6 +14,7 @@ package tech.pegasys.peeps.node;
 
 import java.util.Optional;
 
+import io.vertx.core.Vertx;
 import org.testcontainers.containers.Network;
 
 public class NodeConfiguration {
@@ -21,16 +22,20 @@ public class NodeConfiguration {
   private final String genesisFile;
   private final String enclavePublicKeyFile;
   private final String cors;
-  private final Network containerNetwork;
   private final String ipAddress;
   private final String nodePrivateKeyFile;
   private final String bootnodeEnodeAddress;
+
+  // TODO move these out, they are not related to the node, but test container setups
+  private final Network containerNetwork;
+  private final Vertx vertx;
 
   public NodeConfiguration(
       final String genesisFile,
       final String enclavePublicKeyFile,
       final String cors,
       final Network containerNetwork,
+      final Vertx vertx,
       final String ipAddress,
       final String nodePrivateKeyFile,
       final String bootnodeEnodeAddress) {
@@ -38,6 +43,7 @@ public class NodeConfiguration {
     this.enclavePublicKeyFile = enclavePublicKeyFile;
     this.cors = cors;
     this.containerNetwork = containerNetwork;
+    this.vertx = vertx;
     this.ipAddress = ipAddress;
     this.nodePrivateKeyFile = nodePrivateKeyFile;
     this.bootnodeEnodeAddress = bootnodeEnodeAddress;
@@ -69,5 +75,9 @@ public class NodeConfiguration {
 
   public Optional<String> getBootnodeEnodeAddress() {
     return Optional.ofNullable(bootnodeEnodeAddress);
+  }
+
+  public Vertx getVertx() {
+    return vertx;
   }
 }

@@ -10,21 +10,21 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.node.rpc;
+package tech.pegasys.peeps.node.rpc.admin;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class NodeInfoResponse {
+public class ConnectedPeersResponse {
 
-  private final NodeInfo result;
+  private final ConnectedPeer[] result;
 
-  public NodeInfoResponse(@JsonProperty("result") final NodeInfo result) {
+  public ConnectedPeersResponse(@JsonProperty("result") final ConnectedPeer[] result) {
     this.result = result;
   }
 
-  public NodeInfo getResult() {
+  public ConnectedPeer[] getResult() {
     return result;
   }
 }

@@ -16,7 +16,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.peeps.util.HexFormatter.ensureHexPrefix;
 
-import tech.pegasys.peeps.node.rpc.NodeInfo;
+import tech.pegasys.peeps.node.rpc.NodeJsonRpcClient;
+import tech.pegasys.peeps.node.rpc.admin.NodeInfo;
 import tech.pegasys.peeps.util.Await;
 
 import java.util.Arrays;
@@ -25,7 +26,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testcontainers.containers.BindMode;
@@ -51,78 +51,39 @@ public class Besu {
   private static final String CONTAINER_NODE_PRIVATE_KEY_FILE = "/etc/besu/keys/key.priv";
 
   private final GenericContainer<?> besu;
-  private final BesuRpcClient jsonRpc;
+  private final NodeJsonRpcClient jsonRpc;
   private String nodeId;
 
   public Besu(final NodeConfiguration config) {
 
-    final List<String> commandLineOptions =
-        Lists.newArrayList(
-            "--genesis-file",
-            CONTAINER_GENESIS_FILE,
-            "--logging",
-            "DEBUG",
-            "--miner-enabled",
-            "--miner-coinbase",
-            "1b23ba34ca45bb56aa67bc78be89ac00ca00da00",
-            "--host-whitelist",
-            "*",
-            "--p2p-host",
-            config.getIpAddress(),
-            "--rpc-http-enabled",
-            "--rpc-ws-enabled",
-            "--rpc-http-apis",
-            "ADMIN,ETH,NET,WEB3,EEA",
-            "--privacy-enabled",
-            "--privacy-public-key-file",
-            CONTAINER_PRIVACY_PUBLIC_KEY_FILE);
+    final GenericContainer<?> container = new GenericContainer<>(BESU_IMAGE);
+    final List<String> commandLineOptions = standardCommandLineOptions();
 
-    GenericContainer<?> container = besuContainer(config);
+    addPeerToPeerHost(config, commandLineOptions);
+    addCorsOrigins(config, commandLineOptions);
+    addBootnodeAddress(config, commandLineOptions);
+    addContainerNetwork(config, container);
+    addContainerIpAddress(config, container);
+    addNodePrivateKey(config, commandLineOptions, container);
+    addGenesisFile(config, commandLineOptions, container);
+    addPrivacy(config, commandLineOptions, container);
 
-    // TODO move the other bonds & args out e.g. genesis & encalve
-
-    // TODO refactor these into private helpers
-    config
-        .getCors()
-        .ifPresent(
-            cors -> commandLineOptions.addAll(Lists.newArrayList("--rpc-http-cors-origins", cors)));
-
-    config
-        .getNodePrivateKeyFile()
-        .ifPresent(
-            file -> {
-              container.withClasspathResourceMapping(
-                  file, CONTAINER_NODE_PRIVATE_KEY_FILE, BindMode.READ_ONLY);
-              commandLineOptions.addAll(
-                  Lists.newArrayList("--node-private-key-file", CONTAINER_NODE_PRIVATE_KEY_FILE));
-            });
-
-    config
-        .getBootnodeEnodeAddress()
-        .ifPresent(enode -> commandLineOptions.addAll(Lists.newArrayList("--bootnodes", enode)));
-
-    LOG.debug("besu command line {}", config);
+    LOG.debug("besu command line {}", commandLineOptions);
 
     this.besu =
-        container
-            .withCreateContainerCmdModifier(
-                modifier -> modifier.withIpv4Address(config.getIpAddress()))
-            .withCommand(commandLineOptions.toArray(new String[0]))
-            .waitingFor(liveliness());
+        container.withCommand(commandLineOptions.toArray(new String[0])).waitingFor(liveliness());
 
-    // TODO move the vertx to network & close on stop() - all use the same Vertx instance
-    this.jsonRpc = new BesuRpcClient(Vertx.vertx());
+    this.jsonRpc = new NodeJsonRpcClient(config.getVertx());
   }
 
   public void start() {
     try {
       besu.start();
-      jsonRpc.besuStarted(
+
+      jsonRpc.bind(
           besu.getContainerId(),
           besu.getContainerIpAddress(),
           besu.getMappedPort(CONTAINER_HTTP_RPC_PORT));
-
-      // TODO get the node info & store
 
       final NodeInfo info = jsonRpc.nodeInfo();
       nodeId = info.getId();
@@ -130,9 +91,7 @@ public class Besu {
       // TODO validate the node has the expected state, e.g. consensus, genesis, networkId,
       // protocol(s), ports, listen address
 
-      logHttpRpcPortMapping();
-      logWsRpcPortMapping();
-      logPeerToPeerPortMapping();
+      logPortMappings();
       logContainerNetworkDetails();
     } catch (final ContainerLaunchException e) {
       LOG.error(besu.getLogs());
@@ -142,6 +101,7 @@ public class Besu {
 
   public void stop() {
     besu.stop();
+    jsonRpc.close();
   }
 
   public void awaitConnectivity(final Besu... peers) {
@@ -165,48 +125,20 @@ public class Besu {
         .collect(Collectors.toSet());
   }
 
-  // TODO reduce the args - exposed ports maybe not needed
-  private GenericContainer<?> besuContainer(final NodeConfiguration config) {
-    return new GenericContainer<>(BESU_IMAGE)
-        .withNetwork(config.getContainerNetwork().orElse(null))
-        .withExposedPorts(CONTAINER_HTTP_RPC_PORT, CONTAINER_WS_RPC_PORT, CONTAINER_P2P_PORT)
-        .withClasspathResourceMapping(
-            config.getGenesisFile(), CONTAINER_GENESIS_FILE, BindMode.READ_ONLY)
-        .withClasspathResourceMapping(
-            config.getEnclavePublicKeyFile(),
-            CONTAINER_PRIVACY_PUBLIC_KEY_FILE,
-            BindMode.READ_ONLY);
-  }
-
-  // TODO liveliness should be move to network or configurable to allow parallel besu container
-  // startups
   private HttpWaitStrategy liveliness() {
     return Wait.forHttp(AM_I_ALIVE_ENDPOINT)
         .forStatusCode(ALIVE_STATUS_CODE)
         .forPort(CONTAINER_HTTP_RPC_PORT);
   }
 
-  // TODO a single log line with all details!
-  private void logHttpRpcPortMapping() {
+  private void logPortMappings() {
     LOG.info(
-        "Container {}, HTTP RPC port mapping: {} -> {}",
+        "Container {}, HTTP RPC port mapping: {} -> {}, WS RPC port mapping: {} -> {}, p2p port mapping: {} -> {}",
         besu.getContainerId(),
         CONTAINER_HTTP_RPC_PORT,
-        besu.getMappedPort(CONTAINER_HTTP_RPC_PORT));
-  }
-
-  private void logWsRpcPortMapping() {
-    LOG.info(
-        "Container {}, WS RPC port mapping: {} -> {}",
-        besu.getContainerId(),
+        besu.getMappedPort(CONTAINER_HTTP_RPC_PORT),
         CONTAINER_WS_RPC_PORT,
-        besu.getMappedPort(CONTAINER_WS_RPC_PORT));
-  }
-
-  private void logPeerToPeerPortMapping() {
-    LOG.info(
-        "Container {}, p2p port mapping: {} -> {}",
-        besu.getContainerId(),
+        besu.getMappedPort(CONTAINER_WS_RPC_PORT),
         CONTAINER_P2P_PORT,
         besu.getMappedPort(CONTAINER_P2P_PORT));
   }
@@ -221,5 +153,89 @@ public class Besu {
           besu.getContainerIpAddress(),
           besu.getNetwork().getId());
     }
+  }
+
+  private List<String> standardCommandLineOptions() {
+    return Lists.newArrayList(
+        "--logging",
+        "INFO",
+        "--miner-enabled",
+        "--miner-coinbase",
+        "1b23ba34ca45bb56aa67bc78be89ac00ca00da00",
+        "--host-whitelist",
+        "*",
+        "--rpc-http-enabled",
+        "--rpc-ws-enabled",
+        "--rpc-http-apis",
+        "ADMIN,ETH,NET,WEB3,EEA");
+  }
+
+  private void addPeerToPeerHost(
+      final NodeConfiguration config, final List<String> commandLineOptions) {
+    commandLineOptions.add("--p2p-host");
+    commandLineOptions.add(config.getIpAddress());
+  }
+
+  private void addBootnodeAddress(
+      final NodeConfiguration config, final List<String> commandLineOptions) {
+    config
+        .getBootnodeEnodeAddress()
+        .ifPresent(enode -> commandLineOptions.addAll(Lists.newArrayList("--bootnodes", enode)));
+  }
+
+  private void addContainerNetwork(
+      final NodeConfiguration config, final GenericContainer<?> container) {
+    config.getContainerNetwork().ifPresent(container::withNetwork);
+  }
+
+  private void addCorsOrigins(
+      final NodeConfiguration config, final List<String> commandLineOptions) {
+
+    config
+        .getCors()
+        .ifPresent(
+            cors -> commandLineOptions.addAll(Lists.newArrayList("--rpc-http-cors-origins", cors)));
+  }
+
+  private void addNodePrivateKey(
+      final NodeConfiguration config,
+      final List<String> commandLineOptions,
+      final GenericContainer<?> container) {
+    config
+        .getNodePrivateKeyFile()
+        .ifPresent(
+            file -> {
+              container.withClasspathResourceMapping(
+                  file, CONTAINER_NODE_PRIVATE_KEY_FILE, BindMode.READ_ONLY);
+              commandLineOptions.addAll(
+                  Lists.newArrayList("--node-private-key-file", CONTAINER_NODE_PRIVATE_KEY_FILE));
+            });
+  }
+
+  private void addGenesisFile(
+      final NodeConfiguration config,
+      final List<String> commandLineOptions,
+      final GenericContainer<?> container) {
+    commandLineOptions.add("--genesis-file");
+    commandLineOptions.add(CONTAINER_GENESIS_FILE);
+    container.withClasspathResourceMapping(
+        config.getGenesisFile(), CONTAINER_GENESIS_FILE, BindMode.READ_ONLY);
+  }
+
+  private void addPrivacy(
+      final NodeConfiguration config,
+      final List<String> commandLineOptions,
+      final GenericContainer<?> container) {
+    commandLineOptions.add("--privacy-enabled");
+    commandLineOptions.add("--privacy-public-key-file");
+    commandLineOptions.add(CONTAINER_PRIVACY_PUBLIC_KEY_FILE);
+    container.withClasspathResourceMapping(
+        config.getEnclavePublicKeyFile(), CONTAINER_PRIVACY_PUBLIC_KEY_FILE, BindMode.READ_ONLY);
+  }
+
+  private void addContainerIpAddress(
+      final NodeConfiguration config, final GenericContainer<?> container) {
+    container.withCreateContainerCmdModifier(
+        modifier -> modifier.withIpv4Address(config.getIpAddress()));
   }
 }

@@ -17,6 +17,7 @@ import tech.pegasys.peeps.node.NodeConfigurationBuilder;
 
 import com.github.dockerjava.api.model.Network.Ipam;
 import com.github.dockerjava.api.model.Network.Ipam.Config;
+import io.vertx.core.Vertx;
 
 public class Network {
 
@@ -34,12 +35,15 @@ public class Network {
 
   private final org.testcontainers.containers.Network network;
 
+  private final Vertx vertx;
+
   // TODO IP management
 
   public Network() {
+    this.vertx = Vertx.vertx();
 
     // TODO subnet with substitution for static IPs
-    network =
+    this.network =
         org.testcontainers.containers.Network.builder()
             .createNetworkCmdModifier(
                 modifier ->
@@ -51,10 +55,11 @@ public class Network {
 
     // TODO no magic string!?!?
 
-    besuA =
+    this.besuA =
         new Besu(
             new NodeConfigurationBuilder()
                 .withContainerNetwork(network)
+                .withVertx(vertx)
                 .withIpAddress("172.20.0.5")
                 .withNodePrivateKeyFile(NodeKeys.BOOTNODE.getPrivateKeyFile())
                 .build());
@@ -64,10 +69,11 @@ public class Network {
     // TODO can fail otherwise - runtime exception
     final String bootnodeEnodeAddress = NodeKeys.BOOTNODE.getEnodeAddress("172.20.0.5", "30303");
 
-    besuB =
+    this.besuB =
         new Besu(
             new NodeConfigurationBuilder()
                 .withContainerNetwork(network)
+                .withVertx(vertx)
                 .withIpAddress("172.20.0.6")
                 .withBootnodeEnodeAddress(bootnodeEnodeAddress)
                 .build());
@@ -88,6 +94,7 @@ public class Network {
     besuA.stop();
     besuB.stop();
     network.close();
+    vertx.close();
   }
 
   private void awaitConnectivity() {
