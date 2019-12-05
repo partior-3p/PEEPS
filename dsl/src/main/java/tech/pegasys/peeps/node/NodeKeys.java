@@ -10,16 +10,15 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps;
+package tech.pegasys.peeps.node;
 
 import static tech.pegasys.peeps.util.HexFormatter.removeAnyHexPrefix;
 
 import tech.pegasys.peeps.util.ClasspathResources;
 
-// TODO comment expectations of how directories/files under resources are structured
 // TODO may don't use an enum?
 public enum NodeKeys {
-  BOOTNODE("keys/bootnode");
+  BOOTNODE("node/keys/bootnode");
 
   private static final String PRIVATE_KEY_FILENAME = "/key.priv";
   private static final String PUBLIC_KEY_FILENAME = "/key.pub";

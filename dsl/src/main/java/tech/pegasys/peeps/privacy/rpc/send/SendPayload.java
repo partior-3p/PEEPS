@@ -10,11 +10,16 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps;
+package tech.pegasys.peeps.privacy.rpc.send;
 
-public class Orion {
+import java.util.concurrent.atomic.AtomicLong;
 
-  public void awaitConnectivity(final Orion peer) {
-    // TODO assert that connection to peer within say 10s occurs
+public class SendPayload {
+
+  private static final AtomicLong UNIQUEIFIER = new AtomicLong();
+  private static final String TEST_PAYLOAD = "Test payload %s";
+
+  public static String generateUniquePayload() {
+    return String.format(TEST_PAYLOAD, UNIQUEIFIER.getAndIncrement());
   }
 }

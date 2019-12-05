@@ -100,8 +100,12 @@ public class Besu {
   }
 
   public void stop() {
-    besu.stop();
-    jsonRpc.close();
+    if (besu != null) {
+      besu.stop();
+    }
+    if (jsonRpc != null) {
+      jsonRpc.close();
+    }
   }
 
   public void awaitConnectivity(final Besu... peers) {
@@ -133,7 +137,7 @@ public class Besu {
 
   private void logPortMappings() {
     LOG.info(
-        "Container {}, HTTP RPC port mapping: {} -> {}, WS RPC port mapping: {} -> {}, p2p port mapping: {} -> {}",
+        "Besu Container {}, HTTP RPC port mapping: {} -> {}, WS RPC port mapping: {} -> {}, p2p port mapping: {} -> {}",
         besu.getContainerId(),
         CONTAINER_HTTP_RPC_PORT,
         besu.getMappedPort(CONTAINER_HTTP_RPC_PORT),
@@ -145,10 +149,10 @@ public class Besu {
 
   private void logContainerNetworkDetails() {
     if (besu.getNetwork() == null) {
-      LOG.info("Container {} has no network", besu.getContainerId());
+      LOG.info("Besu Container {} has no network", besu.getContainerId());
     } else {
       LOG.info(
-          "Container {}, IP address: {}, Network: {}",
+          "Besu Container {}, IP address: {}, Network: {}",
           besu.getContainerId(),
           besu.getContainerIpAddress(),
           besu.getNetwork().getId());
@@ -185,7 +189,7 @@ public class Besu {
 
   private void addContainerNetwork(
       final NodeConfiguration config, final GenericContainer<?> container) {
-    config.getContainerNetwork().ifPresent(container::withNetwork);
+    container.withNetwork(config.getContainerNetwork());
   }
 
   private void addCorsOrigins(

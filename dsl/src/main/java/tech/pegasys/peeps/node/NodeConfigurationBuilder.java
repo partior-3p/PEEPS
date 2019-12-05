@@ -12,13 +12,15 @@
  */
 package tech.pegasys.peeps.node;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import io.vertx.core.Vertx;
 import org.testcontainers.containers.Network;
 
 public class NodeConfigurationBuilder {
 
   // TODO move these into the test
-  private static final String DEFAULT_GENESIS_FILE = "genesis/eth_hash_4004.json";
+  private static final String DEFAULT_GENESIS_FILE = "node/genesis/eth_hash_4004.json";
 
   // TODO enclave key.priv to be passed (without default)
   private static final String DEFAULT_ENCLAVE_PUBLIC_KEY_FILE = "node/enclave_key.pub";
@@ -75,7 +77,11 @@ public class NodeConfigurationBuilder {
   }
 
   public NodeConfiguration build() {
-    // TODO assert mandatory parameters are not null
+    checkNotNull(genesisFile, "A genesis file path is mandatory");
+    checkNotNull(enclaveKeyFile, "An enclave key file path is mandatory");
+    checkNotNull(vertx, "A handle to a Vertx instance is mandatory");
+    checkNotNull(containerNetwork, "Container network is mandatory");
+    checkNotNull(ipAddress, "Container IP address is mandatory");
 
     return new NodeConfiguration(
         genesisFile,

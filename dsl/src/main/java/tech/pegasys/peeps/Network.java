@@ -14,6 +14,16 @@ package tech.pegasys.peeps;
 
 import tech.pegasys.peeps.node.Besu;
 import tech.pegasys.peeps.node.NodeConfigurationBuilder;
+import tech.pegasys.peeps.node.NodeKeys;
+import tech.pegasys.peeps.privacy.Orion;
+import tech.pegasys.peeps.privacy.OrionConfigurationBuilder;
+import tech.pegasys.peeps.privacy.OrionKeys;
+
+import java.io.File;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import com.github.dockerjava.api.model.Network.Ipam;
 import com.github.dockerjava.api.model.Network.Ipam.Config;
@@ -26,12 +36,12 @@ public class Network {
   // TODO cater for one-many for Besu/EthSigner
 
   private final Besu besuA;
-  private final Orion orionA = new Orion();
+  private final Orion orionA;
   private final EthSigner signerA = new EthSigner();
 
   private final Besu besuB;
   private final EthSigner signerB = new EthSigner();
-  private final Orion orionB = new Orion();
+  private final Orion orionB;
 
   private final org.testcontainers.containers.Network network;
 
@@ -39,7 +49,7 @@ public class Network {
 
   // TODO IP management
 
-  public Network() {
+  public Network(final Path workingDirectory) {
     this.vertx = Vertx.vertx();
 
     // TODO subnet with substitution for static IPs
@@ -53,48 +63,79 @@ public class Network {
 
     // TODO 0.1 seems to be used, maybe assigned by the network container?
 
-    // TODO no magic string!?!?
+    // TODO no magic strings!?!?
+
+    this.orionA =
+        new Orion(
+            new OrionConfigurationBuilder()
+                .withVertx(vertx)
+                .withContainerNetwork(network)
+                .withIpAddress("172.20.0.5")
+                .withPrivateKeys(Collections.singletonList(OrionKeys.ONE.getPrivateKey()))
+                .withPublicKeys(Collections.singletonList(OrionKeys.ONE.getPublicKey()))
+                .withFileSystemConfigurationFile(
+                    new File(workingDirectory.toFile(), "orionA.conf").toPath())
+                .build());
 
     this.besuA =
         new Besu(
             new NodeConfigurationBuilder()
-                .withContainerNetwork(network)
                 .withVertx(vertx)
-                .withIpAddress("172.20.0.5")
+                .withContainerNetwork(network)
+                .withIpAddress("172.20.0.6")
                 .withNodePrivateKeyFile(NodeKeys.BOOTNODE.getPrivateKeyFile())
                 .build());
 
-    // TODO move this into besu; can figure out if these parts are defined in construction or is
-    // after starting
+    // TODO File or Path
+    final List<String> orionBootnodes = new ArrayList<>();
+    orionBootnodes.add(orionA.getNetworkAddress());
+
+    this.orionB =
+        new Orion(
+            new OrionConfigurationBuilder()
+                .withVertx(vertx)
+                .withContainerNetwork(network)
+                .withIpAddress("172.20.0.7")
+                .withPrivateKeys(Collections.singletonList(OrionKeys.TWO.getPrivateKey()))
+                .withPublicKeys(Collections.singletonList(OrionKeys.TWO.getPublicKey()))
+                .withBootnodeUrls(orionBootnodes)
+                .withFileSystemConfigurationFile(
+                    new File(workingDirectory.toFile(), "orionB.conf").toPath())
+                .build());
+
     // TODO can fail otherwise - runtime exception
-    final String bootnodeEnodeAddress = NodeKeys.BOOTNODE.getEnodeAddress("172.20.0.5", "30303");
+    final String bootnodeEnodeAddress = NodeKeys.BOOTNODE.getEnodeAddress("172.20.0.6", "30303");
 
     this.besuB =
         new Besu(
             new NodeConfigurationBuilder()
-                .withContainerNetwork(network)
                 .withVertx(vertx)
-                .withIpAddress("172.20.0.6")
+                .withContainerNetwork(network)
+                .withIpAddress("172.20.0.8")
                 .withBootnodeEnodeAddress(bootnodeEnodeAddress)
                 .build());
   }
 
   public void start() {
+    // TODO multi-thread the blocking start ops, using await connectivity as the sync point
+    orionA.start();
     besuA.start();
+    orionB.start();
     besuB.start();
     awaitConnectivity();
   }
 
   public void stop() {
+    orionA.stop();
     besuA.stop();
+    orionB.stop();
     besuB.stop();
   }
 
   public void close() {
-    besuA.stop();
-    besuB.stop();
-    network.close();
+    stop();
     vertx.close();
+    network.close();
   }
 
   private void awaitConnectivity() {

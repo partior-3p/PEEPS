@@ -61,8 +61,8 @@ public class NodeConfiguration {
     return Optional.ofNullable(cors);
   }
 
-  public Optional<Network> getContainerNetwork() {
-    return Optional.ofNullable(containerNetwork);
+  public Network getContainerNetwork() {
+    return containerNetwork;
   }
 
   public String getIpAddress() {

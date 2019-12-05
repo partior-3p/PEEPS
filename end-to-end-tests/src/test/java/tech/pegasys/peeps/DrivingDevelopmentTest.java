@@ -16,33 +16,38 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import tech.pegasys.peeps.contract.SimpleStorage;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import java.io.File;
+import java.nio.file.Path;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 // TODO rename & move after
 public class DrivingDevelopmentTest {
 
+  // TODO have Orion use command line parameters, not only a config file
+  private final Path workingDirectory = new File(System.getProperty("user.dir")).toPath();
+
   // TODO start node A
-  private static final EthSigner signerA = new EthSigner();
+  private final EthSigner signerA = new EthSigner();
 
   // TODO start node B
-  private static final EthSigner signerB = new EthSigner();
+  private final EthSigner signerB = new EthSigner();
 
-  // TODO static?
-  private static final Network network = new Network();
+  private final Network network = new Network(workingDirectory);
 
-  // TODO ensure clean up even on crash
-
-  @BeforeAll
-  public static void startUpOnce() {
-    Runtime.getRuntime().addShutdownHook(new Thread(DrivingDevelopmentTest::tearDownOnce));
+  @BeforeEach
+  public void startUp() {
+    Runtime.getRuntime().addShutdownHook(new Thread(this::tearDown));
   }
 
-  @AfterAll
-  public static void tearDownOnce() {
-    // TODO wrap up elsewhere
+  @AfterEach
+  public void tearDown() {
     network.close();
+
+    // TODO ensure deletion for exception & stopping in debugger
+    workingDirectory.toFile().deleteOnExit();
   }
 
   @Test
