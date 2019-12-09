@@ -20,9 +20,9 @@ import tech.pegasys.peeps.privacy.OrionConfigurationBuilder;
 import tech.pegasys.peeps.privacy.OrionKeys;
 import tech.pegasys.peeps.signer.EthSigner;
 import tech.pegasys.peeps.signer.EthSignerConfigurationBuilder;
+import tech.pegasys.peeps.util.PeepsTemporaryDirectory;
 
-import java.io.File;
-import java.nio.file.Path;
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +31,9 @@ import com.github.dockerjava.api.model.Network.Ipam;
 import com.github.dockerjava.api.model.Network.Ipam.Config;
 import io.vertx.core.Vertx;
 
-public class Network {
+public class Network implements Closeable {
+
+  private final PeepsTemporaryDirectory workingDirectory;
 
   // TODO do not be hard coded as two nodes - flexibility in nodes & stack
   // TODO cater for one-many & many-one for Besu/Orion
@@ -52,7 +54,8 @@ public class Network {
   // TODO IP management
 
   // TODO choosing the topology should be elsewhere
-  public Network(final Path workingDirectory) {
+  public Network() {
+    this.workingDirectory = new PeepsTemporaryDirectory();
     this.vertx = Vertx.vertx();
 
     // TODO subnet with substitution for static IPs
@@ -96,8 +99,7 @@ public class Network {
                 .withIpAddress(ipAddressOrionA)
                 .withPrivateKeys(Collections.singletonList(OrionKeys.ONE.getPrivateKey()))
                 .withPublicKeys(Collections.singletonList(OrionKeys.ONE.getPublicKey()))
-                .withFileSystemConfigurationFile(
-                    new File(workingDirectory.toFile(), "orionA.conf").toPath())
+                .withFileSystemConfigurationFile(workingDirectory.getUniqueFile())
                 .build());
 
     this.besuA =
@@ -135,8 +137,7 @@ public class Network {
                 .withPrivateKeys(Collections.singletonList(OrionKeys.TWO.getPrivateKey()))
                 .withPublicKeys(Collections.singletonList(OrionKeys.TWO.getPublicKey()))
                 .withBootnodeUrls(orionBootnodes)
-                .withFileSystemConfigurationFile(
-                    new File(workingDirectory.toFile(), "orionB.conf").toPath())
+                .withFileSystemConfigurationFile(workingDirectory.getUniqueFile())
                 .build());
 
     // TODO better typing then String
@@ -185,10 +186,12 @@ public class Network {
     signerB.stop();
   }
 
+  @Override
   public void close() {
     stop();
     vertx.close();
     network.close();
+    workingDirectory.close();
   }
 
   private void awaitConnectivity() {

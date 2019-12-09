@@ -16,9 +16,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import tech.pegasys.peeps.contract.SimpleStorage;
 
-import java.io.File;
-import java.nio.file.Path;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,10 +23,7 @@ import org.junit.jupiter.api.Test;
 // TODO rename & move after
 public class DrivingDevelopmentTest {
 
-  // TODO have Orion use command line parameters, not only a config file
-  private final Path workingDirectory = new File(System.getProperty("user.dir")).toPath();
-
-  private final Network network = new Network(workingDirectory);
+  private final Network network = new Network();
 
   @BeforeEach
   public void startUp() {
@@ -39,9 +33,6 @@ public class DrivingDevelopmentTest {
   @AfterEach
   public void tearDown() {
     network.close();
-
-    // TODO ensure deletion for exception & stopping in debugger
-    workingDirectory.toFile().deleteOnExit();
   }
 
   @Test
