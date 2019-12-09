@@ -18,6 +18,8 @@ import tech.pegasys.peeps.node.NodeKeys;
 import tech.pegasys.peeps.privacy.Orion;
 import tech.pegasys.peeps.privacy.OrionConfigurationBuilder;
 import tech.pegasys.peeps.privacy.OrionKeys;
+import tech.pegasys.peeps.signer.EthSigner;
+import tech.pegasys.peeps.signer.EthSignerConfigurationBuilder;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -37,10 +39,10 @@ public class Network {
 
   private final Besu besuA;
   private final Orion orionA;
-  private final EthSigner signerA = new EthSigner();
+  private final EthSigner signerA;
 
   private final Besu besuB;
-  private final EthSigner signerB = new EthSigner();
+  private final EthSigner signerB;
   private final Orion orionB;
 
   private final org.testcontainers.containers.Network network;
@@ -49,6 +51,7 @@ public class Network {
 
   // TODO IP management
 
+  // TODO choosing the topology should be elsewhere
   public Network(final Path workingDirectory) {
     this.vertx = Vertx.vertx();
 
@@ -64,13 +67,33 @@ public class Network {
     // TODO 0.1 seems to be used, maybe assigned by the network container?
 
     // TODO no magic strings!?!?
+    // TODO better typing then String
+    final String ipAddressOrionA = "172.20.0.5";
+    final String ipAddressBesuA = "172.20.0.6";
+    final String ipAddressSignerA = "172.20.0.7";
+    final String ipAddressOrionB = "172.20.0.8";
+    final String ipAddressBesuB = "172.20.0.9";
+    final String ipAddressSignerB = "172.20.0.10";
+
+    // TODO these should come from the Besu, or config aggregation
+    final long chainId = 4004;
+    final int portBesuA = 8545;
+    final int portBesuB = 8545;
+
+    // TODO name files according the account pubkey
+
+    // TODO these should come from somewhere, programmatically generated?
+    final String keyFileSignerA = "signer/account/funded/wallet_a.v3";
+    final String passwordFileSignerA = "signer/account/funded/wallet_a.pass";
+    final String keyFileSignerB = "signer/account/funded/wallet_b.v3";
+    final String passwordFileSignerB = "signer/account/funded/wallet_b.pass";
 
     this.orionA =
         new Orion(
             new OrionConfigurationBuilder()
                 .withVertx(vertx)
                 .withContainerNetwork(network)
-                .withIpAddress("172.20.0.5")
+                .withIpAddress(ipAddressOrionA)
                 .withPrivateKeys(Collections.singletonList(OrionKeys.ONE.getPrivateKey()))
                 .withPublicKeys(Collections.singletonList(OrionKeys.ONE.getPublicKey()))
                 .withFileSystemConfigurationFile(
@@ -82,11 +105,24 @@ public class Network {
             new NodeConfigurationBuilder()
                 .withVertx(vertx)
                 .withContainerNetwork(network)
-                .withIpAddress("172.20.0.6")
+                .withIpAddress(ipAddressBesuA)
                 .withNodePrivateKeyFile(NodeKeys.BOOTNODE.getPrivateKeyFile())
                 .build());
 
-    // TODO File or Path
+    this.signerA =
+        new EthSigner(
+            new EthSignerConfigurationBuilder()
+                .withVertx(vertx)
+                .withContainerNetwork(network)
+                .withIpAddress(ipAddressSignerA)
+                .withChainId(chainId)
+                .withDownstreamHost(ipAddressBesuA)
+                .withDownstreamPort(portBesuA)
+                .withKeyFile(keyFileSignerA)
+                .withPasswordFile(passwordFileSignerA)
+                .build());
+
+    // TODO More typing then a String - URI, URL, File or Path
     final List<String> orionBootnodes = new ArrayList<>();
     orionBootnodes.add(orionA.getNetworkAddress());
 
@@ -95,7 +131,7 @@ public class Network {
             new OrionConfigurationBuilder()
                 .withVertx(vertx)
                 .withContainerNetwork(network)
-                .withIpAddress("172.20.0.7")
+                .withIpAddress(ipAddressOrionB)
                 .withPrivateKeys(Collections.singletonList(OrionKeys.TWO.getPrivateKey()))
                 .withPublicKeys(Collections.singletonList(OrionKeys.TWO.getPublicKey()))
                 .withBootnodeUrls(orionBootnodes)
@@ -103,16 +139,29 @@ public class Network {
                     new File(workingDirectory.toFile(), "orionB.conf").toPath())
                 .build());
 
-    // TODO can fail otherwise - runtime exception
-    final String bootnodeEnodeAddress = NodeKeys.BOOTNODE.getEnodeAddress("172.20.0.6", "30303");
+    // TODO better typing then String
+    final String bootnodeEnodeAddress = NodeKeys.BOOTNODE.getEnodeAddress(ipAddressBesuA, "30303");
 
     this.besuB =
         new Besu(
             new NodeConfigurationBuilder()
                 .withVertx(vertx)
                 .withContainerNetwork(network)
-                .withIpAddress("172.20.0.8")
+                .withIpAddress(ipAddressBesuB)
                 .withBootnodeEnodeAddress(bootnodeEnodeAddress)
+                .build());
+
+    this.signerB =
+        new EthSigner(
+            new EthSignerConfigurationBuilder()
+                .withVertx(vertx)
+                .withContainerNetwork(network)
+                .withIpAddress(ipAddressSignerB)
+                .withChainId(chainId)
+                .withDownstreamHost(ipAddressBesuB)
+                .withDownstreamPort(portBesuB)
+                .withKeyFile(keyFileSignerB)
+                .withPasswordFile(passwordFileSignerB)
                 .build());
   }
 
@@ -120,16 +169,20 @@ public class Network {
     // TODO multi-thread the blocking start ops, using await connectivity as the sync point
     orionA.start();
     besuA.start();
+    signerA.start();
     orionB.start();
     besuB.start();
+    signerB.start();
     awaitConnectivity();
   }
 
   public void stop() {
     orionA.stop();
     besuA.stop();
+    signerA.stop();
     orionB.stop();
     besuB.stop();
+    signerB.stop();
   }
 
   public void close() {
@@ -145,6 +198,7 @@ public class Network {
     orionB.awaitConnectivity(orionA);
   }
 
+  // TODO interfaces for the signer used by the test?
   // TODO figure out a nicer way for the UT to get a handle on the signers
   public EthSigner getSignerA() {
     return signerA;

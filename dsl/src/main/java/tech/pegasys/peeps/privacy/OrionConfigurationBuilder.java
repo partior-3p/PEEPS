@@ -26,11 +26,11 @@ public class OrionConfigurationBuilder {
   private List<String> privKeys;
   private List<String> pubKeys;
   private List<String> bootnodeUrls;
-  private String ipAddress;
   private Path fileSystemConfigFile;
 
   // TODO these into their own builder, not node related but test container related
   private Network containerNetwork;
+  private String ipAddress;
   private Vertx vertx;
 
   public OrionConfigurationBuilder withPrivateKeys(final List<String> privKeys) {
@@ -76,7 +76,7 @@ public class OrionConfigurationBuilder {
     checkArgument(pubKeys.size() > 0, "At least one public key is required");
     checkNotNull(fileSystemConfigFile, "A file system configuration file path is mandatory");
     checkNotNull(containerNetwork, "Container network Address is mandatory");
-    checkNotNull(vertx, "A handle to a Vertx instance is mandatory");
+    checkNotNull(vertx, "A Vertx instance is mandatory");
     checkNotNull(ipAddress, "Container IP Address is mandatory");
 
     return new OrionConfiguration(

@@ -22,12 +22,12 @@ public class NodeConfiguration {
   private final String genesisFile;
   private final String enclavePublicKeyFile;
   private final String cors;
-  private final String ipAddress;
   private final String nodePrivateKeyFile;
   private final String bootnodeEnodeAddress;
 
   // TODO move these out, they are not related to the node, but test container setups
   private final Network containerNetwork;
+  private final String ipAddress;
   private final Vertx vertx;
 
   public NodeConfiguration(

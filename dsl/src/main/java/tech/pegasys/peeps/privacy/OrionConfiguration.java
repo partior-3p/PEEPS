@@ -25,11 +25,11 @@ public class OrionConfiguration {
   private final List<String> privKeys;
   private final List<String> pubKeys;
   private final List<String> bootnodeUrls;
-  private final String ipAddress;
   private final Path fileSystemConfigurationFile;
 
   // TODO move these out, they are not related to the node, but test container setups
   private final Network containerNetwork;
+  private final String ipAddress;
   private final Vertx vertx;
 
   public OrionConfiguration(

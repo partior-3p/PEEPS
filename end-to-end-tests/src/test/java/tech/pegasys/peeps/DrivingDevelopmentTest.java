@@ -29,12 +29,6 @@ public class DrivingDevelopmentTest {
   // TODO have Orion use command line parameters, not only a config file
   private final Path workingDirectory = new File(System.getProperty("user.dir")).toPath();
 
-  // TODO start node A
-  private final EthSigner signerA = new EthSigner();
-
-  // TODO start node B
-  private final EthSigner signerB = new EthSigner();
-
   private final Network network = new Network(workingDirectory);
 
   @BeforeEach
@@ -58,10 +52,10 @@ public class DrivingDevelopmentTest {
     // TODO create privacy group between OrionA and OrionB
 
     // TODO send unsigned transaction to privacy group using EhSigner of node A,, store receipt hash
-    final String receiptHash = signerA.deployContract(SimpleStorage.BINARY);
+    final String receiptHash = network.getSignerA().deployContract(SimpleStorage.BINARY);
 
     // TODO get transaction receipt for private transaction from node B
-    final String receipt = signerB.getTransactionReceipt(receiptHash);
+    final String receipt = network.getSignerB().getTransactionReceipt(receiptHash);
 
     // TODO verify receipt is valid, contains a contract address
     assertThat(receipt).isNull();

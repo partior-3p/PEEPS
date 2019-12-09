@@ -28,12 +28,12 @@ public class NodeConfigurationBuilder {
   private String genesisFile;
   private String enclaveKeyFile;
   private String cors;
-  private String ipAddress;
   private String nodePrivateKeyFile;
   private String bootnodeEnodeAddress;
 
   // TODO these into their own builder, not node related but test container related
   private Network containerNetwork;
+  private String ipAddress;
   private Vertx vertx;
 
   public NodeConfigurationBuilder() {
@@ -79,9 +79,9 @@ public class NodeConfigurationBuilder {
   public NodeConfiguration build() {
     checkNotNull(genesisFile, "A genesis file path is mandatory");
     checkNotNull(enclaveKeyFile, "An enclave key file path is mandatory");
-    checkNotNull(vertx, "A handle to a Vertx instance is mandatory");
-    checkNotNull(containerNetwork, "Container network is mandatory");
+    checkNotNull(vertx, "A Vertx instance is mandatory");
     checkNotNull(ipAddress, "Container IP address is mandatory");
+    checkNotNull(containerNetwork, "Container network is mandatory");
 
     return new NodeConfiguration(
         genesisFile,
