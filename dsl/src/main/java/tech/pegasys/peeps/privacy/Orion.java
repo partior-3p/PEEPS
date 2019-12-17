@@ -45,9 +45,11 @@ public class Orion {
 
   private final GenericContainer<?> orion;
   private final String orionNetworkAddress;
+  private final String networkRpcAddress;
   private final OrionRpcClient rpc;
 
-  private final String nodePublicKey;
+  // TODO typing for key?
+  private final String id;
 
   public Orion(final OrionConfiguration config) {
 
@@ -68,15 +70,18 @@ public class Orion {
     this.orionNetworkAddress =
         String.format("http://%s:%s", config.getIpAddress(), CONTAINER_PEER_TO_PEER_PORT);
 
+    this.networkRpcAddress =
+        String.format("http://%s:%s", config.getIpAddress(), CONTAINER_HTTP_RPC_PORT);
+
     // TODO just using the first key, selecting the identity could be an option for multi-key Orion
-    this.nodePublicKey = ClasspathResources.read(config.getPublicKeys().get(0));
-    this.rpc = new OrionRpcClient(config.getVertx(), nodePublicKey);
+    this.id = ClasspathResources.read(config.getPublicKeys().get(0));
+    this.rpc = new OrionRpcClient(config.getVertx(), id);
   }
 
   public void awaitConnectivity(final Orion peer) {
     final String sentMessage = generateUniquePayload();
 
-    final String receipt = rpc.send(peer.nodePublicKey, sentMessage);
+    final String receipt = rpc.send(peer.id, sentMessage);
     assertThat(receipt).isNotBlank();
 
     assertReceived(rpc, receipt, sentMessage);
@@ -112,8 +117,17 @@ public class Orion {
     }
   }
 
-  public String getNetworkAddress() {
+  public String getPeerNetworkAddress() {
     return orionNetworkAddress;
+  }
+
+  public String getNetworkRpcAddress() {
+    return networkRpcAddress;
+  }
+
+  // TODO would be nice to not expose this
+  public String getId() {
+    return id;
   }
 
   private void assertReceived(

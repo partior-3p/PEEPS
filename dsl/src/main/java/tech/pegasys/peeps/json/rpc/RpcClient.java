@@ -10,7 +10,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.util;
+package tech.pegasys.peeps.json.rpc;
 
 import static com.github.dockerjava.core.MediaType.APPLICATION_JSON;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -19,6 +19,7 @@ import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 
 import tech.pegasys.peeps.json.Json;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -34,11 +35,13 @@ public abstract class RpcClient {
 
   private final Vertx vertx;
   private final Logger log;
+  private final Duration timeout;
 
   private HttpClient rpc;
   private String containerId;
 
-  public RpcClient(final Vertx vertx, final Logger log) {
+  public RpcClient(final Vertx vertx, final Duration timeout, final Logger log) {
+    this.timeout = timeout;
     this.vertx = vertx;
     this.log = log;
   }
@@ -56,7 +59,10 @@ public abstract class RpcClient {
 
     rpc =
         vertx.createHttpClient(
-            new WebClientOptions().setDefaultPort(httpJsonRpcPort).setDefaultHost(ipAddress));
+            new WebClientOptions()
+                .setDefaultPort(httpJsonRpcPort)
+                .setDefaultHost(ipAddress)
+                .setConnectTimeout((int) timeout.toMillis()));
   }
 
   public void close() {
@@ -65,7 +71,7 @@ public abstract class RpcClient {
     }
   }
 
-  public <T> T post(final String relativeUri, final Object requestPojo, final Class<T> clazz) {
+  protected <T> T post(final String relativeUri, final Object requestPojo, final Class<T> clazz) {
     final CompletableFuture<T> future = new CompletableFuture<>();
     final String json = Json.encode(requestPojo);
 

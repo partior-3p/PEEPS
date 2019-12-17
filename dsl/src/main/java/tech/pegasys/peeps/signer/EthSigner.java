@@ -12,6 +12,14 @@
  */
 package tech.pegasys.peeps.signer;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import tech.pegasys.peeps.node.Besu;
+import tech.pegasys.peeps.privacy.Orion;
+import tech.pegasys.peeps.signer.rpc.SignerRpcClient;
+import tech.pegasys.peeps.util.Await;
+
+import java.time.Duration;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -30,16 +38,28 @@ public class EthSigner {
   private static final String AM_I_ALIVE_ENDPOINT = "/upcheck";
   private static final int ALIVE_STATUS_CODE = 200;
 
-  private static final String ETH_SIGNER_IMAGE = "pegasyseng/ethsigner:latest";
+  //  private static final String ETH_SIGNER_IMAGE = "pegasyseng/ethsigner:latest";
+  private static final String ETH_SIGNER_IMAGE = "pegasyseng/ethsigner:develop";
   private static final String CONTAINER_DATA_PATH = "/etc/ethsigner/tmp/";
   private static final int CONTAINER_HTTP_RPC_PORT = 8545;
+  private static final Duration DOWNSTREAM_TIMEOUT = Duration.ofSeconds(10);
 
   private static final String CONTAINER_KEY_FILE = "/etc/ethsigner/key_file.v3";
   private static final String CONTAINER_PASSWORD_FILE = "/etc/ethsigner/password_file.txt";
 
   // TODO need a rpcClient to send stuff to the signer
   private final GenericContainer<?> ethSigner;
+  private final SignerRpcClient rpc;
 
+  // TODO better typing
+
+  // TODO enter this perhaps
+  // TODO this is stored in the wallet file as address - can be read in EthSigner
+  private final String senderAccount = "0xf17f52151ebef6c7334fad080c5704d77216b732";
+  //  private final String senderAccount = "0x627306090abab3a6e1400e9345bc60c78a8bef57";
+
+  // TODO need to know about the Besu we are talking to, can output docker logs
+  // TODO for privacy transaction need the Orion logs too
   public EthSigner(final EthSignerConfiguration config) {
 
     final GenericContainer<?> container = new GenericContainer<>(ETH_SIGNER_IMAGE);
@@ -52,15 +72,22 @@ public class EthSigner {
     addContainerIpAddress(config, container);
     addFileBasedSigner(config, commandLineOptions, container);
 
+    LOG.info("EthSigner command line {}", commandLineOptions);
+
     this.ethSigner =
         container.withCommand(commandLineOptions.toArray(new String[0])).waitingFor(liveliness());
+
+    this.rpc = new SignerRpcClient(config.getVertx(), DOWNSTREAM_TIMEOUT);
   }
 
   public void start() {
     try {
       ethSigner.start();
 
-      // TODO create signer to send things to EthSigner
+      rpc.bind(
+          ethSigner.getContainerId(),
+          ethSigner.getContainerIpAddress(),
+          ethSigner.getMappedPort(CONTAINER_HTTP_RPC_PORT));
 
       // TODO validate the node has the expected state, e.g. consensus, genesis, networkId,
       // protocol(s), ports, listen address
@@ -77,21 +104,22 @@ public class EthSigner {
     if (ethSigner != null) {
       ethSigner.stop();
     }
+    if (rpc != null) {
+      rpc.close();
+    }
   }
 
-  public String deployContract(final String binary) {
+  // TODO could config a EthSigner to be bound to a node & orion setup?
+  public String deployContractToPrivacyGroup(
+      final String binary, final Orion sender, final Orion... recipients) {
+    final String[] privateRecipients = new String[recipients.length];
+    for (int i = 0; i < recipients.length; i++) {
+      privateRecipients[i] = recipients[i].getId();
+    }
 
-    final String receiptHash = null;
-    // TODO code
-
-    return receiptHash;
-  }
-
-  public String getTransactionReceipt(final String receiptHash) {
-    final String receipt = null;
-    // TODO code
-
-    return receipt;
+    // TODO catch error & log EthSigner & Besu & Orion docker logs
+    return rpc.deployContractToPrivacyGroup(
+        senderAccount, binary, sender.getId(), privateRecipients);
   }
 
   private HttpWaitStrategy liveliness() {
@@ -109,7 +137,9 @@ public class EthSigner {
         "--http-listen-host",
         "0.0.0.0",
         "--http-listen-port",
-        String.valueOf(CONTAINER_HTTP_RPC_PORT));
+        String.valueOf(CONTAINER_HTTP_RPC_PORT),
+        "--downstream-http-request-timeout",
+        String.valueOf(DOWNSTREAM_TIMEOUT.toMillis()));
   }
 
   private void logContainerNetworkDetails() {
@@ -176,5 +206,11 @@ public class EthSigner {
     commandLineOptions.add(CONTAINER_PASSWORD_FILE);
     container.withClasspathResourceMapping(
         config.getPasswordFile(), CONTAINER_PASSWORD_FILE, BindMode.READ_ONLY);
+  }
+
+  public void awaitConnectivity(final Besu node) {
+    Await.await(
+        () -> assertThat(rpc.enode()).isEqualTo(node.getEnodeId()),
+        String.format("Failed to connect to node: %s", node.getEnodeId()));
   }
 }

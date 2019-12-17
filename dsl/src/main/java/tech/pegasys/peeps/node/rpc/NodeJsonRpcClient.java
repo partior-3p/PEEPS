@@ -12,13 +12,17 @@
  */
 package tech.pegasys.peeps.node.rpc;
 
+import tech.pegasys.peeps.json.rpc.JsonRpcClient;
 import tech.pegasys.peeps.node.rpc.admin.ConnectedPeer;
 import tech.pegasys.peeps.node.rpc.admin.ConnectedPeersResponse;
 import tech.pegasys.peeps.node.rpc.admin.NodeInfo;
 import tech.pegasys.peeps.node.rpc.admin.NodeInfoResponse;
-import tech.pegasys.peeps.util.RpcClient;
+import tech.pegasys.peeps.node.rpc.priv.GetPrivateTransactionResponse;
+import tech.pegasys.peeps.node.rpc.priv.PrivacyTransactionReceipt;
 
+import java.time.Duration;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,17 +30,16 @@ import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class NodeJsonRpcClient extends RpcClient {
+public class NodeJsonRpcClient extends JsonRpcClient {
 
   private static final Logger LOG = LogManager.getLogger();
-  private static final String JSON_RPC_CONTEXT_PATH = "/";
-  private static final String JSON_RPC_VERSION = "2.0";
+  private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(5);
 
   public NodeJsonRpcClient(final Vertx vertx) {
-    super(vertx, LOG);
+    super(vertx, DEFAULT_TIMEOUT, LOG);
   }
 
-  public Set<String> connectedPeerIds() {
+  public Set<String> getConnectedPeerIds() {
     return Arrays.stream(connectedPeers()).map(ConnectedPeer::getId).collect(Collectors.toSet());
   }
 
@@ -48,10 +51,8 @@ public class NodeJsonRpcClient extends RpcClient {
     return post("admin_peers", ConnectedPeersResponse.class).getResult();
   }
 
-  public <T> T post(final String method, final Class<T> clazz) {
-    return post(
-        JSON_RPC_CONTEXT_PATH,
-        new JsonRpcRequest(JSON_RPC_VERSION, method, new Object[0], new JsonRpcRequestId(1)),
-        clazz);
+  public Optional<PrivacyTransactionReceipt> getPrivacyTransactionReceipt(final String hash) {
+    return post("priv_getTransactionReceipt", hash, GetPrivateTransactionResponse.class)
+        .getResult();
   }
 }

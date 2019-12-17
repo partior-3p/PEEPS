@@ -10,27 +10,24 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.node.rpc.admin;
+package tech.pegasys.peeps.node.rpc.priv;
+
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class NodeInfo {
+public class GetPrivateTransactionResponse {
 
-  private final String id;
-  private final String enode;
+  private PrivacyTransactionReceipt result;
 
-  public NodeInfo(@JsonProperty("enode") final String enode, @JsonProperty("id") final String id) {
-    this.id = id;
-    this.enode = enode;
+  @JsonSetter("result")
+  public void setResult(final PrivacyTransactionReceipt result) {
+    this.result = result;
   }
 
-  public String getId() {
-    return id;
-  }
-
-  public String getEnode() {
-    return enode;
+  public Optional<PrivacyTransactionReceipt> getResult() {
+    return Optional.ofNullable(result);
   }
 }

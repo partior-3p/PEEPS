@@ -26,7 +26,7 @@ public class EthSignerConfiguration {
   private final String ipAddress;
   private final Vertx vertx;
 
-  // TOFO move these file specific ones out into their own config, encapsulate (i.e refactor
+  // TODO move these file specific ones out into their own config, encapsulate (i.e refactor
   // EthSigner)
   private final String keyFile;
   private final String passwordFile;

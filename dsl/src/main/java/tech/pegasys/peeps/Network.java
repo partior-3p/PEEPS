@@ -107,8 +107,10 @@ public class Network implements Closeable {
             new NodeConfigurationBuilder()
                 .withVertx(vertx)
                 .withContainerNetwork(network)
+                .withPrivacyUrl(orionA.getNetworkRpcAddress())
                 .withIpAddress(ipAddressBesuA)
                 .withNodePrivateKeyFile(NodeKeys.BOOTNODE.getPrivateKeyFile())
+                .withPrivacyManagerPublicKey(OrionKeys.ONE.getPublicKey())
                 .build());
 
     this.signerA =
@@ -126,7 +128,7 @@ public class Network implements Closeable {
 
     // TODO More typing then a String - URI, URL, File or Path
     final List<String> orionBootnodes = new ArrayList<>();
-    orionBootnodes.add(orionA.getNetworkAddress());
+    orionBootnodes.add(orionA.getPeerNetworkAddress());
 
     this.orionB =
         new Orion(
@@ -148,8 +150,10 @@ public class Network implements Closeable {
             new NodeConfigurationBuilder()
                 .withVertx(vertx)
                 .withContainerNetwork(network)
+                .withPrivacyUrl(orionB.getNetworkRpcAddress())
                 .withIpAddress(ipAddressBesuB)
                 .withBootnodeEnodeAddress(bootnodeEnodeAddress)
+                .withPrivacyManagerPublicKey(OrionKeys.TWO.getPublicKey())
                 .build());
 
     this.signerB =
@@ -157,8 +161,8 @@ public class Network implements Closeable {
             new EthSignerConfigurationBuilder()
                 .withVertx(vertx)
                 .withContainerNetwork(network)
-                .withIpAddress(ipAddressSignerB)
                 .withChainId(chainId)
+                .withIpAddress(ipAddressSignerB)
                 .withDownstreamHost(ipAddressBesuB)
                 .withDownstreamPort(portBesuB)
                 .withKeyFile(keyFileSignerB)
@@ -199,6 +203,9 @@ public class Network implements Closeable {
     besuB.awaitConnectivity(besuA);
     orionA.awaitConnectivity(orionB);
     orionB.awaitConnectivity(orionA);
+
+    signerA.awaitConnectivity(besuA);
+    signerB.awaitConnectivity(besuB);
   }
 
   // TODO interfaces for the signer used by the test?
@@ -207,9 +214,28 @@ public class Network implements Closeable {
     return signerA;
   }
 
-  // TODO figure out a nicer way for the UT to get a handle on the signers
   public EthSigner getSignerB() {
     return signerB;
+  }
+
+  // TODO figure out a nicer way for the UT to get a handle on the node or send requests
+  public Besu getNodeA() {
+    return besuA;
+  }
+
+  // TODO figure out a nicer way for the UT to get a handle on the node or send requests
+  public Besu getNodeB() {
+    return besuB;
+  }
+
+  // TODO figure out a nicer way for the UT to get a handle on the Orion or send requests
+  public Orion getOrionA() {
+    return orionA;
+  }
+
+  // TODO figure out a nicer way for the UT to get a handle on the Orion or send requests
+  public Orion getOrionB() {
+    return orionB;
   }
 
   // TODO provide a handle for Besus too? (web3j?)

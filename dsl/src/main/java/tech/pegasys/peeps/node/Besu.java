@@ -18,10 +18,12 @@ import static tech.pegasys.peeps.util.HexFormatter.ensureHexPrefix;
 
 import tech.pegasys.peeps.node.rpc.NodeJsonRpcClient;
 import tech.pegasys.peeps.node.rpc.admin.NodeInfo;
+import tech.pegasys.peeps.node.rpc.priv.PrivacyTransactionReceipt;
 import tech.pegasys.peeps.util.Await;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -48,11 +50,14 @@ public class Besu {
   private static final String CONTAINER_GENESIS_FILE = "/etc/besu/genesis.json";
   private static final String CONTAINER_PRIVACY_PUBLIC_KEY_FILE =
       "/etc/besu/privacy_public_key.pub";
-  private static final String CONTAINER_NODE_PRIVATE_KEY_FILE = "/etc/besu/keys/key.priv";
+  private static final String CONTAINER_NODE_PRIVATE_KEY_FILE = "/etc/besu/keys/node.priv";
+  private static final String CONTAINER_PRIVACY_SIGNING_PRIVATE_KEY_FILE =
+      "/etc/besu/keys/pmt_signing.priv";
 
   private final GenericContainer<?> besu;
   private final NodeJsonRpcClient jsonRpc;
   private String nodeId;
+  private String enodeId;
 
   public Besu(final NodeConfiguration config) {
 
@@ -68,7 +73,7 @@ public class Besu {
     addGenesisFile(config, commandLineOptions, container);
     addPrivacy(config, commandLineOptions, container);
 
-    LOG.debug("besu command line {}", commandLineOptions);
+    LOG.info("Besu command line {}", commandLineOptions);
 
     this.besu =
         container.withCommand(commandLineOptions.toArray(new String[0])).waitingFor(liveliness());
@@ -87,6 +92,7 @@ public class Besu {
 
       final NodeInfo info = jsonRpc.nodeInfo();
       nodeId = info.getId();
+      enodeId = info.getEnode();
 
       // TODO validate the node has the expected state, e.g. consensus, genesis, networkId,
       // protocol(s), ports, listen address
@@ -108,8 +114,28 @@ public class Besu {
     }
   }
 
+  public String getEnodeId() {
+    return enodeId;
+  }
+
   public void awaitConnectivity(final Besu... peers) {
     awaitPeerIdConnections(expectedPeerIds(peers));
+  }
+
+  public Optional<PrivacyTransactionReceipt> getPrivacyTransactionReceipt(
+      final String receiptHash) {
+    // TODO get the result on success?
+    Await.await(
+        () -> assertThat(jsonRpc.getPrivacyTransactionReceipt(receiptHash)).isPresent(),
+        String.format(
+            "Failed to retrieve the private transaction receipt with hash: %s", receiptHash));
+
+    return jsonRpc.getPrivacyTransactionReceipt(receiptHash);
+  }
+
+  public void log() {
+    LOG.info("Besu Container {}", besu.getContainerId());
+    LOG.info(besu.getLogs());
   }
 
   private String getNodeId() {
@@ -119,7 +145,7 @@ public class Besu {
 
   private void awaitPeerIdConnections(final Set<String> peerIds) {
     Await.await(
-        () -> assertThat(jsonRpc.connectedPeerIds().containsAll(peerIds)).isTrue(),
+        () -> assertThat(jsonRpc.getConnectedPeerIds().containsAll(peerIds)).isTrue(),
         String.format("Failed to connect in time to peers: %s", peerIds));
   }
 
@@ -162,7 +188,7 @@ public class Besu {
   private List<String> standardCommandLineOptions() {
     return Lists.newArrayList(
         "--logging",
-        "INFO",
+        "DEBUG",
         "--miner-enabled",
         "--miner-coinbase",
         "1b23ba34ca45bb56aa67bc78be89ac00ca00da00",
@@ -171,7 +197,7 @@ public class Besu {
         "--rpc-http-enabled",
         "--rpc-ws-enabled",
         "--rpc-http-apis",
-        "ADMIN,ETH,NET,WEB3,EEA");
+        "ADMIN,ETH,NET,WEB3,EEA,PRIV");
   }
 
   private void addPeerToPeerHost(
@@ -231,10 +257,18 @@ public class Besu {
       final List<String> commandLineOptions,
       final GenericContainer<?> container) {
     commandLineOptions.add("--privacy-enabled");
+    commandLineOptions.add("--privacy-url");
+    commandLineOptions.add(config.getPrivacyUrl());
     commandLineOptions.add("--privacy-public-key-file");
     commandLineOptions.add(CONTAINER_PRIVACY_PUBLIC_KEY_FILE);
     container.withClasspathResourceMapping(
-        config.getEnclavePublicKeyFile(), CONTAINER_PRIVACY_PUBLIC_KEY_FILE, BindMode.READ_ONLY);
+        config.getPrivacyPublicKeyFile(), CONTAINER_PRIVACY_PUBLIC_KEY_FILE, BindMode.READ_ONLY);
+    commandLineOptions.add("--privacy-marker-transaction-signing-key-file");
+    commandLineOptions.add(CONTAINER_PRIVACY_SIGNING_PRIVATE_KEY_FILE);
+    container.withClasspathResourceMapping(
+        config.getPrivacyMarkerSigningPrivateKeyFile(),
+        CONTAINER_PRIVACY_SIGNING_PRIVATE_KEY_FILE,
+        BindMode.READ_ONLY);
   }
 
   private void addContainerIpAddress(
