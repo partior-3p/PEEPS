@@ -49,6 +49,7 @@ public class OrionConfiguration {
     this.fileSystemConfigurationFile = fileSystemConfigurationFile;
   }
 
+  // TODO return type cab be a PATH
   public String getFileSystemConfigurationFile() {
     try {
       return fileSystemConfigurationFile.toUri().toURL().getPath();

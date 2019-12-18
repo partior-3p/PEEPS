@@ -26,6 +26,7 @@ import org.testcontainers.containers.ContainerLaunchException;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.utility.MountableFile;
 
 public class Orion {
 
@@ -64,7 +65,9 @@ public class Orion {
     this.orion =
         container
             .withCommand(CONTAINER_CONFIG_FILE)
-            .withFileSystemBind(config.getFileSystemConfigurationFile(), CONTAINER_CONFIG_FILE)
+            .withCopyFileToContainer(
+                MountableFile.forHostPath(config.getFileSystemConfigurationFile()),
+                CONTAINER_CONFIG_FILE)
             .waitingFor(liveliness());
 
     this.orionNetworkAddress =

@@ -20,20 +20,20 @@ import tech.pegasys.peeps.privacy.OrionConfigurationBuilder;
 import tech.pegasys.peeps.privacy.OrionKeys;
 import tech.pegasys.peeps.signer.EthSigner;
 import tech.pegasys.peeps.signer.EthSignerConfigurationBuilder;
-import tech.pegasys.peeps.util.PeepsTemporaryDirectory;
+import tech.pegasys.peeps.util.PathGenerator;
 
 import java.io.Closeable;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import com.github.dockerjava.api.model.Network.Ipam;
 import com.github.dockerjava.api.model.Network.Ipam.Config;
+import com.google.common.base.Preconditions;
 import io.vertx.core.Vertx;
 
 public class Network implements Closeable {
-
-  private final PeepsTemporaryDirectory workingDirectory;
 
   // TODO do not be hard coded as two nodes - flexibility in nodes & stack
   // TODO cater for one-many & many-one for Besu/Orion
@@ -54,8 +54,10 @@ public class Network implements Closeable {
   // TODO IP management
 
   // TODO choosing the topology should be elsewhere
-  public Network() {
-    this.workingDirectory = new PeepsTemporaryDirectory();
+  public Network(final Path configurationDirectory) {
+    Preconditions.checkNotNull(configurationDirectory);
+
+    final PathGenerator pathGenerator = new PathGenerator(configurationDirectory);
     this.vertx = Vertx.vertx();
 
     // TODO subnet with substitution for static IPs
@@ -99,7 +101,7 @@ public class Network implements Closeable {
                 .withIpAddress(ipAddressOrionA)
                 .withPrivateKeys(Collections.singletonList(OrionKeys.ONE.getPrivateKey()))
                 .withPublicKeys(Collections.singletonList(OrionKeys.ONE.getPublicKey()))
-                .withFileSystemConfigurationFile(workingDirectory.getUniqueFile())
+                .withFileSystemConfigurationFile(pathGenerator.uniqueFile())
                 .build());
 
     this.besuA =
@@ -139,7 +141,7 @@ public class Network implements Closeable {
                 .withPrivateKeys(Collections.singletonList(OrionKeys.TWO.getPrivateKey()))
                 .withPublicKeys(Collections.singletonList(OrionKeys.TWO.getPublicKey()))
                 .withBootnodeUrls(orionBootnodes)
-                .withFileSystemConfigurationFile(workingDirectory.getUniqueFile())
+                .withFileSystemConfigurationFile(pathGenerator.uniqueFile())
                 .build());
 
     // TODO better typing then String
@@ -195,7 +197,6 @@ public class Network implements Closeable {
     stop();
     vertx.close();
     network.close();
-    workingDirectory.close();
   }
 
   private void awaitConnectivity() {

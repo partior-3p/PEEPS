@@ -17,20 +17,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 import tech.pegasys.peeps.contract.SimpleStorage;
 import tech.pegasys.peeps.node.rpc.priv.PrivacyTransactionReceipt;
 
+import java.nio.file.Path;
 import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 // TODO extract common network setup into superclass
 public class PrivacyContractDeployment {
 
-  private final Network network = new Network();
+  @TempDir Path configurationDirectory;
+
+  private Network network;
 
   @BeforeEach
   public void startUp() {
     Runtime.getRuntime().addShutdownHook(new Thread(this::tearDown));
+    network = new Network(configurationDirectory);
     network.start();
   }
 
