@@ -18,7 +18,6 @@ import tech.pegasys.peeps.contract.SimpleStorage;
 import tech.pegasys.peeps.node.rpc.priv.PrivacyTransactionReceipt;
 
 import java.nio.file.Path;
-import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 // TODO extract common network setup into superclass
-public class PrivacyContractDeployment {
+public class PrivacyNetworkContracDeploymentTest {
 
   @TempDir Path configurationDirectory;
 
@@ -45,30 +44,20 @@ public class PrivacyContractDeployment {
   }
 
   @Test
-  public void a() {
+  public void deploymentMustSucceed() {
     final String receiptHash =
         network
             .getSignerA()
             .deployContractToPrivacyGroup(
                 SimpleStorage.BINARY, network.getOrionA(), network.getOrionB());
 
-    final Optional<PrivacyTransactionReceipt> receiptNodeA =
-        network.getNodeA().getPrivacyTransactionReceipt(receiptHash);
+    final PrivacyTransactionReceipt receiptNodeA =
+        network.getNodeA().getPrivacyContractReceipt(receiptHash);
+    final PrivacyTransactionReceipt receiptNodeB =
+        network.getNodeB().getPrivacyContractReceipt(receiptHash);
 
-    final Optional<PrivacyTransactionReceipt> receiptNodeB =
-        network.getNodeB().getPrivacyTransactionReceipt(receiptHash);
-
-    // TODO verify receipt is valid, contains a contract address
-    assertThat(receiptNodeA).isNotNull();
-    assertThat(receiptNodeB).isNotNull();
-
-    assertThat(receiptNodeA).isPresent();
-    assertThat(receiptNodeB).isPresent();
-
-    assertThat(receiptNodeA.get().getContractAddress()).isNotEmpty();
-    assertThat(receiptNodeA.get().getStatus()).isEqualTo("0x1");
-
-    assertThat(receiptNodeA.get()).usingRecursiveComparison().isEqualTo(receiptNodeB.get());
+    assertThat(receiptNodeA.isSuccess()).isTrue();
+    assertThat(receiptNodeA).usingRecursiveComparison().isEqualTo(receiptNodeB);
 
     // TODO verify the state of the Orions & state of each Besu - side effects
   }

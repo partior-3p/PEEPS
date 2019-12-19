@@ -12,6 +12,8 @@
  */
 package tech.pegasys.peeps.node.rpc.priv;
 
+import tech.pegasys.peeps.model.Address;
+
 import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -22,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PrivacyTransactionReceipt {
 
-  private final String contractAddress;
+  private final Address contract;
   private final String sender;
 
   private final String output;
@@ -34,12 +36,12 @@ public class PrivacyTransactionReceipt {
 
   @JsonCreator
   public PrivacyTransactionReceipt(
-      @JsonProperty("contractAddress") final String contractAddress,
+      @JsonProperty("contractAddress") final Address contract,
       @JsonProperty("from") final String sender,
       @JsonProperty("output") final String output,
       @JsonProperty("logs") final String[] logs,
       @JsonProperty("status") final String status) {
-    this.contractAddress = contractAddress;
+    this.contract = contract;
     this.sender = sender;
     this.output = output;
     this.logs = logs;
@@ -51,8 +53,8 @@ public class PrivacyTransactionReceipt {
     this.recipient = recipient;
   }
 
-  public String getContractAddress() {
-    return contractAddress;
+  public Address getContractAddress() {
+    return contract;
   }
 
   public String getSender() {
@@ -71,7 +73,7 @@ public class PrivacyTransactionReceipt {
     return logs;
   }
 
-  public String getStatus() {
-    return status;
+  public boolean isSuccess() {
+    return status.contentEquals("0x1");
   }
 }

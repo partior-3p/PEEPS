@@ -122,13 +122,26 @@ public class Besu {
     awaitPeerIdConnections(expectedPeerIds(peers));
   }
 
-  public Optional<PrivacyTransactionReceipt> getPrivacyTransactionReceipt(
-      final String receiptHash) {
+  // TODO these JSON-RPC call could do with encapsulating outside of Besu
+  public PrivacyTransactionReceipt getPrivacyContractReceipt(final String receiptHash) {
+    final Optional<PrivacyTransactionReceipt> potentialReceipt =
+        privacyContractReceipt(receiptHash);
+    assertThat(potentialReceipt).isNotNull();
+    assertThat(potentialReceipt).isPresent();
+    return potentialReceipt.get();
+  }
+
+  private Optional<PrivacyTransactionReceipt> privacyContractReceipt(final String receiptHash) {
     // TODO get the result on success?
     Await.await(
         () -> assertThat(jsonRpc.getPrivacyTransactionReceipt(receiptHash)).isPresent(),
         String.format(
             "Failed to retrieve the private transaction receipt with hash: %s", receiptHash));
+
+    final Optional<PrivacyTransactionReceipt> potentialReceipt =
+        jsonRpc.getPrivacyTransactionReceipt(receiptHash);
+    assertThat(potentialReceipt).isNotNull();
+    assertThat(potentialReceipt).isPresent();
 
     return jsonRpc.getPrivacyTransactionReceipt(receiptHash);
   }
