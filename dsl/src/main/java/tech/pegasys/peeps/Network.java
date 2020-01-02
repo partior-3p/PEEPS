@@ -12,14 +12,18 @@
  */
 package tech.pegasys.peeps;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import tech.pegasys.peeps.node.Besu;
 import tech.pegasys.peeps.node.NodeConfigurationBuilder;
 import tech.pegasys.peeps.node.NodeKeys;
+import tech.pegasys.peeps.node.model.TransactionReceipt;
 import tech.pegasys.peeps.privacy.Orion;
 import tech.pegasys.peeps.privacy.OrionConfigurationBuilder;
 import tech.pegasys.peeps.privacy.OrionKeys;
 import tech.pegasys.peeps.signer.EthSigner;
 import tech.pegasys.peeps.signer.EthSignerConfigurationBuilder;
+import tech.pegasys.peeps.util.Await;
 import tech.pegasys.peeps.util.PathGenerator;
 
 import java.io.Closeable;
@@ -207,6 +211,22 @@ public class Network implements Closeable {
 
     signerA.awaitConnectivity(besuA);
     signerB.awaitConnectivity(besuB);
+  }
+
+  // TODO restructure, maybe Supplier related or a utility on network?
+  // TODO stricter typing than String
+  public void awaitConsensusOn(final String receiptHash) {
+
+    Await.await(
+        () -> {
+          final TransactionReceipt pmtReceiptNodeA = besuA.getTransactionReceipt(receiptHash);
+          final TransactionReceipt pmtReceiptNodeB = besuB.getTransactionReceipt(receiptHash);
+
+          assertThat(pmtReceiptNodeA).isNotNull();
+          assertThat(pmtReceiptNodeA.isSuccess()).isTrue();
+          assertThat(pmtReceiptNodeA).usingRecursiveComparison().isEqualTo(pmtReceiptNodeB);
+        },
+        "Consensus was not reached in time for receipt hash: " + receiptHash);
   }
 
   // TODO interfaces for the signer used by the test?

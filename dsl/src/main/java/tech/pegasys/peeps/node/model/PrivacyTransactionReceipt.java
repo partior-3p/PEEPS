@@ -10,9 +10,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.node.rpc.priv;
-
-import tech.pegasys.peeps.model.Address;
+package tech.pegasys.peeps.node.model;
 
 import java.util.Optional;
 
@@ -25,19 +23,18 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 public class PrivacyTransactionReceipt {
 
   private final Address contract;
-  private final String sender;
+  private final Address sender;
 
   private final String output;
   private final String[] logs;
   private final String status;
 
-  private String recipient;
-  // TODO better typing than String
+  private Address recipient;
 
   @JsonCreator
   public PrivacyTransactionReceipt(
       @JsonProperty("contractAddress") final Address contract,
-      @JsonProperty("from") final String sender,
+      @JsonProperty("from") final Address sender,
       @JsonProperty("output") final String output,
       @JsonProperty("logs") final String[] logs,
       @JsonProperty("status") final String status) {
@@ -49,7 +46,7 @@ public class PrivacyTransactionReceipt {
   }
 
   @JsonSetter("to")
-  public void setRecipient(final String recipient) {
+  public void setRecipient(final Address recipient) {
     this.recipient = recipient;
   }
 
@@ -57,11 +54,11 @@ public class PrivacyTransactionReceipt {
     return contract;
   }
 
-  public String getSender() {
+  public Address getSender() {
     return sender;
   }
 
-  public Optional<String> getRecipient() {
+  public Optional<Address> getRecipient() {
     return Optional.ofNullable(recipient);
   }
 

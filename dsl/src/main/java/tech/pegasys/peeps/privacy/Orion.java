@@ -32,22 +32,23 @@ public class Orion {
 
   private static final Logger LOG = LogManager.getLogger();
 
+  private static final String CONTAINER_WORKING_DIRECTORY_PREFIX = "/opt/orion/";
   private static final String CONTAINER_CONFIG_FILE = "/orion.conf";
-
   private static final String AM_I_ALIVE_ENDPOINT = "/upcheck";
-  private static final int ALIVE_STATUS_CODE = 200;
-  private static final int CONTAINER_HTTP_RPC_PORT = 8888;
-  private static final int CONTAINER_PEER_TO_PEER_PORT = 8080;
 
   // TODO there should be the 'latest' version
   private static final String ORION_IMAGE = "pegasyseng/orion:develop";
 
-  private static final String CONTAINER_WORKING_DIRECTORY_PREFIX = "/opt/orion/";
+  private static final int CONTAINER_PEER_TO_PEER_PORT = 8080;
+  private static final int CONTAINER_HTTP_RPC_PORT = 8888;
+  private static final int ALIVE_STATUS_CODE = 200;
 
   private final GenericContainer<?> orion;
+  private final OrionRpcClient rpc;
+
+  // TODO stronger typing than String
   private final String orionNetworkAddress;
   private final String networkRpcAddress;
-  private final OrionRpcClient rpc;
 
   // TODO typing for key?
   private final String id;
@@ -76,7 +77,8 @@ public class Orion {
     this.networkRpcAddress =
         String.format("http://%s:%s", config.getIpAddress(), CONTAINER_HTTP_RPC_PORT);
 
-    // TODO just using the first key, selecting the identity could be an option for multi-key Orion
+    // TODO just using the first key, selecting the identity could be an option for
+    // multi-key Orion
     this.id = ClasspathResources.read(config.getPublicKeys().get(0));
     this.rpc = new OrionRpcClient(config.getVertx(), id);
   }
@@ -100,9 +102,11 @@ public class Orion {
           orion.getContainerIpAddress(),
           orion.getMappedPort(CONTAINER_HTTP_RPC_PORT));
 
-      // TODO validate the node has the expected state, e.g. consensus, genesis, networkId,
+      // TODO validate the node has the expected state, e.g. consensus, genesis,
+      // networkId,
       // protocol(s), ports, listen address
 
+      logOrionDetails();
       logPortMappings();
       logContainerNetworkDetails();
     } catch (final ContainerLaunchException e) {
@@ -133,6 +137,11 @@ public class Orion {
     return id;
   }
 
+  // TODO stronger typing than String
+  public String getPayload(final String receipt) {
+    return rpc.receive(receipt);
+  }
+
   private void assertReceived(
       final OrionRpcClient rpc, final String receipt, final String sentMessage) {
     assertThat(rpc.receive(receipt)).isEqualTo(sentMessage);
@@ -155,6 +164,10 @@ public class Orion {
 
   private String containerWorkingDirectory(final String relativePath) {
     return CONTAINER_WORKING_DIRECTORY_PREFIX + relativePath;
+  }
+
+  private void logOrionDetails() {
+    LOG.info("Orion Container {}, ID: {}", orion.getContainerId(), id);
   }
 
   private void logContainerNetworkDetails() {

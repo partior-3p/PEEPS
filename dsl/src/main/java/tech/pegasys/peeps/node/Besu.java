@@ -16,9 +16,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.peeps.util.HexFormatter.ensureHexPrefix;
 
+import tech.pegasys.peeps.node.model.PrivacyTransactionReceipt;
+import tech.pegasys.peeps.node.model.Transaction;
+import tech.pegasys.peeps.node.model.TransactionReceipt;
 import tech.pegasys.peeps.node.rpc.NodeJsonRpcClient;
 import tech.pegasys.peeps.node.rpc.admin.NodeInfo;
-import tech.pegasys.peeps.node.rpc.priv.PrivacyTransactionReceipt;
 import tech.pegasys.peeps.util.Await;
 
 import java.util.Arrays;
@@ -94,7 +96,8 @@ public class Besu {
       nodeId = info.getId();
       enodeId = info.getEnode();
 
-      // TODO validate the node has the expected state, e.g. consensus, genesis, networkId,
+      // TODO validate the node has the expected state, e.g. consensus, genesis,
+      // networkId,
       // protocol(s), ports, listen address
 
       logPortMappings();
@@ -124,26 +127,59 @@ public class Besu {
 
   // TODO these JSON-RPC call could do with encapsulating outside of Besu
   public PrivacyTransactionReceipt getPrivacyContractReceipt(final String receiptHash) {
-    final Optional<PrivacyTransactionReceipt> potentialReceipt =
-        privacyContractReceipt(receiptHash);
-    assertThat(potentialReceipt).isNotNull();
-    assertThat(potentialReceipt).isPresent();
-    return potentialReceipt.get();
+    final Optional<PrivacyTransactionReceipt> potential = privacyContractReceipt(receiptHash);
+    assertThat(potential).isNotNull();
+    assertThat(potential).isPresent();
+    return potential.get();
+  }
+
+  public TransactionReceipt getTransactionReceipt(final String receiptHash) {
+    final Optional<TransactionReceipt> potential = transactiontReceipt(receiptHash);
+    assertThat(potential).isNotNull();
+    assertThat(potential).isPresent();
+    return potential.get();
+  }
+
+  // TODO maybe tying together privacy functions?
+  public Transaction getTransactionByHash(final String hash) {
+    final Optional<Transaction> potential = transactionByHash(hash);
+    assertThat(potential).isNotNull();
+    assertThat(potential).isPresent();
+    return potential.get();
   }
 
   private Optional<PrivacyTransactionReceipt> privacyContractReceipt(final String receiptHash) {
-    // TODO get the result on success?
+    // TODO find a way to avoid the additional call when successful
     Await.await(
-        () -> assertThat(jsonRpc.getPrivacyTransactionReceipt(receiptHash)).isPresent(),
+        () -> {
+          assertThat(jsonRpc.getPrivacyTransactionReceipt(receiptHash)).isPresent();
+        },
         String.format(
             "Failed to retrieve the private transaction receipt with hash: %s", receiptHash));
 
-    final Optional<PrivacyTransactionReceipt> potentialReceipt =
-        jsonRpc.getPrivacyTransactionReceipt(receiptHash);
-    assertThat(potentialReceipt).isNotNull();
-    assertThat(potentialReceipt).isPresent();
-
     return jsonRpc.getPrivacyTransactionReceipt(receiptHash);
+  }
+
+  private Optional<TransactionReceipt> transactiontReceipt(final String receiptHash) {
+    // TODO find a way to avoid the additional call when successful
+    Await.await(
+        () -> {
+          assertThat(jsonRpc.getTransactionReceipt(receiptHash)).isPresent();
+        },
+        String.format("Failed to retrieve the transaction receipt with hash: %s", receiptHash));
+
+    return jsonRpc.getTransactionReceipt(receiptHash);
+  }
+
+  private Optional<Transaction> transactionByHash(final String hash) {
+    // TODO find a way to avoid the additional call when successful
+    Await.await(
+        () -> {
+          assertThat(jsonRpc.getTransactionByHash(hash)).isPresent();
+        },
+        String.format("Failed to retrieve the transaction with hash: %s", hash));
+
+    return jsonRpc.getTransactionByHash(hash);
   }
 
   public void log() {

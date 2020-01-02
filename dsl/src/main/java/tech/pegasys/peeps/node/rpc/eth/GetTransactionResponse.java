@@ -10,9 +10,9 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.node.rpc.priv;
+package tech.pegasys.peeps.node.rpc.eth;
 
-import tech.pegasys.peeps.node.model.PrivacyTransactionReceipt;
+import tech.pegasys.peeps.node.model.TransactionReceipt;
 
 import java.util.Optional;
 
@@ -20,16 +20,16 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSetter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class GetPrivateTransactionResponse {
+public class GetTransactionResponse {
 
-  private PrivacyTransactionReceipt result;
+  private TransactionReceipt result;
 
   @JsonSetter("result")
-  public void setResult(final PrivacyTransactionReceipt result) {
+  public void setResult(final TransactionReceipt result) {
     this.result = result;
   }
 
-  public Optional<PrivacyTransactionReceipt> getResult() {
+  public Optional<TransactionReceipt> getResult() {
     return Optional.ofNullable(result);
   }
 }

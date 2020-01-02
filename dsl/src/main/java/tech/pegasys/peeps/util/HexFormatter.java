@@ -21,6 +21,6 @@ public class HexFormatter {
   }
 
   public static String removeAnyHexPrefix(final String content) {
-    return content.startsWith(PREFIX) ? content.substring(PREFIX.length()) : PREFIX;
+    return content.startsWith(PREFIX) ? content.substring(PREFIX.length()) : content;
   }
 }
