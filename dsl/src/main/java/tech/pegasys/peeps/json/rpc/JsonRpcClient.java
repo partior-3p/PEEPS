@@ -17,7 +17,7 @@ import java.time.Duration;
 import io.vertx.core.Vertx;
 import org.apache.logging.log4j.Logger;
 
-public abstract class JsonRpcClient extends RpcClient {
+public class JsonRpcClient extends RpcClient {
 
   private static final String JSON_RPC_VERSION = "2.0";
   private static final String JSON_RPC_CONTEXT_PATH = "/";
@@ -26,12 +26,12 @@ public abstract class JsonRpcClient extends RpcClient {
     super(vertx, timeout, log);
   }
 
-  protected <T> T post(final String method, final Class<T> clazz) {
+  public <T> T post(final String method, final Class<T> clazz) {
     return this.post(method, new Object[0], clazz);
   }
 
   @Override
-  protected <T> T post(final String method, final Object params, final Class<T> clazz) {
+  public <T> T post(final String method, final Object params, final Class<T> clazz) {
     return super.post(
         JSON_RPC_CONTEXT_PATH,
         new JsonRpcRequest(

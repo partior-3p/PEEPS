@@ -75,6 +75,7 @@ public abstract class RpcClient {
     final CompletableFuture<T> future = new CompletableFuture<>();
     final String json = Json.encode(requestPojo);
 
+    @SuppressWarnings("deprecation")
     final HttpClientRequest request =
         rpc.post(
             relativeUri,

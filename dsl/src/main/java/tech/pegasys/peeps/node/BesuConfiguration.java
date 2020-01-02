@@ -17,7 +17,7 @@ import java.util.Optional;
 import io.vertx.core.Vertx;
 import org.testcontainers.containers.Network;
 
-public class NodeConfiguration {
+public class BesuConfiguration {
 
   private final String genesisFile;
   private final String enclavePublicKeyFile;
@@ -32,7 +32,7 @@ public class NodeConfiguration {
   private final String ipAddress;
   private final Vertx vertx;
 
-  public NodeConfiguration(
+  public BesuConfiguration(
       final String genesisFile,
       final String privacyManagerPublicKeyFile,
       final String privacyUrl,

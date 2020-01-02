@@ -15,7 +15,7 @@ package tech.pegasys.peeps;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import tech.pegasys.peeps.node.Besu;
-import tech.pegasys.peeps.node.NodeConfigurationBuilder;
+import tech.pegasys.peeps.node.BesuConfigurationBuilder;
 import tech.pegasys.peeps.node.NodeKeys;
 import tech.pegasys.peeps.node.model.TransactionReceipt;
 import tech.pegasys.peeps.privacy.Orion;
@@ -110,7 +110,7 @@ public class Network implements Closeable {
 
     this.besuA =
         new Besu(
-            new NodeConfigurationBuilder()
+            new BesuConfigurationBuilder()
                 .withVertx(vertx)
                 .withContainerNetwork(network)
                 .withPrivacyUrl(orionA.getNetworkRpcAddress())
@@ -153,7 +153,7 @@ public class Network implements Closeable {
 
     this.besuB =
         new Besu(
-            new NodeConfigurationBuilder()
+            new BesuConfigurationBuilder()
                 .withVertx(vertx)
                 .withContainerNetwork(network)
                 .withPrivacyUrl(orionB.getNetworkRpcAddress())

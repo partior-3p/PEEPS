@@ -24,14 +24,14 @@ import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class OrionRpcClient extends RpcClient {
+public class OrionRpc extends RpcClient {
 
   private static final Logger LOG = LogManager.getLogger();
   private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(5);
 
   private final String pubKey;
 
-  public OrionRpcClient(final Vertx vertx, final String pubKey) {
+  public OrionRpc(final Vertx vertx, final String pubKey) {
     super(vertx, DEFAULT_TIMEOUT, LOG);
     this.pubKey = pubKey;
   }

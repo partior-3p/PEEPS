@@ -17,7 +17,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import io.vertx.core.Vertx;
 import org.testcontainers.containers.Network;
 
-public class NodeConfigurationBuilder {
+public class BesuConfigurationBuilder {
 
   // TODO move these into the test
   private static final String DEFAULT_GENESIS_FILE = "node/genesis/eth_hash_4004.json";
@@ -39,65 +39,65 @@ public class NodeConfigurationBuilder {
   private String ipAddress;
   private Vertx vertx;
 
-  public NodeConfigurationBuilder() {
+  public BesuConfigurationBuilder() {
     this.genesisFile = DEFAULT_GENESIS_FILE;
     this.privacyMarkerSigningPrivateKeyFile = DEFAULT_PRIVACY_MARKER_SIGNER_PRIVATE_KEY_FILE;
   }
 
-  public NodeConfigurationBuilder withGenesisFile(final String genesisFile) {
+  public BesuConfigurationBuilder withGenesisFile(final String genesisFile) {
     this.genesisFile = genesisFile;
     return this;
   }
 
-  public NodeConfigurationBuilder withCors(final String cors) {
+  public BesuConfigurationBuilder withCors(final String cors) {
     this.cors = cors;
     return this;
   }
 
-  public NodeConfigurationBuilder withContainerNetwork(final Network containerNetwork) {
+  public BesuConfigurationBuilder withContainerNetwork(final Network containerNetwork) {
     this.containerNetwork = containerNetwork;
     return this;
   }
 
-  public NodeConfigurationBuilder withIpAddress(final String ipAddress) {
+  public BesuConfigurationBuilder withIpAddress(final String ipAddress) {
     this.ipAddress = ipAddress;
     return this;
   }
 
-  public NodeConfigurationBuilder withBootnodeEnodeAddress(final String bootnodeEnodeAddress) {
+  public BesuConfigurationBuilder withBootnodeEnodeAddress(final String bootnodeEnodeAddress) {
     this.bootnodeEnodeAddress = bootnodeEnodeAddress;
     return this;
   }
 
-  public NodeConfigurationBuilder withNodePrivateKeyFile(final String nodePrivateKeyFile) {
+  public BesuConfigurationBuilder withNodePrivateKeyFile(final String nodePrivateKeyFile) {
     this.nodePrivateKeyFile = nodePrivateKeyFile;
     return this;
   }
 
-  public NodeConfigurationBuilder withVertx(final Vertx vertx) {
+  public BesuConfigurationBuilder withVertx(final Vertx vertx) {
     this.vertx = vertx;
     return this;
   }
 
-  public NodeConfigurationBuilder withPrivacyUrl(final String privacyTransactionManagerUrl) {
+  public BesuConfigurationBuilder withPrivacyUrl(final String privacyTransactionManagerUrl) {
     this.privacyTransactionManagerUrl = privacyTransactionManagerUrl;
     return this;
   }
 
-  public NodeConfigurationBuilder withPrivacyManagerPublicKey(
+  public BesuConfigurationBuilder withPrivacyManagerPublicKey(
       final String privacyManagerPublicKeyFile) {
     this.privacyManagerPublicKeyFile = privacyManagerPublicKeyFile;
     return this;
   }
 
-  public NodeConfiguration build() {
+  public BesuConfiguration build() {
     checkNotNull(genesisFile, "A genesis file path is mandatory");
     checkNotNull(privacyManagerPublicKeyFile, "An privacy manager key file is mandatory");
     checkNotNull(vertx, "A Vertx instance is mandatory");
     checkNotNull(ipAddress, "Container IP address is mandatory");
     checkNotNull(containerNetwork, "Container network is mandatory");
 
-    return new NodeConfiguration(
+    return new BesuConfiguration(
         genesisFile,
         privacyManagerPublicKeyFile,
         privacyTransactionManagerUrl,

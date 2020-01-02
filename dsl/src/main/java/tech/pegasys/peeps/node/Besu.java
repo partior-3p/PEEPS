@@ -19,7 +19,7 @@ import static tech.pegasys.peeps.util.HexFormatter.ensureHexPrefix;
 import tech.pegasys.peeps.node.model.PrivacyTransactionReceipt;
 import tech.pegasys.peeps.node.model.Transaction;
 import tech.pegasys.peeps.node.model.TransactionReceipt;
-import tech.pegasys.peeps.node.rpc.NodeJsonRpcClient;
+import tech.pegasys.peeps.node.rpc.NodeRpc;
 import tech.pegasys.peeps.node.rpc.admin.NodeInfo;
 import tech.pegasys.peeps.util.Await;
 
@@ -57,11 +57,11 @@ public class Besu {
       "/etc/besu/keys/pmt_signing.priv";
 
   private final GenericContainer<?> besu;
-  private final NodeJsonRpcClient jsonRpc;
+  private final NodeRpc rpc;
   private String nodeId;
   private String enodeId;
 
-  public Besu(final NodeConfiguration config) {
+  public Besu(final BesuConfiguration config) {
 
     final GenericContainer<?> container = new GenericContainer<>(BESU_IMAGE);
     final List<String> commandLineOptions = standardCommandLineOptions();
@@ -80,19 +80,19 @@ public class Besu {
     this.besu =
         container.withCommand(commandLineOptions.toArray(new String[0])).waitingFor(liveliness());
 
-    this.jsonRpc = new NodeJsonRpcClient(config.getVertx());
+    this.rpc = new NodeRpc(config.getVertx());
   }
 
   public void start() {
     try {
       besu.start();
 
-      jsonRpc.bind(
+      rpc.bind(
           besu.getContainerId(),
           besu.getContainerIpAddress(),
           besu.getMappedPort(CONTAINER_HTTP_RPC_PORT));
 
-      final NodeInfo info = jsonRpc.nodeInfo();
+      final NodeInfo info = rpc.nodeInfo();
       nodeId = info.getId();
       enodeId = info.getEnode();
 
@@ -112,8 +112,8 @@ public class Besu {
     if (besu != null) {
       besu.stop();
     }
-    if (jsonRpc != null) {
-      jsonRpc.close();
+    if (rpc != null) {
+      rpc.close();
     }
   }
 
@@ -152,34 +152,34 @@ public class Besu {
     // TODO find a way to avoid the additional call when successful
     Await.await(
         () -> {
-          assertThat(jsonRpc.getPrivacyTransactionReceipt(receiptHash)).isPresent();
+          assertThat(rpc.getPrivacyTransactionReceipt(receiptHash)).isPresent();
         },
         String.format(
             "Failed to retrieve the private transaction receipt with hash: %s", receiptHash));
 
-    return jsonRpc.getPrivacyTransactionReceipt(receiptHash);
+    return rpc.getPrivacyTransactionReceipt(receiptHash);
   }
 
   private Optional<TransactionReceipt> transactiontReceipt(final String receiptHash) {
     // TODO find a way to avoid the additional call when successful
     Await.await(
         () -> {
-          assertThat(jsonRpc.getTransactionReceipt(receiptHash)).isPresent();
+          assertThat(rpc.getTransactionReceipt(receiptHash)).isPresent();
         },
         String.format("Failed to retrieve the transaction receipt with hash: %s", receiptHash));
 
-    return jsonRpc.getTransactionReceipt(receiptHash);
+    return rpc.getTransactionReceipt(receiptHash);
   }
 
   private Optional<Transaction> transactionByHash(final String hash) {
     // TODO find a way to avoid the additional call when successful
     Await.await(
         () -> {
-          assertThat(jsonRpc.getTransactionByHash(hash)).isPresent();
+          assertThat(rpc.getTransactionByHash(hash)).isPresent();
         },
         String.format("Failed to retrieve the transaction with hash: %s", hash));
 
-    return jsonRpc.getTransactionByHash(hash);
+    return rpc.getTransactionByHash(hash);
   }
 
   public void log() {
@@ -194,7 +194,7 @@ public class Besu {
 
   private void awaitPeerIdConnections(final Set<String> peerIds) {
     Await.await(
-        () -> assertThat(jsonRpc.getConnectedPeerIds().containsAll(peerIds)).isTrue(),
+        () -> assertThat(rpc.getConnectedPeerIds().containsAll(peerIds)).isTrue(),
         String.format("Failed to connect in time to peers: %s", peerIds));
   }
 
@@ -250,25 +250,25 @@ public class Besu {
   }
 
   private void addPeerToPeerHost(
-      final NodeConfiguration config, final List<String> commandLineOptions) {
+      final BesuConfiguration config, final List<String> commandLineOptions) {
     commandLineOptions.add("--p2p-host");
     commandLineOptions.add(config.getIpAddress());
   }
 
   private void addBootnodeAddress(
-      final NodeConfiguration config, final List<String> commandLineOptions) {
+      final BesuConfiguration config, final List<String> commandLineOptions) {
     config
         .getBootnodeEnodeAddress()
         .ifPresent(enode -> commandLineOptions.addAll(Lists.newArrayList("--bootnodes", enode)));
   }
 
   private void addContainerNetwork(
-      final NodeConfiguration config, final GenericContainer<?> container) {
+      final BesuConfiguration config, final GenericContainer<?> container) {
     container.withNetwork(config.getContainerNetwork());
   }
 
   private void addCorsOrigins(
-      final NodeConfiguration config, final List<String> commandLineOptions) {
+      final BesuConfiguration config, final List<String> commandLineOptions) {
 
     config
         .getCors()
@@ -277,7 +277,7 @@ public class Besu {
   }
 
   private void addNodePrivateKey(
-      final NodeConfiguration config,
+      final BesuConfiguration config,
       final List<String> commandLineOptions,
       final GenericContainer<?> container) {
     config
@@ -292,7 +292,7 @@ public class Besu {
   }
 
   private void addGenesisFile(
-      final NodeConfiguration config,
+      final BesuConfiguration config,
       final List<String> commandLineOptions,
       final GenericContainer<?> container) {
     commandLineOptions.add("--genesis-file");
@@ -302,7 +302,7 @@ public class Besu {
   }
 
   private void addPrivacy(
-      final NodeConfiguration config,
+      final BesuConfiguration config,
       final List<String> commandLineOptions,
       final GenericContainer<?> container) {
     commandLineOptions.add("--privacy-enabled");
@@ -321,7 +321,7 @@ public class Besu {
   }
 
   private void addContainerIpAddress(
-      final NodeConfiguration config, final GenericContainer<?> container) {
+      final BesuConfiguration config, final GenericContainer<?> container) {
     container.withCreateContainerCmdModifier(
         modifier -> modifier.withIpv4Address(config.getIpAddress()));
   }

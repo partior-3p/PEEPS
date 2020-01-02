@@ -34,12 +34,12 @@ import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class NodeJsonRpcClient extends JsonRpcClient {
+public class NodeRpc extends JsonRpcClient {
 
   private static final Logger LOG = LogManager.getLogger();
   private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(5);
 
-  public NodeJsonRpcClient(final Vertx vertx) {
+  public NodeRpc(final Vertx vertx) {
     super(vertx, DEFAULT_TIMEOUT, LOG);
   }
 

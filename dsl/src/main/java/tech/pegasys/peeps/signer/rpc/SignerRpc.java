@@ -23,12 +23,12 @@ import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SignerRpcClient extends JsonRpcClient {
+public class SignerRpc extends JsonRpcClient {
 
   private static final Logger LOG = LogManager.getLogger();
   private static final String NO_RECIPIENT = null;
 
-  public SignerRpcClient(final Vertx vertx, final Duration timeout) {
+  public SignerRpc(final Vertx vertx, final Duration timeout) {
     super(vertx, timeout, LOG);
   }
 

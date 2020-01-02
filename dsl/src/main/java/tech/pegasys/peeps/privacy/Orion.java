@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.peeps.privacy.OrionConfigurationFile.write;
 import static tech.pegasys.peeps.privacy.rpc.send.SendPayload.generateUniquePayload;
 
-import tech.pegasys.peeps.privacy.rpc.OrionRpcClient;
+import tech.pegasys.peeps.privacy.rpc.OrionRpc;
 import tech.pegasys.peeps.util.ClasspathResources;
 
 import org.apache.logging.log4j.LogManager;
@@ -44,7 +44,7 @@ public class Orion {
   private static final int ALIVE_STATUS_CODE = 200;
 
   private final GenericContainer<?> orion;
-  private final OrionRpcClient rpc;
+  private final OrionRpc rpc;
 
   // TODO stronger typing than String
   private final String orionNetworkAddress;
@@ -80,7 +80,7 @@ public class Orion {
     // TODO just using the first key, selecting the identity could be an option for
     // multi-key Orion
     this.id = ClasspathResources.read(config.getPublicKeys().get(0));
-    this.rpc = new OrionRpcClient(config.getVertx(), id);
+    this.rpc = new OrionRpc(config.getVertx(), id);
   }
 
   public void awaitConnectivity(final Orion peer) {
@@ -142,8 +142,7 @@ public class Orion {
     return rpc.receive(receipt);
   }
 
-  private void assertReceived(
-      final OrionRpcClient rpc, final String receipt, final String sentMessage) {
+  private void assertReceived(final OrionRpc rpc, final String receipt, final String sentMessage) {
     assertThat(rpc.receive(receipt)).isEqualTo(sentMessage);
   }
 

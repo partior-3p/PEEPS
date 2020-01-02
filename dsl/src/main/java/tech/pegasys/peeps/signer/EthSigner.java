@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import tech.pegasys.peeps.node.Besu;
 import tech.pegasys.peeps.privacy.Orion;
-import tech.pegasys.peeps.signer.rpc.SignerRpcClient;
+import tech.pegasys.peeps.signer.rpc.SignerRpc;
 import tech.pegasys.peeps.util.Await;
 
 import java.time.Duration;
@@ -49,7 +49,7 @@ public class EthSigner {
 
   // TODO need a rpcClient to send stuff to the signer
   private final GenericContainer<?> ethSigner;
-  private final SignerRpcClient rpc;
+  private final SignerRpc rpc;
 
   // TODO better typing
 
@@ -77,7 +77,7 @@ public class EthSigner {
     this.ethSigner =
         container.withCommand(commandLineOptions.toArray(new String[0])).waitingFor(liveliness());
 
-    this.rpc = new SignerRpcClient(config.getVertx(), DOWNSTREAM_TIMEOUT);
+    this.rpc = new SignerRpc(config.getVertx(), DOWNSTREAM_TIMEOUT);
   }
 
   public void start() {
