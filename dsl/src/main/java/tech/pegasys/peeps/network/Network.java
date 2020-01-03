@@ -10,8 +10,9 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps;
+package tech.pegasys.peeps.network;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import tech.pegasys.peeps.node.Besu;
@@ -32,9 +33,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.github.dockerjava.api.model.Network.Ipam;
-import com.github.dockerjava.api.model.Network.Ipam.Config;
-import com.google.common.base.Preconditions;
 import io.vertx.core.Vertx;
 
 public class Network implements Closeable {
@@ -55,34 +53,26 @@ public class Network implements Closeable {
 
   private final Vertx vertx;
 
-  // TODO IP management
-
   // TODO choosing the topology should be elsewhere
   public Network(final Path configurationDirectory) {
-    Preconditions.checkNotNull(configurationDirectory);
+    checkNotNull(configurationDirectory);
 
     final PathGenerator pathGenerator = new PathGenerator(configurationDirectory);
     this.vertx = Vertx.vertx();
 
-    // TODO subnet with substitution for static IPs
-    this.network =
-        org.testcontainers.containers.Network.builder()
-            .createNetworkCmdModifier(
-                modifier ->
-                    modifier.withIpam(
-                        new Ipam().withConfig(new Config().withSubnet("172.20.0.0/24"))))
-            .build();
+    final Subnet subnet = new Subnet();
+
+    this.network = subnet.createContainerNetwork();
 
     // TODO 0.1 seems to be used, maybe assigned by the network container?
 
-    // TODO no magic strings!?!?
     // TODO better typing then String
-    final String ipAddressOrionA = "172.20.0.5";
-    final String ipAddressBesuA = "172.20.0.6";
-    final String ipAddressSignerA = "172.20.0.7";
-    final String ipAddressOrionB = "172.20.0.8";
-    final String ipAddressBesuB = "172.20.0.9";
-    final String ipAddressSignerB = "172.20.0.10";
+    final String ipAddressOrionA = subnet.getAddressAndIncrement();
+    final String ipAddressBesuA = subnet.getAddressAndIncrement();
+    final String ipAddressSignerA = subnet.getAddressAndIncrement();
+    final String ipAddressOrionB = subnet.getAddressAndIncrement();
+    final String ipAddressBesuB = subnet.getAddressAndIncrement();
+    final String ipAddressSignerB = subnet.getAddressAndIncrement();
 
     // TODO these should come from the Besu, or config aggregation
     final long chainId = 4004;
@@ -177,7 +167,8 @@ public class Network implements Closeable {
   }
 
   public void start() {
-    // TODO multi-thread the blocking start ops, using await connectivity as the sync point
+    // TODO multi-thread the blocking start ops, using await connectivity as the
+    // sync point
     orionA.start();
     besuA.start();
     signerA.start();
@@ -239,22 +230,26 @@ public class Network implements Closeable {
     return signerB;
   }
 
-  // TODO figure out a nicer way for the UT to get a handle on the node or send requests
+  // TODO figure out a nicer way for the UT to get a handle on the node or send
+  // requests
   public Besu getNodeA() {
     return besuA;
   }
 
-  // TODO figure out a nicer way for the UT to get a handle on the node or send requests
+  // TODO figure out a nicer way for the UT to get a handle on the node or send
+  // requests
   public Besu getNodeB() {
     return besuB;
   }
 
-  // TODO figure out a nicer way for the UT to get a handle on the Orion or send requests
+  // TODO figure out a nicer way for the UT to get a handle on the Orion or send
+  // requests
   public Orion getOrionA() {
     return orionA;
   }
 
-  // TODO figure out a nicer way for the UT to get a handle on the Orion or send requests
+  // TODO figure out a nicer way for the UT to get a handle on the Orion or send
+  // requests
   public Orion getOrionB() {
     return orionB;
   }

@@ -16,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.peeps.util.HexFormatter.removeAnyHexPrefix;
 
 import tech.pegasys.peeps.contract.SimpleStorage;
+import tech.pegasys.peeps.network.Network;
 import tech.pegasys.peeps.node.model.PrivacyTransactionReceipt;
 import tech.pegasys.peeps.node.model.Transaction;
 import tech.pegasys.peeps.node.model.TransactionReceipt;
@@ -39,7 +40,7 @@ public class PrivacyNetworkContracDeploymentTest {
   private Network network;
 
   @BeforeEach
-  public void startUp() {
+  public void setUp() {
     Runtime.getRuntime().addShutdownHook(new Thread(this::tearDown));
     network = new Network(configurationDirectory);
     network.start();

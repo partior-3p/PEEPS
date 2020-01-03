@@ -35,4 +35,9 @@ dependencies {
   implementation 'io.vertx:vertx-web-client'
 
   runtimeOnly 'org.apache.logging.log4j:log4j-core'
+
+  testImplementation 'org.assertj:assertj-core'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api'
+
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 }
