@@ -50,6 +50,7 @@ public class Subnet {
         String.format("Failed to create a Docker network within %s attempts", MAXIMUM_ATTEMPTS));
   }
 
+  // TODO stricter typing then String
   public String getAddressAndIncrement() {
     return addresses.getAddressAndIncrement();
   }

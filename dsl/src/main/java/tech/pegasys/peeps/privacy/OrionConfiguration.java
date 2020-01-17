@@ -12,7 +12,6 @@
  */
 package tech.pegasys.peeps.privacy;
 
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -49,14 +48,8 @@ public class OrionConfiguration {
     this.fileSystemConfigurationFile = fileSystemConfigurationFile;
   }
 
-  // TODO return type cab be a PATH
-  public String getFileSystemConfigurationFile() {
-    try {
-      return fileSystemConfigurationFile.toUri().toURL().getPath();
-    } catch (final MalformedURLException e) {
-      throw new IllegalStateException(
-          "Problem forming a URL from a URI from " + fileSystemConfigurationFile.toUri());
-    }
+  public Path getFileSystemConfigurationFile() {
+    return fileSystemConfigurationFile;
   }
 
   public String getIpAddress() {

@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import org.apache.tuweni.eth.Address;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PrivacyTransactionReceipt {
@@ -33,21 +34,21 @@ public class PrivacyTransactionReceipt {
 
   @JsonCreator
   public PrivacyTransactionReceipt(
-      @JsonProperty("contractAddress") final Address contract,
-      @JsonProperty("from") final Address sender,
+      @JsonProperty("contractAddress") final String contract,
+      @JsonProperty("from") final String sender,
       @JsonProperty("output") final String output,
       @JsonProperty("logs") final String[] logs,
       @JsonProperty("status") final String status) {
-    this.contract = contract;
-    this.sender = sender;
+    this.contract = Address.fromHexString(contract);
+    this.sender = Address.fromHexString(sender);
     this.output = output;
     this.logs = logs;
     this.status = status;
   }
 
   @JsonSetter("to")
-  public void setRecipient(final Address recipient) {
-    this.recipient = recipient;
+  public void setRecipient(final String recipient) {
+    this.recipient = Address.fromHexString(recipient);
   }
 
   public Address getContractAddress() {

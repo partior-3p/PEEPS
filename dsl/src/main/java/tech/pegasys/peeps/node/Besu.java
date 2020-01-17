@@ -12,22 +12,24 @@
  */
 package tech.pegasys.peeps.node;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
+import static tech.pegasys.peeps.util.Await.await;
 import static tech.pegasys.peeps.util.HexFormatter.ensureHexPrefix;
 
-import tech.pegasys.peeps.node.model.PrivacyTransactionReceipt;
-import tech.pegasys.peeps.node.model.Transaction;
-import tech.pegasys.peeps.node.model.TransactionReceipt;
+import tech.pegasys.peeps.network.NetworkMember;
 import tech.pegasys.peeps.node.rpc.NodeRpc;
+import tech.pegasys.peeps.node.rpc.NodeRpcExpectingData;
 import tech.pegasys.peeps.node.rpc.admin.NodeInfo;
-import tech.pegasys.peeps.util.Await;
+import tech.pegasys.peeps.node.verification.AccountValue;
+import tech.pegasys.peeps.node.verification.NodeValueTransition;
+import tech.pegasys.peeps.util.DockerLogs;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import org.apache.logging.log4j.LogManager;
@@ -37,15 +39,17 @@ import org.testcontainers.containers.ContainerLaunchException;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.utility.MountableFile;
 
-public class Besu {
+public class Besu implements NetworkMember {
 
   private static final Logger LOG = LogManager.getLogger();
 
   private static final String AM_I_ALIVE_ENDPOINT = "/liveness";
   private static final int ALIVE_STATUS_CODE = 200;
 
-  private static final String BESU_IMAGE = "hyperledger/besu:latest";
+  //  private static final String BESU_IMAGE = "hyperledger/besu:latest";
+  private static final String BESU_IMAGE = "hyperledger/besu:develop";
   private static final int CONTAINER_HTTP_RPC_PORT = 8545;
   private static final int CONTAINER_WS_RPC_PORT = 8546;
   private static final int CONTAINER_P2P_PORT = 30303;
@@ -57,7 +61,10 @@ public class Besu {
       "/etc/besu/keys/pmt_signing.priv";
 
   private final GenericContainer<?> besu;
-  private final NodeRpc rpc;
+  private final NodeRpc nodeRpc;
+  private final NodeRpcExpectingData rpc;
+  private final String ipAddress;
+  private final NodeKey identity;
   private String nodeId;
   private String enodeId;
 
@@ -66,33 +73,41 @@ public class Besu {
     final GenericContainer<?> container = new GenericContainer<>(BESU_IMAGE);
     final List<String> commandLineOptions = standardCommandLineOptions();
 
+    this.ipAddress = config.getIpAddress();
+
     addPeerToPeerHost(config, commandLineOptions);
     addCorsOrigins(config, commandLineOptions);
     addBootnodeAddress(config, commandLineOptions);
     addContainerNetwork(config, container);
-    addContainerIpAddress(config, container);
+    addContainerIpAddress(ipAddress, container);
     addNodePrivateKey(config, commandLineOptions, container);
     addGenesisFile(config, commandLineOptions, container);
-    addPrivacy(config, commandLineOptions, container);
 
-    LOG.info("Besu command line {}", commandLineOptions);
+    if (config.isPrivacyEnabled()) {
+      addPrivacy(config, commandLineOptions, container);
+    }
+
+    LOG.info("Besu command line: {}", commandLineOptions);
 
     this.besu =
         container.withCommand(commandLineOptions.toArray(new String[0])).waitingFor(liveliness());
 
-    this.rpc = new NodeRpc(config.getVertx());
+    this.nodeRpc = new NodeRpc(config.getVertx());
+    this.rpc = new NodeRpcExpectingData(nodeRpc);
+    this.identity = config.getIdentity();
   }
 
+  @Override
   public void start() {
     try {
       besu.start();
 
-      rpc.bind(
+      nodeRpc.bind(
           besu.getContainerId(),
           besu.getContainerIpAddress(),
           besu.getMappedPort(CONTAINER_HTTP_RPC_PORT));
 
-      final NodeInfo info = rpc.nodeInfo();
+      final NodeInfo info = nodeRpc.nodeInfo();
       nodeId = info.getId();
       enodeId = info.getEnode();
 
@@ -108,83 +123,56 @@ public class Besu {
     }
   }
 
+  @Override
   public void stop() {
     if (besu != null) {
       besu.stop();
     }
-    if (rpc != null) {
-      rpc.close();
+    if (nodeRpc != null) {
+      nodeRpc.close();
     }
   }
 
-  public String getEnodeId() {
+  // TODO stricter typing then String
+  public String ipAddress() {
+    return ipAddress;
+  }
+
+  // TODO these may not have a value, i.e. node not started :. optional
+  public String enodeId() {
     return enodeId;
   }
 
-  public void awaitConnectivity(final Besu... peers) {
-    awaitPeerIdConnections(expectedPeerIds(peers));
+  public NodeKey identity() {
+    return identity;
   }
 
-  // TODO these JSON-RPC call could do with encapsulating outside of Besu
-  public PrivacyTransactionReceipt getPrivacyContractReceipt(final String receiptHash) {
-    final Optional<PrivacyTransactionReceipt> potential = privacyContractReceipt(receiptHash);
-    assertThat(potential).isNotNull();
-    assertThat(potential).isPresent();
-    return potential.get();
+  public int httpRpcPort() {
+    return CONTAINER_HTTP_RPC_PORT;
   }
 
-  public TransactionReceipt getTransactionReceipt(final String receiptHash) {
-    final Optional<TransactionReceipt> potential = transactiontReceipt(receiptHash);
-    assertThat(potential).isNotNull();
-    assertThat(potential).isPresent();
-    return potential.get();
+  public int p2pPort() {
+    return CONTAINER_P2P_PORT;
   }
 
-  // TODO maybe tying together privacy functions?
-  public Transaction getTransactionByHash(final String hash) {
-    final Optional<Transaction> potential = transactionByHash(hash);
-    assertThat(potential).isNotNull();
-    assertThat(potential).isPresent();
-    return potential.get();
+  public void awaitConnectivity(final List<Besu> peers) {
+    awaitPeerIdConnections(excludeSelf(expectedPeerIds(peers)));
   }
 
-  private Optional<PrivacyTransactionReceipt> privacyContractReceipt(final String receiptHash) {
-    // TODO find a way to avoid the additional call when successful
-    Await.await(
-        () -> {
-          assertThat(rpc.getPrivacyTransactionReceipt(receiptHash)).isPresent();
-        },
-        String.format(
-            "Failed to retrieve the private transaction receipt with hash: %s", receiptHash));
-
-    return rpc.getPrivacyTransactionReceipt(receiptHash);
+  public String getLogs() {
+    return DockerLogs.format("Besu", besu);
   }
 
-  private Optional<TransactionReceipt> transactiontReceipt(final String receiptHash) {
-    // TODO find a way to avoid the additional call when successful
-    Await.await(
-        () -> {
-          assertThat(rpc.getTransactionReceipt(receiptHash)).isPresent();
-        },
-        String.format("Failed to retrieve the transaction receipt with hash: %s", receiptHash));
-
-    return rpc.getTransactionReceipt(receiptHash);
+  public NodeRpcExpectingData rpc() {
+    return rpc;
   }
 
-  private Optional<Transaction> transactionByHash(final String hash) {
-    // TODO find a way to avoid the additional call when successful
-    Await.await(
-        () -> {
-          assertThat(rpc.getTransactionByHash(hash)).isPresent();
-        },
-        String.format("Failed to retrieve the transaction with hash: %s", hash));
-
-    return rpc.getTransactionByHash(hash);
+  public void verifyTransition(final NodeValueTransition... changes) {
+    Stream.of(changes).parallel().forEach(change -> change.verify(rpc));
   }
 
-  public void log() {
-    LOG.info("Besu Container {}", besu.getContainerId());
-    LOG.info(besu.getLogs());
+  public void verifyValue(final Set<AccountValue> values) {
+    values.parallelStream().forEach(value -> value.verify(rpc));
   }
 
   private String getNodeId() {
@@ -193,14 +181,22 @@ public class Besu {
   }
 
   private void awaitPeerIdConnections(final Set<String> peerIds) {
-    Await.await(
-        () -> assertThat(rpc.getConnectedPeerIds().containsAll(peerIds)).isTrue(),
+    await(
+        () -> assertThat(nodeRpc.getConnectedPeerIds().containsAll(peerIds)).isTrue(),
         String.format("Failed to connect in time to peers: %s", peerIds));
   }
 
-  private Set<String> expectedPeerIds(final Besu... peers) {
-    return Arrays.stream(peers)
+  private Set<String> expectedPeerIds(final List<Besu> peers) {
+    return peers
+        .parallelStream()
         .map(node -> ensureHexPrefix(node.getNodeId()))
+        .collect(Collectors.toSet());
+  }
+
+  private Set<String> excludeSelf(final Set<String> peers) {
+    return peers
+        .parallelStream()
+        .filter(peer -> !peer.contains(nodeId))
         .collect(Collectors.toSet());
   }
 
@@ -212,7 +208,7 @@ public class Besu {
 
   private void logPortMappings() {
     LOG.info(
-        "Besu Container {}, HTTP RPC port mapping: {} -> {}, WS RPC port mapping: {} -> {}, p2p port mapping: {} -> {}",
+        "Besu Container: {}, HTTP RPC port mapping: {} -> {}, WS RPC port mapping: {} -> {}, p2p port mapping: {} -> {}",
         besu.getContainerId(),
         CONTAINER_HTTP_RPC_PORT,
         besu.getMappedPort(CONTAINER_HTTP_RPC_PORT),
@@ -224,10 +220,10 @@ public class Besu {
 
   private void logContainerNetworkDetails() {
     if (besu.getNetwork() == null) {
-      LOG.info("Besu Container {} has no network", besu.getContainerId());
+      LOG.info("Besu Container: {}, has no network", besu.getContainerId());
     } else {
       LOG.info(
-          "Besu Container {}, IP address: {}, Network: {}",
+          "Besu Container: {}, IP address: {}, Network: {}",
           besu.getContainerId(),
           besu.getContainerIpAddress(),
           besu.getNetwork().getId());
@@ -280,15 +276,13 @@ public class Besu {
       final BesuConfiguration config,
       final List<String> commandLineOptions,
       final GenericContainer<?> container) {
-    config
-        .getNodePrivateKeyFile()
-        .ifPresent(
-            file -> {
-              container.withClasspathResourceMapping(
-                  file, CONTAINER_NODE_PRIVATE_KEY_FILE, BindMode.READ_ONLY);
-              commandLineOptions.addAll(
-                  Lists.newArrayList("--node-private-key-file", CONTAINER_NODE_PRIVATE_KEY_FILE));
-            });
+
+    container.withClasspathResourceMapping(
+        config.getIdentity().getPrivateKeyFile(),
+        CONTAINER_NODE_PRIVATE_KEY_FILE,
+        BindMode.READ_ONLY);
+    commandLineOptions.addAll(
+        Lists.newArrayList("--node-private-key-file", CONTAINER_NODE_PRIVATE_KEY_FILE));
   }
 
   private void addGenesisFile(
@@ -297,32 +291,40 @@ public class Besu {
       final GenericContainer<?> container) {
     commandLineOptions.add("--genesis-file");
     commandLineOptions.add(CONTAINER_GENESIS_FILE);
-    container.withClasspathResourceMapping(
-        config.getGenesisFile(), CONTAINER_GENESIS_FILE, BindMode.READ_ONLY);
+    container.withCopyFileToContainer(
+        MountableFile.forHostPath(config.getGenesisFile()), CONTAINER_GENESIS_FILE);
   }
 
   private void addPrivacy(
       final BesuConfiguration config,
       final List<String> commandLineOptions,
       final GenericContainer<?> container) {
+
+    checkArgument(
+        config.getPrivacyUrl() != null && config.getPrivacyUrl().isPresent(),
+        "Privacy URL is mandatory when using Privacy");
+    checkArgument(
+        config.getPrivacyMarkerSigningPrivateKeyFile() != null
+            && config.getPrivacyMarkerSigningPrivateKeyFile().isPresent(),
+        "Private Marker Transaction key file is mandatory when using Privacy");
+
     commandLineOptions.add("--privacy-enabled");
     commandLineOptions.add("--privacy-url");
-    commandLineOptions.add(config.getPrivacyUrl());
+    commandLineOptions.add(config.getPrivacyUrl().get());
     commandLineOptions.add("--privacy-public-key-file");
     commandLineOptions.add(CONTAINER_PRIVACY_PUBLIC_KEY_FILE);
     container.withClasspathResourceMapping(
         config.getPrivacyPublicKeyFile(), CONTAINER_PRIVACY_PUBLIC_KEY_FILE, BindMode.READ_ONLY);
     commandLineOptions.add("--privacy-marker-transaction-signing-key-file");
     commandLineOptions.add(CONTAINER_PRIVACY_SIGNING_PRIVATE_KEY_FILE);
+
     container.withClasspathResourceMapping(
-        config.getPrivacyMarkerSigningPrivateKeyFile(),
+        config.getPrivacyMarkerSigningPrivateKeyFile().get(),
         CONTAINER_PRIVACY_SIGNING_PRIVATE_KEY_FILE,
         BindMode.READ_ONLY);
   }
 
-  private void addContainerIpAddress(
-      final BesuConfiguration config, final GenericContainer<?> container) {
-    container.withCreateContainerCmdModifier(
-        modifier -> modifier.withIpv4Address(config.getIpAddress()));
+  private void addContainerIpAddress(final String ipAddress, final GenericContainer<?> container) {
+    container.withCreateContainerCmdModifier(modifier -> modifier.withIpv4Address(ipAddress));
   }
 }

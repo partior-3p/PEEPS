@@ -12,14 +12,11 @@
  */
 package tech.pegasys.peeps.network;
 
-import static com.google.common.base.Preconditions.checkState;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.github.dockerjava.api.model.Network.Ipam;
-import com.github.dockerjava.api.model.Network.Ipam.Config;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,12 +47,15 @@ public class SubnetTest {
 
   @Test
   public void canCreateNetworkWhenFirstSubnetUnavailable() {
-    createDockerNetwork(new Subnet().nextSubnet());
+    final Network first = create();
+    assertThat(first).isNotNull();
+    assertThat(first.getId()).isNotBlank();
 
-    final Network network = create();
+    final Network second = create();
+    assertThat(second).isNotNull();
+    assertThat(second.getId()).isNotBlank();
 
-    assertThat(network).isNotNull();
-    assertThat(network.getId()).isNotBlank();
+    assertThat(first.getId()).isNotEqualTo(second.getId());
   }
 
   @Test
@@ -71,17 +71,5 @@ public class SubnetTest {
     final Network network = new Subnet().createContainerNetwork();
     cleanUp.add(network);
     return network;
-  }
-
-  private void createDockerNetwork(final String subnet) {
-    final Network network =
-        Network.builder()
-            .createNetworkCmdModifier(
-                modifier ->
-                    modifier.withIpam(new Ipam().withConfig(new Config().withSubnet(subnet))))
-            .build();
-
-    checkState(network.getId() != null);
-    checkState(!network.getId().isBlank());
   }
 }

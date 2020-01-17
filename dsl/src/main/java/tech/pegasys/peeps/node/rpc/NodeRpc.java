@@ -13,6 +13,7 @@
 package tech.pegasys.peeps.node.rpc;
 
 import tech.pegasys.peeps.json.rpc.JsonRpcClient;
+import tech.pegasys.peeps.node.model.Hash;
 import tech.pegasys.peeps.node.model.PrivacyTransactionReceipt;
 import tech.pegasys.peeps.node.model.Transaction;
 import tech.pegasys.peeps.node.model.TransactionReceipt;
@@ -20,8 +21,9 @@ import tech.pegasys.peeps.node.rpc.admin.ConnectedPeer;
 import tech.pegasys.peeps.node.rpc.admin.ConnectedPeersResponse;
 import tech.pegasys.peeps.node.rpc.admin.NodeInfo;
 import tech.pegasys.peeps.node.rpc.admin.NodeInfoResponse;
+import tech.pegasys.peeps.node.rpc.eth.GetBalanceResponse;
 import tech.pegasys.peeps.node.rpc.eth.GetTransactionByHashResponse;
-import tech.pegasys.peeps.node.rpc.eth.GetTransactionResponse;
+import tech.pegasys.peeps.node.rpc.eth.GetTransactionReceiptResponse;
 import tech.pegasys.peeps.node.rpc.priv.GetPrivateTransactionResponse;
 
 import java.time.Duration;
@@ -33,14 +35,20 @@ import java.util.stream.Collectors;
 import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.tuweni.eth.Address;
+import org.apache.tuweni.units.ethereum.Wei;
 
 public class NodeRpc extends JsonRpcClient {
 
   private static final Logger LOG = LogManager.getLogger();
   private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(5);
 
+  public NodeRpc(final Vertx vertx, final Duration timeout, final Logger log) {
+    super(vertx, timeout, log);
+  }
+
   public NodeRpc(final Vertx vertx) {
-    super(vertx, DEFAULT_TIMEOUT, LOG);
+    this(vertx, DEFAULT_TIMEOUT, LOG);
   }
 
   public Set<String> getConnectedPeerIds() {
@@ -55,16 +63,23 @@ public class NodeRpc extends JsonRpcClient {
     return post("admin_peers", ConnectedPeersResponse.class).getResult();
   }
 
-  public Optional<PrivacyTransactionReceipt> getPrivacyTransactionReceipt(final String hash) {
-    return post("priv_getTransactionReceipt", hash, GetPrivateTransactionResponse.class)
+  public Optional<PrivacyTransactionReceipt> getPrivacyTransactionReceipt(final Hash receipt) {
+    return post("priv_getTransactionReceipt", GetPrivateTransactionResponse.class, receipt)
         .getResult();
   }
 
-  public Optional<TransactionReceipt> getTransactionReceipt(final String hash) {
-    return post("eth_getTransactionReceipt", hash, GetTransactionResponse.class).getResult();
+  public Optional<TransactionReceipt> getTransactionReceipt(final Hash receipt) {
+    return post("eth_getTransactionReceipt", GetTransactionReceiptResponse.class, receipt)
+        .getResult();
   }
 
-  public Optional<Transaction> getTransactionByHash(final String hash) {
-    return post("eth_getTransactionByHash", hash, GetTransactionByHashResponse.class).getResult();
+  public Optional<Transaction> getTransactionByHash(final Hash transaction) {
+    return post("eth_getTransactionByHash", GetTransactionByHashResponse.class, transaction)
+        .getResult();
+  }
+
+  public Wei getBalance(final Address account) {
+    return post("eth_getBalance", GetBalanceResponse.class, account.toHexString(), "latest")
+        .getResult();
   }
 }

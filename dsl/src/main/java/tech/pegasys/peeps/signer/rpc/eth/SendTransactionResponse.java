@@ -10,26 +10,23 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.node.rpc.eth;
+package tech.pegasys.peeps.signer.rpc.eth;
 
-import tech.pegasys.peeps.node.model.TransactionReceipt;
+import tech.pegasys.peeps.node.model.Hash;
 
-import java.util.Optional;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSetter;
+public class SendTransactionResponse {
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class GetTransactionResponse {
+  private final Hash result;
 
-  private TransactionReceipt result;
-
-  @JsonSetter("result")
-  public void setResult(final TransactionReceipt result) {
+  @JsonCreator
+  public SendTransactionResponse(@JsonProperty("result") final Hash result) {
     this.result = result;
   }
 
-  public Optional<TransactionReceipt> getResult() {
-    return Optional.ofNullable(result);
+  public Hash getResult() {
+    return result;
   }
 }

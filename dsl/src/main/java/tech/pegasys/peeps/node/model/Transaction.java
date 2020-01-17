@@ -16,21 +16,25 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import org.apache.tuweni.eth.Address;
+import org.apache.tuweni.units.bigints.UInt256;
+import org.apache.tuweni.units.ethereum.Gas;
+import org.apache.tuweni.units.ethereum.Wei;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Transaction {
 
   private final Address sender;
+  private final Gas gas;
+  private final Wei gasPrice;
+  private final Wei value;
 
   // TODO stricter typing than String
   private final String blockHash;
   private final String blockNumber;
-  private final String gas;
-  private final String gasPrice;
   private final String hash;
   private final String input;
   private final String nonce;
-  private final String value;
   private final String v;
   private final String r;
   private final String s;
@@ -40,7 +44,7 @@ public class Transaction {
 
   @JsonCreator
   public Transaction(
-      @JsonProperty("from") final Address sender,
+      @JsonProperty("from") final String sender,
       @JsonProperty("blockHash") final String blockHash,
       @JsonProperty("blockNumber") final String blockNumber,
       @JsonProperty("gas") final String gas,
@@ -52,26 +56,26 @@ public class Transaction {
       @JsonProperty("v") final String v,
       @JsonProperty("r") final String r,
       @JsonProperty("s") final String s) {
-    this.sender = sender;
+    this.sender = Address.fromHexString(sender);
     this.blockHash = blockHash;
     this.blockNumber = blockNumber;
-    this.gas = gas;
-    this.gasPrice = gasPrice;
+    this.gas = Gas.valueOf(UInt256.fromHexString(gas));
+    this.gasPrice = Wei.valueOf(UInt256.fromHexString(gasPrice));
     this.hash = hash;
     this.input = input;
     this.nonce = nonce;
-    this.value = value;
+    this.value = Wei.valueOf(UInt256.fromHexString(value));
     this.v = v;
     this.r = r;
     this.s = s;
   }
 
   @JsonSetter("to")
-  public void setRecipient(final Address recipient) {
-    this.recipient = recipient;
+  public void setRecipient(final String recipient) {
+    this.recipient = recipient == null ? null : Address.fromHexString(recipient);
   }
 
-  @JsonSetter("to")
+  @JsonSetter("transactionIndex")
   public void setTransactionIndex(final String transactionIndex) {
     this.transactionIndex = transactionIndex;
   }
@@ -88,11 +92,11 @@ public class Transaction {
     return blockNumber;
   }
 
-  public String getGas() {
+  public Gas getGas() {
     return gas;
   }
 
-  public String getGasPrice() {
+  public Wei getGasPrice() {
     return gasPrice;
   }
 
@@ -108,7 +112,7 @@ public class Transaction {
     return nonce;
   }
 
-  public String getValue() {
+  public Wei getValue() {
     return value;
   }
 

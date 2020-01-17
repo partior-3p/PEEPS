@@ -15,7 +15,6 @@ package tech.pegasys.peeps.privacy;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,13 +48,13 @@ public class OrionConfigurationFile {
     }
 
     LOG.info(
-        "Creating Orion config at: {}, with contents:\n{}",
+        "Creating Orion config file\n\tLocation: {} \n\tContents: {}",
         confg.getFileSystemConfigurationFile(),
         content.toString());
 
     try {
       Files.write(
-          Path.of(confg.getFileSystemConfigurationFile()),
+          confg.getFileSystemConfigurationFile(),
           content.toString().getBytes(StandardCharsets.UTF_8),
           StandardOpenOption.CREATE);
     } catch (final IOException e) {

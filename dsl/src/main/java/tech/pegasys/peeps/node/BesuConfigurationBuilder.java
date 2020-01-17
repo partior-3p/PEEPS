@@ -14,24 +14,27 @@ package tech.pegasys.peeps.node;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import tech.pegasys.peeps.privacy.Orion;
+
+import java.nio.file.Path;
+
 import io.vertx.core.Vertx;
 import org.testcontainers.containers.Network;
 
 public class BesuConfigurationBuilder {
 
   // TODO move these into the test
-  private static final String DEFAULT_GENESIS_FILE = "node/genesis/eth_hash_4004.json";
-
-  // TODO move these into the test
   private static final String DEFAULT_PRIVACY_MARKER_SIGNER_PRIVATE_KEY_FILE =
       "node/keys/pmt_signing.priv";
 
-  private String genesisFile;
+  private Path genesisFile;
+  private NodeKey identity;
+
+  // TODO better typing then String
   private String privacyManagerPublicKeyFile;
   private String privacyMarkerSigningPrivateKeyFile;
   private String privacyTransactionManagerUrl;
   private String cors;
-  private String nodePrivateKeyFile;
   private String bootnodeEnodeAddress;
 
   // TODO these into their own builder, not node related but test container related
@@ -40,11 +43,10 @@ public class BesuConfigurationBuilder {
   private Vertx vertx;
 
   public BesuConfigurationBuilder() {
-    this.genesisFile = DEFAULT_GENESIS_FILE;
     this.privacyMarkerSigningPrivateKeyFile = DEFAULT_PRIVACY_MARKER_SIGNER_PRIVATE_KEY_FILE;
   }
 
-  public BesuConfigurationBuilder withGenesisFile(final String genesisFile) {
+  public BesuConfigurationBuilder withGenesisFile(final Path genesisFile) {
     this.genesisFile = genesisFile;
     return this;
   }
@@ -69,8 +71,8 @@ public class BesuConfigurationBuilder {
     return this;
   }
 
-  public BesuConfigurationBuilder withNodePrivateKeyFile(final String nodePrivateKeyFile) {
-    this.nodePrivateKeyFile = nodePrivateKeyFile;
+  public BesuConfigurationBuilder withIdentity(final NodeKey identity) {
+    this.identity = identity;
     return this;
   }
 
@@ -79,8 +81,8 @@ public class BesuConfigurationBuilder {
     return this;
   }
 
-  public BesuConfigurationBuilder withPrivacyUrl(final String privacyTransactionManagerUrl) {
-    this.privacyTransactionManagerUrl = privacyTransactionManagerUrl;
+  public BesuConfigurationBuilder withPrivacyUrl(final Orion privacyTransactionManager) {
+    this.privacyTransactionManagerUrl = privacyTransactionManager.getNetworkRpcAddress();
     return this;
   }
 
@@ -92,7 +94,7 @@ public class BesuConfigurationBuilder {
 
   public BesuConfiguration build() {
     checkNotNull(genesisFile, "A genesis file path is mandatory");
-    checkNotNull(privacyManagerPublicKeyFile, "An privacy manager key file is mandatory");
+    checkNotNull(identity, "A NodeKey is mandatory");
     checkNotNull(vertx, "A Vertx instance is mandatory");
     checkNotNull(ipAddress, "Container IP address is mandatory");
     checkNotNull(containerNetwork, "Container network is mandatory");
@@ -106,7 +108,7 @@ public class BesuConfigurationBuilder {
         containerNetwork,
         vertx,
         ipAddress,
-        nodePrivateKeyFile,
+        identity,
         bootnodeEnodeAddress);
   }
 }

@@ -18,31 +18,34 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import org.apache.tuweni.eth.Address;
+import org.apache.tuweni.units.bigints.UInt256;
+import org.apache.tuweni.units.ethereum.Gas;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TransactionReceipt {
 
   private final Address sender;
-  private final String transactionIndex;
-  private final String status;
+  private final Hash blockHash;
+  private final Hash transactionHash;
+  private final Gas gasUsed;
 
   // TODO stricter typing than String
-  private final String blockHash;
   private final String blockNumber;
   private final String cumulativeGasUsed;
-  private final String gasUsed;
-  private final String transactionHash;
   private final String logsBloom;
+  private final String transactionIndex;
+  private final String status;
 
   private Address recipient;
   private Address contract;
 
   @JsonCreator
   public TransactionReceipt(
-      @JsonProperty("blockHash") final String blockHash,
+      @JsonProperty("blockHash") final Hash blockHash,
       @JsonProperty("blockNumber") final String blockNumber,
-      @JsonProperty("from") final Address from,
-      @JsonProperty("transactionHash") final String transactionHash,
+      @JsonProperty("from") final String sender,
+      @JsonProperty("transactionHash") final Hash transactionHash,
       @JsonProperty("transactionIndex") final String transactionIndex,
       @JsonProperty("status") final String status,
       @JsonProperty("cumulativeGasUsed") final String cumulativeGasUsed,
@@ -50,23 +53,23 @@ public class TransactionReceipt {
       @JsonProperty("logsBloom") final String logsBloom) {
     this.blockHash = blockHash;
     this.blockNumber = blockNumber;
-    this.sender = from;
+    this.sender = Address.fromHexString(sender);
     this.transactionHash = transactionHash;
     this.transactionIndex = transactionIndex;
     this.status = status;
     this.cumulativeGasUsed = cumulativeGasUsed;
-    this.gasUsed = gasUsed;
+    this.gasUsed = Gas.valueOf(UInt256.fromHexString(gasUsed));
     this.logsBloom = logsBloom;
   }
 
   @JsonSetter("to")
-  public void setRecipient(final Address recipient) {
-    this.recipient = recipient;
+  public void setRecipient(final String recipient) {
+    this.recipient = recipient == null ? null : Address.fromHexString(recipient);
   }
 
   @JsonSetter("contractAddress")
-  public void setContractAddress(final Address contract) {
-    this.contract = contract;
+  public void setContractAddress(final String contract) {
+    this.contract = contract == null ? null : Address.fromHexString(contract);
   }
 
   public Optional<Address> getContractAddress() {
@@ -81,7 +84,7 @@ public class TransactionReceipt {
     return Optional.ofNullable(recipient);
   }
 
-  public String getBlockHash() {
+  public Hash getBlockHash() {
     return blockHash;
   }
 
@@ -93,7 +96,7 @@ public class TransactionReceipt {
     return transactionIndex;
   }
 
-  public String getTransactionHash() {
+  public Hash getTransactionHash() {
     return transactionHash;
   }
 
@@ -101,7 +104,7 @@ public class TransactionReceipt {
     return cumulativeGasUsed;
   }
 
-  public String getGasUsed() {
+  public Gas getGasUsed() {
     return gasUsed;
   }
 

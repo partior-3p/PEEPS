@@ -12,9 +12,12 @@
  */
 package tech.pegasys.peeps.signer.rpc;
 
-import tech.pegasys.peeps.json.rpc.JsonRpcClient;
-import tech.pegasys.peeps.signer.rpc.eea.SendPrivateTransactionResponse;
-import tech.pegasys.peeps.signer.rpc.eea.SendTransactionRequest;
+import tech.pegasys.peeps.node.model.Hash;
+import tech.pegasys.peeps.node.rpc.NodeRpc;
+import tech.pegasys.peeps.signer.rpc.eea.SendPrivacyTransactionRequest;
+import tech.pegasys.peeps.signer.rpc.eea.SendPrivacyTransactionResponse;
+import tech.pegasys.peeps.signer.rpc.eth.SendTransactionRequest;
+import tech.pegasys.peeps.signer.rpc.eth.SendTransactionResponse;
 import tech.pegasys.peeps.signer.rpc.net.EnodeResponse;
 
 import java.time.Duration;
@@ -22,26 +25,37 @@ import java.time.Duration;
 import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.tuweni.eth.Address;
+import org.apache.tuweni.units.ethereum.Wei;
 
-public class SignerRpc extends JsonRpcClient {
+public class SignerRpc extends NodeRpc {
 
   private static final Logger LOG = LogManager.getLogger();
-  private static final String NO_RECIPIENT = null;
+  private static final Address NO_RECIPIENT = null;
 
   public SignerRpc(final Vertx vertx, final Duration timeout) {
     super(vertx, timeout, LOG);
   }
 
-  public String deployContractToPrivacyGroup(
-      final String sender,
+  // TODO all the RPCs should use addresses and privacy address instead of String
+  public Hash deployContractToPrivacyGroup(
+      final Address sender,
       final String binary,
       final String privateSender,
       final String[] privateRecipients) {
     return post(
             "eea_sendTransaction",
-            new SendTransactionRequest(
-                sender, NO_RECIPIENT, binary, privateSender, privateRecipients),
-            SendPrivateTransactionResponse.class)
+            SendPrivacyTransactionResponse.class,
+            new SendPrivacyTransactionRequest(
+                sender, NO_RECIPIENT, binary, privateSender, privateRecipients))
+        .getResult();
+  }
+
+  public Hash transfer(final Address sender, final Address receiver, final Wei amount) {
+    return post(
+            "eth_sendTransaction",
+            SendTransactionResponse.class,
+            new SendTransactionRequest(sender, receiver, null, amount))
         .getResult();
   }
 

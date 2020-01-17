@@ -24,6 +24,8 @@ public class SubnetAddresses {
       Pattern.compile("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.%d$");
 
   private static final int HOST_MAXIMUM = 255;
+
+  /** First address is reserved for the TestContainer routing container. */
   private static final int FIRST_AVAILABLE_HOST_ADDRESS = 2;
 
   private final String addressFormat;

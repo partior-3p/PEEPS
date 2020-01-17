@@ -27,7 +27,7 @@ import org.apache.logging.log4j.Logger;
 public class OrionRpc extends RpcClient {
 
   private static final Logger LOG = LogManager.getLogger();
-  private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(5);
+  private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(4);
 
   private final String pubKey;
 

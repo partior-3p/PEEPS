@@ -12,14 +12,15 @@
  */
 package tech.pegasys.peeps.signer;
 
+import tech.pegasys.peeps.node.Besu;
+
 import io.vertx.core.Vertx;
 import org.testcontainers.containers.Network;
 
 public class EthSignerConfiguration {
 
   private final long chainId;
-  private final String downstreamHost;
-  private final int downstreamPort;
+  private final Besu downstream;
 
   // TODO move these out, they are not related to the node, but test container setups
   private final Network containerNetwork;
@@ -33,16 +34,14 @@ public class EthSignerConfiguration {
 
   public EthSignerConfiguration(
       final long chainId,
-      final String downstreamHost,
-      final int downstreamPort,
+      final Besu downstream,
       final Network containerNetwork,
       final String ipAddress,
       final Vertx vertx,
       final String keyFile,
       final String passwordFile) {
     this.chainId = chainId;
-    this.downstreamHost = downstreamHost;
-    this.downstreamPort = downstreamPort;
+    this.downstream = downstream;
     this.containerNetwork = containerNetwork;
     this.ipAddress = ipAddress;
     this.vertx = vertx;
@@ -66,12 +65,8 @@ public class EthSignerConfiguration {
     return chainId;
   }
 
-  public int getDownstreamPort() {
-    return downstreamPort;
-  }
-
-  public String getDownstreamHost() {
-    return downstreamHost;
+  public Besu getDownstream() {
+    return downstream;
   }
 
   public String getKeyFile() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 ConsenSys AG.
+ * Copyright 2020 ConsenSys AG.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -10,21 +10,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.signer.rpc.eea;
+package tech.pegasys.peeps.node.verification;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import tech.pegasys.peeps.node.rpc.NodeRpcExpectingData;
 
-public class SendPrivateTransactionResponse {
+public interface NodeValueTransition {
 
-  private final String result;
-
-  @JsonCreator
-  public SendPrivateTransactionResponse(@JsonProperty("result") final String result) {
-    this.result = result;
-  }
-
-  public String getResult() {
-    return result;
-  }
+  void verify(NodeRpcExpectingData rpc);
 }

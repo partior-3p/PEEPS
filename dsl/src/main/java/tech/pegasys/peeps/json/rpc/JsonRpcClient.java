@@ -27,15 +27,13 @@ public class JsonRpcClient extends RpcClient {
   }
 
   public <T> T post(final String method, final Class<T> clazz) {
-    return this.post(method, new Object[0], clazz);
+    return this.post(method, clazz, new Object[0]);
   }
 
-  @Override
-  public <T> T post(final String method, final Object params, final Class<T> clazz) {
+  public <T> T post(final String method, final Class<T> clazz, final Object... params) {
     return super.post(
         JSON_RPC_CONTEXT_PATH,
-        new JsonRpcRequest(
-            JSON_RPC_VERSION, method, new Object[] {params}, new JsonRpcRequestId(1)),
+        new JsonRpcRequest(JSON_RPC_VERSION, method, params, new JsonRpcRequestId(1)),
         clazz);
   }
 }

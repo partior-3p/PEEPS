@@ -13,11 +13,13 @@
 package tech.pegasys.peeps.signer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static tech.pegasys.peeps.util.Await.await;
 
+import tech.pegasys.peeps.network.NetworkMember;
 import tech.pegasys.peeps.node.Besu;
-import tech.pegasys.peeps.privacy.Orion;
 import tech.pegasys.peeps.signer.rpc.SignerRpc;
-import tech.pegasys.peeps.util.Await;
+import tech.pegasys.peeps.signer.rpc.SignerRpcExpectingData;
+import tech.pegasys.peeps.util.DockerLogs;
 
 import java.time.Duration;
 import java.util.List;
@@ -31,7 +33,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-public class EthSigner {
+public class EthSigner implements NetworkMember {
 
   private static final Logger LOG = LogManager.getLogger();
 
@@ -47,19 +49,11 @@ public class EthSigner {
   private static final String CONTAINER_KEY_FILE = "/etc/ethsigner/key_file.v3";
   private static final String CONTAINER_PASSWORD_FILE = "/etc/ethsigner/password_file.txt";
 
-  // TODO need a rpcClient to send stuff to the signer
   private final GenericContainer<?> ethSigner;
-  private final SignerRpc rpc;
+  private final SignerRpcExpectingData rpc;
+  private final SignerRpc signerRpc;
+  private final Besu downstream;
 
-  // TODO better typing
-
-  // TODO enter this perhaps
-  // TODO this is stored in the wallet file as address - can be read in EthSigner
-  private final String senderAccount = "0xf17f52151ebef6c7334fad080c5704d77216b732";
-  //  private final String senderAccount = "0x627306090abab3a6e1400e9345bc60c78a8bef57";
-
-  // TODO need to know about the Besu we are talking to, can output docker logs
-  // TODO for privacy transaction need the Orion logs too
   public EthSigner(final EthSignerConfiguration config) {
 
     final GenericContainer<?> container = new GenericContainer<>(ETH_SIGNER_IMAGE);
@@ -72,19 +66,22 @@ public class EthSigner {
     addContainerIpAddress(config, container);
     addFileBasedSigner(config, commandLineOptions, container);
 
-    LOG.info("EthSigner command line {}", commandLineOptions);
+    LOG.info("EthSigner command line: {}", commandLineOptions);
 
+    this.downstream = config.getDownstream();
     this.ethSigner =
         container.withCommand(commandLineOptions.toArray(new String[0])).waitingFor(liveliness());
 
-    this.rpc = new SignerRpc(config.getVertx(), DOWNSTREAM_TIMEOUT);
+    this.signerRpc = new SignerRpc(config.getVertx(), DOWNSTREAM_TIMEOUT);
+    this.rpc = new SignerRpcExpectingData(signerRpc, () -> getLogs(), () -> downstream.getLogs());
   }
 
+  @Override
   public void start() {
     try {
       ethSigner.start();
 
-      rpc.bind(
+      signerRpc.bind(
           ethSigner.getContainerId(),
           ethSigner.getContainerIpAddress(),
           ethSigner.getMappedPort(CONTAINER_HTTP_RPC_PORT));
@@ -100,26 +97,28 @@ public class EthSigner {
     }
   }
 
+  @Override
   public void stop() {
     if (ethSigner != null) {
       ethSigner.stop();
     }
-    if (rpc != null) {
-      rpc.close();
+    if (signerRpc != null) {
+      signerRpc.close();
     }
   }
 
-  // TODO could config a EthSigner to be bound to a node & orion setup?
-  public String deployContractToPrivacyGroup(
-      final String binary, final Orion sender, final Orion... recipients) {
-    final String[] privateRecipients = new String[recipients.length];
-    for (int i = 0; i < recipients.length; i++) {
-      privateRecipients[i] = recipients[i].getId();
-    }
+  public SignerRpcExpectingData rpc() {
+    return rpc;
+  }
 
-    // TODO catch error & log EthSigner & Besu & Orion docker logs
-    return rpc.deployContractToPrivacyGroup(
-        senderAccount, binary, sender.getId(), privateRecipients);
+  public void awaitConnectivityToDownstream() {
+    await(
+        () -> assertThat(signerRpc.enode()).isEqualTo(downstream.enodeId()),
+        String.format("Failed to connect to node: %s", downstream.enodeId()));
+  }
+
+  private String getLogs() {
+    return DockerLogs.format("EthSigner", ethSigner);
   }
 
   private HttpWaitStrategy liveliness() {
@@ -144,10 +143,10 @@ public class EthSigner {
 
   private void logContainerNetworkDetails() {
     if (ethSigner.getNetwork() == null) {
-      LOG.info("EthSigner Container {} has no network", ethSigner.getContainerId());
+      LOG.info("EthSigner Container: {}, has no network", ethSigner.getContainerId());
     } else {
       LOG.info(
-          "EthSigner Container {}, IP address: {}, Network: {}",
+          "EthSigner Container: {}, IP address: {}, Network: {}",
           ethSigner.getContainerId(),
           ethSigner.getContainerIpAddress(),
           ethSigner.getNetwork().getId());
@@ -156,7 +155,7 @@ public class EthSigner {
 
   private void logPortMappings() {
     LOG.info(
-        "EthSigner Container {}, HTTP RPC port mapping: {} -> {}",
+        "EthSigner Container: {}, HTTP RPC port mapping: {} -> {}",
         ethSigner.getContainerId(),
         CONTAINER_HTTP_RPC_PORT,
         ethSigner.getMappedPort(CONTAINER_HTTP_RPC_PORT));
@@ -171,13 +170,13 @@ public class EthSigner {
   private void addDownstreamPort(
       final EthSignerConfiguration config, final List<String> commandLineOptions) {
     commandLineOptions.add("--downstream-http-port");
-    commandLineOptions.add(String.valueOf(config.getDownstreamPort()));
+    commandLineOptions.add(String.valueOf(config.getDownstream().httpRpcPort()));
   }
 
   private void addDownstreamHost(
       final EthSignerConfiguration config, final List<String> commandLineOptions) {
     commandLineOptions.add("--downstream-http-host");
-    commandLineOptions.add(config.getDownstreamHost());
+    commandLineOptions.add(config.getDownstream().ipAddress());
   }
 
   private void addContainerNetwork(
@@ -206,11 +205,5 @@ public class EthSigner {
     commandLineOptions.add(CONTAINER_PASSWORD_FILE);
     container.withClasspathResourceMapping(
         config.getPasswordFile(), CONTAINER_PASSWORD_FILE, BindMode.READ_ONLY);
-  }
-
-  public void awaitConnectivity(final Besu node) {
-    Await.await(
-        () -> assertThat(rpc.enode()).isEqualTo(node.getEnodeId()),
-        String.format("Failed to connect to node: %s", node.getEnodeId()));
   }
 }

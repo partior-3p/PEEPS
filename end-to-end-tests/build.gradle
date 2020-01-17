@@ -16,6 +16,8 @@ dependencies {
 
   testImplementation project(':dsl')
 
+  testImplementation 'org.apache.tuweni:tuweni-eth'
+  testImplementation 'org.apache.tuweni:tuweni-units'
   testImplementation 'commons-codec:commons-codec'
   testImplementation 'org.assertj:assertj-core'
   testImplementation 'org.junit.jupiter:junit-jupiter-api'

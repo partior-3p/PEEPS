@@ -13,178 +13,96 @@
 package tech.pegasys.peeps.network;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static org.assertj.core.api.Assertions.assertThat;
+import static tech.pegasys.peeps.util.Await.await;
 
+import tech.pegasys.peeps.json.Json;
 import tech.pegasys.peeps.node.Besu;
 import tech.pegasys.peeps.node.BesuConfigurationBuilder;
-import tech.pegasys.peeps.node.NodeKeys;
+import tech.pegasys.peeps.node.GenesisAccounts;
+import tech.pegasys.peeps.node.NodeKey;
+import tech.pegasys.peeps.node.genesis.Genesis;
+import tech.pegasys.peeps.node.genesis.GenesisAccount;
+import tech.pegasys.peeps.node.genesis.GenesisConfig;
+import tech.pegasys.peeps.node.genesis.ethhash.EthHashConfig;
+import tech.pegasys.peeps.node.genesis.ethhash.GenesisConfigEthHash;
+import tech.pegasys.peeps.node.genesis.ibft2.GenesisConfigIbft2;
+import tech.pegasys.peeps.node.genesis.ibft2.Ibft2Config;
+import tech.pegasys.peeps.node.genesis.ibft2.Ibft2ExtraData;
+import tech.pegasys.peeps.node.model.GenesisAddress;
+import tech.pegasys.peeps.node.model.Hash;
 import tech.pegasys.peeps.node.model.TransactionReceipt;
+import tech.pegasys.peeps.node.verification.AccountValue;
 import tech.pegasys.peeps.privacy.Orion;
+import tech.pegasys.peeps.privacy.OrionConfiguration;
 import tech.pegasys.peeps.privacy.OrionConfigurationBuilder;
-import tech.pegasys.peeps.privacy.OrionKeys;
+import tech.pegasys.peeps.privacy.OrionConfigurationFile;
+import tech.pegasys.peeps.privacy.OrionKeyPair;
 import tech.pegasys.peeps.signer.EthSigner;
 import tech.pegasys.peeps.signer.EthSignerConfigurationBuilder;
-import tech.pegasys.peeps.util.Await;
+import tech.pegasys.peeps.signer.SignerWallet;
 import tech.pegasys.peeps.util.PathGenerator;
 
 import java.io.Closeable;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import io.vertx.core.Vertx;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.tuweni.eth.Address;
 
 public class Network implements Closeable {
 
-  // TODO do not be hard coded as two nodes - flexibility in nodes & stack
-  // TODO cater for one-many & many-one for Besu/Orion
-  // TODO cater for one-many for Besu/EthSigner
+  private static final Logger LOG = LogManager.getLogger();
 
-  private final Besu besuA;
-  private final Orion orionA;
-  private final EthSigner signerA;
+  private final List<NetworkMember> members;
+  private final List<Besu> nodes;
+  private final List<EthSigner> signers;
+  private final List<Orion> privacyManagers;
 
-  private final Besu besuB;
-  private final EthSigner signerB;
-  private final Orion orionB;
-
+  private final Subnet subnet;
   private final org.testcontainers.containers.Network network;
-
+  private final PathGenerator pathGenerator;
   private final Vertx vertx;
+  private final Path genesisFile;
 
-  // TODO choosing the topology should be elsewhere
+  private Genesis genesis;
+
   public Network(final Path configurationDirectory) {
-    checkNotNull(configurationDirectory);
+    checkNotNull(configurationDirectory, "Path to configuration directory is mandatory");
 
-    final PathGenerator pathGenerator = new PathGenerator(configurationDirectory);
+    this.privacyManagers = new ArrayList<>();
+    this.members = new ArrayList<>();
+    this.signers = new ArrayList<>();
+    this.nodes = new ArrayList<>();
+    this.pathGenerator = new PathGenerator(configurationDirectory);
     this.vertx = Vertx.vertx();
-
-    final Subnet subnet = new Subnet();
-
+    this.subnet = new Subnet();
     this.network = subnet.createContainerNetwork();
+    this.genesisFile = pathGenerator.uniqueFile();
 
-    // TODO 0.1 seems to be used, maybe assigned by the network container?
-
-    // TODO better typing then String
-    final String ipAddressOrionA = subnet.getAddressAndIncrement();
-    final String ipAddressBesuA = subnet.getAddressAndIncrement();
-    final String ipAddressSignerA = subnet.getAddressAndIncrement();
-    final String ipAddressOrionB = subnet.getAddressAndIncrement();
-    final String ipAddressBesuB = subnet.getAddressAndIncrement();
-    final String ipAddressSignerB = subnet.getAddressAndIncrement();
-
-    // TODO these should come from the Besu, or config aggregation
-    final long chainId = 4004;
-    final int portBesuA = 8545;
-    final int portBesuB = 8545;
-
-    // TODO name files according the account pubkey
-
-    // TODO these should come from somewhere, programmatically generated?
-    final String keyFileSignerA = "signer/account/funded/wallet_a.v3";
-    final String passwordFileSignerA = "signer/account/funded/wallet_a.pass";
-    final String keyFileSignerB = "signer/account/funded/wallet_b.v3";
-    final String passwordFileSignerB = "signer/account/funded/wallet_b.pass";
-
-    this.orionA =
-        new Orion(
-            new OrionConfigurationBuilder()
-                .withVertx(vertx)
-                .withContainerNetwork(network)
-                .withIpAddress(ipAddressOrionA)
-                .withPrivateKeys(Collections.singletonList(OrionKeys.ONE.getPrivateKey()))
-                .withPublicKeys(Collections.singletonList(OrionKeys.ONE.getPublicKey()))
-                .withFileSystemConfigurationFile(pathGenerator.uniqueFile())
-                .build());
-
-    this.besuA =
-        new Besu(
-            new BesuConfigurationBuilder()
-                .withVertx(vertx)
-                .withContainerNetwork(network)
-                .withPrivacyUrl(orionA.getNetworkRpcAddress())
-                .withIpAddress(ipAddressBesuA)
-                .withNodePrivateKeyFile(NodeKeys.BOOTNODE.getPrivateKeyFile())
-                .withPrivacyManagerPublicKey(OrionKeys.ONE.getPublicKey())
-                .build());
-
-    this.signerA =
-        new EthSigner(
-            new EthSignerConfigurationBuilder()
-                .withVertx(vertx)
-                .withContainerNetwork(network)
-                .withIpAddress(ipAddressSignerA)
-                .withChainId(chainId)
-                .withDownstreamHost(ipAddressBesuA)
-                .withDownstreamPort(portBesuA)
-                .withKeyFile(keyFileSignerA)
-                .withPasswordFile(passwordFileSignerA)
-                .build());
-
-    // TODO More typing then a String - URI, URL, File or Path
-    final List<String> orionBootnodes = new ArrayList<>();
-    orionBootnodes.add(orionA.getPeerNetworkAddress());
-
-    this.orionB =
-        new Orion(
-            new OrionConfigurationBuilder()
-                .withVertx(vertx)
-                .withContainerNetwork(network)
-                .withIpAddress(ipAddressOrionB)
-                .withPrivateKeys(Collections.singletonList(OrionKeys.TWO.getPrivateKey()))
-                .withPublicKeys(Collections.singletonList(OrionKeys.TWO.getPublicKey()))
-                .withBootnodeUrls(orionBootnodes)
-                .withFileSystemConfigurationFile(pathGenerator.uniqueFile())
-                .build());
-
-    // TODO better typing then String
-    final String bootnodeEnodeAddress = NodeKeys.BOOTNODE.getEnodeAddress(ipAddressBesuA, "30303");
-
-    this.besuB =
-        new Besu(
-            new BesuConfigurationBuilder()
-                .withVertx(vertx)
-                .withContainerNetwork(network)
-                .withPrivacyUrl(orionB.getNetworkRpcAddress())
-                .withIpAddress(ipAddressBesuB)
-                .withBootnodeEnodeAddress(bootnodeEnodeAddress)
-                .withPrivacyManagerPublicKey(OrionKeys.TWO.getPublicKey())
-                .build());
-
-    this.signerB =
-        new EthSigner(
-            new EthSignerConfigurationBuilder()
-                .withVertx(vertx)
-                .withContainerNetwork(network)
-                .withChainId(chainId)
-                .withIpAddress(ipAddressSignerB)
-                .withDownstreamHost(ipAddressBesuB)
-                .withDownstreamPort(portBesuB)
-                .withKeyFile(keyFileSignerB)
-                .withPasswordFile(passwordFileSignerB)
-                .build());
+    set(ConsensusMechanism.ETH_HASH);
   }
 
   public void start() {
-    // TODO multi-thread the blocking start ops, using await connectivity as the
-    // sync point
-    orionA.start();
-    besuA.start();
-    signerA.start();
-    orionB.start();
-    besuB.start();
-    signerB.start();
+    members.parallelStream().forEach(member -> member.start());
+
     awaitConnectivity();
   }
 
   public void stop() {
-    orionA.stop();
-    besuA.stop();
-    signerA.stop();
-    orionB.stop();
-    besuB.stop();
-    signerB.stop();
+    members.parallelStream().forEach(member -> member.stop());
   }
 
   @Override
@@ -194,65 +112,204 @@ public class Network implements Closeable {
     network.close();
   }
 
-  private void awaitConnectivity() {
-    besuA.awaitConnectivity(besuB);
-    besuB.awaitConnectivity(besuA);
-    orionA.awaitConnectivity(orionB);
-    orionB.awaitConnectivity(orionA);
+  // TODO validators hacky, dynamically figure out after the nodes are all added
+  public void set(final ConsensusMechanism consensus, final Besu... validators) {
 
-    signerA.awaitConnectivity(besuA);
-    signerB.awaitConnectivity(besuB);
+    // TODO deny is network is live
+
+    // TODO delay node loading of genesis until after start
+    //    checkState(nodes.isEmpty(), "Cannot change consensus mechanism after creating nodes");
+    checkState(signers.isEmpty(), "Cannot change consensus mechanism after creating signers");
+
+    this.genesis = createGenesis(consensus, validators);
+
+    writeGenesisFile();
   }
 
-  // TODO restructure, maybe Supplier related or a utility on network?
-  // TODO stricter typing than String
-  public void awaitConsensusOn(final String receiptHash) {
+  public Besu addNode(final NodeKey identity) {
+    return addNode(new BesuConfigurationBuilder().withIdentity(identity));
+  }
 
-    Await.await(
+  public Besu addNode(final BesuConfigurationBuilder config) {
+
+    // TODO supplier for the genesis file?
+    final Besu besu =
+        new Besu(
+            config
+                .withVertx(vertx)
+                .withContainerNetwork(network)
+                .withIpAddress(subnet.getAddressAndIncrement())
+                .withGenesisFile(genesisFile)
+                .withBootnodeEnodeAddress(bootnodeEnodeAddresses())
+                .build());
+
+    nodes.add(besu);
+    members.add(besu);
+
+    return besu;
+  }
+
+  private String bootnodeEnodeAddresses() {
+    return nodes
+        .parallelStream()
+        .map(node -> node.identity().enodeAddress(node.ipAddress(), node.p2pPort()))
+        .collect(Collectors.joining(","));
+  }
+
+  public Orion addPrivacyManager(final OrionKeyPair... keys) {
+
+    final OrionConfiguration configuration =
+        new OrionConfigurationBuilder()
+            .withVertx(vertx)
+            .withContainerNetwork(network)
+            .withIpAddress(subnet.getAddressAndIncrement())
+            .withFileSystemConfigurationFile(pathGenerator.uniqueFile())
+            .withBootnodeUrls(privacyManagerBootnodeUrls())
+            .withKeyPairs(keys)
+            .build();
+
+    // TODO encapsulate?
+    OrionConfigurationFile.write(configuration);
+
+    final Orion manager = new Orion(configuration);
+
+    privacyManagers.add(manager);
+    members.add(manager);
+
+    return manager;
+  }
+
+  public EthSigner addSigner(final SignerWallet wallet, final Besu downstream) {
+    final EthSigner signer =
+        new EthSigner(
+            new EthSignerConfigurationBuilder()
+                .withVertx(vertx)
+                .withContainerNetwork(network)
+                .withIpAddress(subnet.getAddressAndIncrement())
+                .withDownstream(downstream)
+                .withChainId(genesis.getConfig().getChainId())
+                .witWallet(wallet)
+                .build());
+
+    signers.add(signer);
+    members.add(signer);
+
+    return signer;
+  }
+
+  /**
+   * Waits until either all nodes in the network reach consensus on the Transaction Receipt (that
+   * includes a block hash), or exceptions when wait time has been exceeded.
+   */
+  public void awaitConsensusOnTransactionReciept(final Hash transaction) {
+    checkState(nodes.size() > 1, "There must be two or more nodes to be able to wait on consensus");
+
+    await(
         () -> {
-          final TransactionReceipt pmtReceiptNodeA = besuA.getTransactionReceipt(receiptHash);
-          final TransactionReceipt pmtReceiptNodeB = besuB.getTransactionReceipt(receiptHash);
+          final List<TransactionReceipt> receipts =
+              nodes
+                  .parallelStream()
+                  .map(node -> node.rpc().getTransactionReceipt(transaction))
+                  .collect(Collectors.toList());
 
-          assertThat(pmtReceiptNodeA).isNotNull();
-          assertThat(pmtReceiptNodeA.isSuccess()).isTrue();
-          assertThat(pmtReceiptNodeA).usingRecursiveComparison().isEqualTo(pmtReceiptNodeB);
+          assertThat(receipts.size()).isEqualTo(nodes.size());
+          final TransactionReceipt firstReceipt = receipts.get(0);
+
+          for (final TransactionReceipt receipt : receipts) {
+            assertThat(receipt).isNotNull();
+            assertThat(receipt.isSuccess()).isTrue();
+            assertThat(receipt).usingRecursiveComparison().isEqualTo(firstReceipt);
+          }
         },
-        "Consensus was not reached in time for receipt hash: " + receiptHash);
+        "Consensus was not reached in time for Transaction Receipt with hash: " + transaction);
   }
 
-  // TODO interfaces for the signer used by the test?
-  // TODO figure out a nicer way for the UT to get a handle on the signers
-  public EthSigner getSignerA() {
-    return signerA;
+  public void verifyConsensusOnValue(final Address... accounts) {
+    checkState(
+        nodes.size() > 1, "There must be two or more nodes to be able to verify on consensus");
+
+    final Besu firstNode = nodes.get(0);
+    final Set<AccountValue> values =
+        Stream.of(accounts)
+            .parallel()
+            .map(account -> new AccountValue(account, firstNode.rpc().getBalance(account)))
+            .collect(Collectors.toSet());
+
+    nodes.parallelStream().forEach(node -> node.verifyValue(values));
   }
 
-  public EthSigner getSignerB() {
-    return signerB;
+  private Genesis createGenesis(final ConsensusMechanism consensus, final Besu... validators) {
+    final long chainId = Math.round(Math.random() * Long.MAX_VALUE);
+
+    final GenesisConfig genesisConfig;
+
+    switch (consensus) {
+      case IBFT2:
+        genesisConfig = new GenesisConfigIbft2(chainId, new Ibft2Config());
+        break;
+      case ETH_HASH:
+      default:
+        genesisConfig = new GenesisConfigEthHash(chainId, new EthHashConfig());
+        break;
+    }
+
+    // TODO configurable somehow?
+    final Map<GenesisAddress, GenesisAccount> genesisAccounts =
+        GenesisAccounts.of(GenesisAccounts.ALPHA, GenesisAccounts.BETA, GenesisAccounts.GAMMA);
+
+    final String extraData;
+
+    switch (consensus) {
+      case IBFT2:
+        extraData = Ibft2ExtraData.encode(validators).toString();
+        break;
+      case ETH_HASH:
+      default:
+        extraData = null;
+        break;
+    }
+
+    return new Genesis(genesisConfig, genesisAccounts, extraData);
   }
 
-  // TODO figure out a nicer way for the UT to get a handle on the node or send
-  // requests
-  public Besu getNodeA() {
-    return besuA;
+  private void writeGenesisFile() {
+
+    // TODO delay creation of alloc & extra data until after all nodes addded & validators /
+    // accounts known
+
+    final String encodedBesuGenesis = Json.encode(genesis);
+    LOG.info(
+        "Creating Besu genesis file\n\tLocation: {} \n\tContents: {}",
+        genesisFile,
+        encodedBesuGenesis);
+
+    try {
+      Files.write(
+          genesisFile,
+          encodedBesuGenesis.getBytes(StandardCharsets.UTF_8),
+          StandardOpenOption.CREATE);
+    } catch (final IOException e) {
+      final String message =
+          String.format(
+              "Problem creating the Besu config file in the file system: %s, %s",
+              genesisFile, e.getLocalizedMessage());
+      throw new IllegalStateException(message);
+    }
   }
 
-  // TODO figure out a nicer way for the UT to get a handle on the node or send
-  // requests
-  public Besu getNodeB() {
-    return besuB;
+  private void awaitConnectivity() {
+
+    nodes.parallelStream().forEach(node -> node.awaitConnectivity(nodes));
+    privacyManagers
+        .parallelStream()
+        .forEach(privacyManger -> privacyManger.awaitConnectivity(privacyManagers));
+    signers.parallelStream().forEach(signer -> signer.awaitConnectivityToDownstream());
   }
 
-  // TODO figure out a nicer way for the UT to get a handle on the Orion or send
-  // requests
-  public Orion getOrionA() {
-    return orionA;
+  private List<String> privacyManagerBootnodeUrls() {
+    return privacyManagers
+        .parallelStream()
+        .map(manager -> manager.getPeerNetworkAddress())
+        .collect(Collectors.toList());
   }
-
-  // TODO figure out a nicer way for the UT to get a handle on the Orion or send
-  // requests
-  public Orion getOrionB() {
-    return orionB;
-  }
-
-  // TODO provide a handle for Besus too? (web3j?)
 }
