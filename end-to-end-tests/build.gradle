@@ -16,6 +16,7 @@ dependencies {
 
   testImplementation project(':dsl')
 
+  testImplementation 'org.bouncycastle:bcprov-jdk15on'
   testImplementation 'org.apache.tuweni:tuweni-eth'
   testImplementation 'org.apache.tuweni:tuweni-units'
   testImplementation 'commons-codec:commons-codec'

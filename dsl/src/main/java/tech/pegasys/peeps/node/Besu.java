@@ -19,6 +19,8 @@ import static tech.pegasys.peeps.util.Await.await;
 import static tech.pegasys.peeps.util.HexFormatter.ensureHexPrefix;
 
 import tech.pegasys.peeps.network.NetworkMember;
+import tech.pegasys.peeps.node.model.Hash;
+import tech.pegasys.peeps.node.model.TransactionReceipt;
 import tech.pegasys.peeps.node.rpc.NodeRpc;
 import tech.pegasys.peeps.node.rpc.NodeRpcExpectingData;
 import tech.pegasys.peeps.node.rpc.admin.NodeInfo;
@@ -26,6 +28,7 @@ import tech.pegasys.peeps.node.verification.AccountValue;
 import tech.pegasys.peeps.node.verification.NodeValueTransition;
 import tech.pegasys.peeps.util.DockerLogs;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -155,7 +158,7 @@ public class Besu implements NetworkMember {
     return CONTAINER_P2P_PORT;
   }
 
-  public void awaitConnectivity(final List<Besu> peers) {
+  public void awaitConnectivity(final Collection<Besu> peers) {
     awaitPeerIdConnections(excludeSelf(expectedPeerIds(peers)));
   }
 
@@ -175,6 +178,13 @@ public class Besu implements NetworkMember {
     values.parallelStream().forEach(value -> value.verify(rpc));
   }
 
+  public void verifySuccessfulTransactionReceipt(final Hash transaction) {
+    final TransactionReceipt receipt = rpc.getTransactionReceipt(transaction);
+
+    assertThat(receipt.getTransactionHash()).isEqualTo(transaction);
+    assertThat(receipt.isSuccess()).isTrue();
+  }
+
   private String getNodeId() {
     checkNotNull(nodeId, "NodeId only exists after the node has started");
     return nodeId;
@@ -186,7 +196,7 @@ public class Besu implements NetworkMember {
         String.format("Failed to connect in time to peers: %s", peerIds));
   }
 
-  private Set<String> expectedPeerIds(final List<Besu> peers) {
+  private Set<String> expectedPeerIds(final Collection<Besu> peers) {
     return peers
         .parallelStream()
         .map(node -> ensureHexPrefix(node.getNodeId()))

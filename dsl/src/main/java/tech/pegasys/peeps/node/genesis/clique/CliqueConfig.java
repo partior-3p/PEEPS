@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 ConsenSys AG.
+ * Copyright 2020 ConsenSys AG.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -10,31 +10,31 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.privacy.rpc.receive;
-
-import tech.pegasys.peeps.privacy.model.OrionKey;
+package tech.pegasys.peeps.node.genesis.clique;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ReceiveRequest {
+public class CliqueConfig {
 
-  private final String to;
-  private final OrionKey key;
+  private final int blockPeriodSeconds;
+  private final int epochLength;
 
-  public ReceiveRequest(final String to, final OrionKey key) {
-    this.to = to;
-    this.key = key;
+  public CliqueConfig() {
+    this(2, 30000);
   }
 
-  @JsonGetter("to")
-  public String getTo() {
-    return to;
+  public CliqueConfig(final int blockPeriodSeconds, final int epochLength) {
+    this.blockPeriodSeconds = blockPeriodSeconds;
+    this.epochLength = epochLength;
   }
 
-  @JsonGetter("key")
-  public OrionKey getKey() {
-    return key;
+  @JsonGetter("blockperiodseconds")
+  public int getBlockPeriodSeconds() {
+    return blockPeriodSeconds;
+  }
+
+  @JsonGetter("epochlength")
+  public int getEpochLength() {
+    return epochLength;
   }
 }

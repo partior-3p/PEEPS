@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 ConsenSys AG.
+ * Copyright 2020 ConsenSys AG.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -10,23 +10,24 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.privacy.rpc.send;
+package tech.pegasys.peeps.network;
 
-import tech.pegasys.peeps.privacy.model.OrionKey;
+import tech.pegasys.peeps.node.Besu;
+import tech.pegasys.peeps.node.model.Hash;
+import tech.pegasys.peeps.node.verification.NodeValueTransition;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+public class NodeVerify {
+  private final Besu node;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class SendResponse {
-
-  private final OrionKey key;
-
-  public SendResponse(@JsonProperty("key") final OrionKey key) {
-    this.key = key;
+  public NodeVerify(final Besu node) {
+    this.node = node;
   }
 
-  public OrionKey getKey() {
-    return key;
+  public void transistion(final NodeValueTransition... changes) {
+    node.verifyTransition(changes);
+  }
+
+  public void successfulTransactionReceipt(final Hash transaction) {
+    node.verifySuccessfulTransactionReceipt(transaction);
   }
 }

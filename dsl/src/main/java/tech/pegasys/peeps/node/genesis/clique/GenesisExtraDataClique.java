@@ -10,31 +10,26 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.node.genesis.ibft2;
+package tech.pegasys.peeps.node.genesis.clique;
 
 import tech.pegasys.peeps.node.Besu;
+import tech.pegasys.peeps.node.genesis.GenesisExtraData;
 
-import java.security.Security;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.Hash;
-import org.apache.tuweni.crypto.SECP256K1.Signature;
 import org.apache.tuweni.eth.Address;
-import org.apache.tuweni.rlp.RLP;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-public class Ibft2ExtraData {
+public class GenesisExtraDataClique extends GenesisExtraData {
 
-  // TODO do this static configuration somewhere sensible i.e. not here!
-  static {
-    Security.addProvider(new BouncyCastleProvider());
+  public GenesisExtraDataClique(final Besu... validators) {
+    super(encode(validators));
   }
 
-  public static Bytes encode(final Besu... validators) {
+  private static Bytes encode(final Besu... validators) {
 
     return encode(
         Stream.of(validators)
@@ -48,22 +43,15 @@ public class Ibft2ExtraData {
   }
 
   private static Bytes encode(final List<Address> validators) {
-    final byte[] vanityData = new byte[32];
-    final byte[] round = new byte[4];
-    final byte[] votes = new byte[0];
-    final List<Signature> seals = Collections.emptyList();
+    final Bytes vanityData = Bytes.wrap(new byte[32]);
+    final Bytes proposerSeal = Bytes.wrap(new byte[65]);
+    final Bytes genesisValidators =
+        Bytes.concatenate(
+            validators
+                .parallelStream()
+                .map(validator -> validator.toBytes())
+                .toArray(Bytes[]::new));
 
-    return RLP.encode(
-        writer -> {
-          writer.writeList(
-              listWriter -> {
-                listWriter.writeByteArray(vanityData);
-                listWriter.writeList(
-                    validators, (rlp, validator) -> rlp.writeValue(validator.toBytes()));
-                listWriter.writeByteArray(votes);
-                listWriter.writeByteArray(round);
-                listWriter.writeList(seals, (rlp, committer) -> rlp.writeValue(committer.bytes()));
-              });
-        });
+    return Bytes.concatenate(vanityData, genesisValidators, proposerSeal);
   }
 }

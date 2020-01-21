@@ -14,6 +14,8 @@ package tech.pegasys.peeps.privacy.rpc;
 
 import static tech.pegasys.peeps.util.Await.awaitData;
 
+import tech.pegasys.peeps.privacy.model.OrionKey;
+
 public class OrionRpcExpectingData {
 
   private final OrionRpc rpc;
@@ -22,12 +24,12 @@ public class OrionRpcExpectingData {
     this.rpc = rpc;
   }
 
-  public String send(final String to, final String payload) {
+  public OrionKey send(final String to, final String payload) {
     return awaitData(
         () -> rpc.send(to, payload), "Failed to sent payload: %s, to peer: %s", payload, to);
   }
 
-  public String receive(final String receipt) {
+  public String receive(final OrionKey receipt) {
     return awaitData(
         () -> rpc.receive(receipt), "Failed to retrieve payload with key: %s", receipt);
   }

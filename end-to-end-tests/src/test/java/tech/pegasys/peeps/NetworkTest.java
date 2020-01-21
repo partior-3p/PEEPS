@@ -12,23 +12,35 @@
  */
 package tech.pegasys.peeps;
 
-import tech.pegasys.peeps.network.AwaitNetwork;
 import tech.pegasys.peeps.network.Network;
-import tech.pegasys.peeps.network.VerifyNetwork;
+import tech.pegasys.peeps.network.NetworkAwait;
+import tech.pegasys.peeps.network.NetworkVerify;
+import tech.pegasys.peeps.network.NodeVerify;
+import tech.pegasys.peeps.node.NodeKey;
+import tech.pegasys.peeps.node.rpc.NodeRpcExpectingData;
+import tech.pegasys.peeps.signer.SignerWallet;
+import tech.pegasys.peeps.signer.rpc.SignerRpcExpectingData;
 
 import java.nio.file.Path;
+import java.security.Security;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.io.TempDir;
 
 public abstract class NetworkTest {
 
+  // TODO this may not be the best place to be adding Security providers
+  static {
+    Security.addProvider(new BouncyCastleProvider());
+  }
+
   @TempDir Path configurationDirectory;
 
   private Network network;
-  private AwaitNetwork await;
-  private VerifyNetwork verify;
+  private NetworkAwait await;
+  private NetworkVerify verify;
 
   @BeforeEach
   public void setUpNetwork() {
@@ -37,8 +49,8 @@ public abstract class NetworkTest {
     setUpNetwork(network);
     network.start();
 
-    await = new AwaitNetwork(network);
-    verify = new VerifyNetwork(network);
+    await = new NetworkAwait(network);
+    verify = new NetworkVerify(network);
   }
 
   @AfterEach
@@ -48,11 +60,24 @@ public abstract class NetworkTest {
 
   protected abstract void setUpNetwork(Network network);
 
-  protected AwaitNetwork await() {
+  // TODO not sure about having these here, maybe somewhere else?
+  protected NetworkAwait await() {
     return await;
   }
 
-  protected VerifyNetwork verify() {
+  protected NetworkVerify verify() {
     return verify;
+  }
+
+  protected NodeVerify verify(final NodeKey id) {
+    return network.verify(id);
+  }
+
+  protected SignerRpcExpectingData execute(final SignerWallet id) {
+    return network.rpc(id);
+  }
+
+  protected NodeRpcExpectingData execute(final NodeKey id) {
+    return network.rpc(id);
   }
 }

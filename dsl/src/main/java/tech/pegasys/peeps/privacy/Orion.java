@@ -16,11 +16,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.peeps.privacy.rpc.send.SendPayload.generateUniquePayload;
 
 import tech.pegasys.peeps.network.NetworkMember;
+import tech.pegasys.peeps.privacy.model.OrionKey;
 import tech.pegasys.peeps.privacy.rpc.OrionRpc;
 import tech.pegasys.peeps.privacy.rpc.OrionRpcExpectingData;
 import tech.pegasys.peeps.util.ClasspathResources;
 
-import java.util.List;
+import java.util.Collection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -81,8 +82,8 @@ public class Orion implements NetworkMember {
     this.rpc = new OrionRpcExpectingData(orionRpc);
   }
 
-  public void awaitConnectivity(final List<Orion> peers) {
-    peers.parallelStream().forEach(peer -> awaitConnectivity(peer));
+  public void awaitConnectivity(final Collection<Orion> collection) {
+    collection.parallelStream().forEach(peer -> awaitConnectivity(peer));
   }
 
   @Override
@@ -126,29 +127,24 @@ public class Orion implements NetworkMember {
     return networkRpcAddress;
   }
 
-  // TODO would be nice to not expose this
-  public String getId() {
-    return id;
-  }
-
   // TODO stronger typing than String
-  public String getPayload(final String receipt) {
-    return rpc.receive(receipt);
+  public String getPayload(final OrionKey key) {
+    return rpc.receive(key);
   }
 
   private void awaitConnectivity(final Orion peer) {
     final String message = generateUniquePayload();
 
-    final String receipt = rpc.send(peer.id, message);
-    assertThat(receipt).isNotBlank();
+    final OrionKey key = rpc.send(peer.id, message);
+    assertThat(key).isNotNull();
 
-    assertReceived(rpc, receipt, message);
-    assertReceived(peer.rpc, receipt, message);
+    assertReceived(rpc, key, message);
+    assertReceived(peer.rpc, key, message);
   }
 
   private void assertReceived(
-      final OrionRpcExpectingData rpc, final String receipt, final String sentMessage) {
-    assertThat(rpc.receive(receipt)).isEqualTo(sentMessage);
+      final OrionRpcExpectingData rpc, final OrionKey key, final String sentMessage) {
+    assertThat(rpc.receive(key)).isEqualTo(sentMessage);
   }
 
   private void addPrivateKeys(

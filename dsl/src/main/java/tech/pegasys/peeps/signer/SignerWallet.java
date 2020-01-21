@@ -12,23 +12,39 @@
  */
 package tech.pegasys.peeps.signer;
 
+import tech.pegasys.peeps.node.Account;
+
+import org.apache.tuweni.eth.Address;
+
 public enum SignerWallet {
-  ALPHA("signer/account/funded/wallet_a.v3", "signer/account/funded/wallet_a.pass"),
-  BETA("signer/account/funded/wallet_b.v3", "signer/account/funded/wallet_b.pass");
+  ALPHA(
+      "signer/account/funded/wallet_a.v3",
+      "signer/account/funded/wallet_a.pass",
+      Account.ALPHA.address()),
+  BETA(
+      "signer/account/funded/wallet_b.v3",
+      "signer/account/funded/wallet_b.pass",
+      Account.BETA.address());
 
   private final String keyResource;
   private final String passwordResource;
+  private final Address address;
 
-  SignerWallet(final String keyResource, final String passwordResource) {
+  SignerWallet(final String keyResource, final String passwordResource, final Address address) {
     this.keyResource = keyResource;
     this.passwordResource = passwordResource;
+    this.address = address;
   }
 
-  public String getKeyResource() {
+  public String keyResource() {
     return keyResource;
   }
 
-  public String getPasswordResource() {
+  public String passwordResource() {
     return passwordResource;
+  }
+
+  public Address address() {
+    return address;
   }
 }

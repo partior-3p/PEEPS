@@ -27,13 +27,13 @@ public class Genesis {
 
   private final GenesisConfig config;
   private final Map<GenesisAddress, GenesisAccount> accountBalances;
-  private final String extraData;
+  private final GenesisExtraData extraData;
 
   @JsonCreator
   public Genesis(
       @JsonProperty("config") final GenesisConfig config,
       @JsonProperty("alloc") final Map<GenesisAddress, GenesisAccount> accountBalances,
-      final String extraData) {
+      final GenesisExtraData extraData) {
     this.config = config;
     this.accountBalances = accountBalances;
     this.extraData = extraData;
@@ -45,7 +45,7 @@ public class Genesis {
   }
 
   @JsonGetter("extraData")
-  public String getExtraData() {
+  public GenesisExtraData getExtraData() {
     return extraData;
   }
 

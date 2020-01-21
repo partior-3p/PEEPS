@@ -12,6 +12,8 @@
  */
 package tech.pegasys.peeps.privacy;
 
+import tech.pegasys.peeps.util.ClasspathResources;
+
 // TODO maybe not use an enum?
 public enum OrionKeyPair {
   ALPHA("privacy/keys/key_0"),
@@ -21,19 +23,25 @@ public enum OrionKeyPair {
   private static final String PRIVATE_KEY_FILENAME = "%s.priv";
   private static final String PUBLIC_KEY_FILENAME = "%s.pub";
 
+  private final String pubKeyResource;
+  private final String privKeyResource;
   private final String pubKey;
-  private final String privKey;
 
   OrionKeyPair(final String name) {
-    privKey = String.format(PRIVATE_KEY_FILENAME, name);
-    pubKey = String.format(PUBLIC_KEY_FILENAME, name);
+    this.privKeyResource = String.format(PRIVATE_KEY_FILENAME, name);
+    this.pubKeyResource = String.format(PUBLIC_KEY_FILENAME, name);
+    this.pubKey = ClasspathResources.read(pubKeyResource);
+  }
+
+  public String getPublicKeyResource() {
+    return pubKeyResource;
+  }
+
+  public String getPrivateKeyResource() {
+    return privKeyResource;
   }
 
   public String getPublicKey() {
     return pubKey;
-  }
-
-  public String getPrivateKey() {
-    return privKey;
   }
 }

@@ -12,25 +12,19 @@
  */
 package tech.pegasys.peeps.node.genesis;
 
-import tech.pegasys.peeps.json.Json;
+import com.fasterxml.jackson.annotation.JsonValue;
+import org.apache.tuweni.bytes.Bytes;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+public abstract class GenesisExtraData {
 
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.DecodeException;
+  private final Bytes extraData;
 
-public class BesuGenesisFileChainId {
+  public GenesisExtraData(final Bytes extraData) {
+    this.extraData = extraData;
+  }
 
-  public static long get(final Path genesisFile) {
-
-    try {
-      return Json.decode(Buffer.buffer(Files.readAllBytes(genesisFile)), Genesis.class)
-          .getConfig()
-          .getChainId();
-    } catch (final DecodeException | IOException e) {
-      throw new IllegalArgumentException("Cannot read file: " + genesisFile, e);
-    }
+  @JsonValue
+  public String getExtraData() {
+    return extraData.toString();
   }
 }

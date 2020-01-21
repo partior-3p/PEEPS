@@ -30,7 +30,7 @@ public class NodeRpcExpectingData {
     this.rpc = rpc;
   }
 
-  public PrivacyTransactionReceipt getPrivacyContractReceipt(final Hash receipt) {
+  public PrivacyTransactionReceipt getPrivacyTransactionReceipt(final Hash receipt) {
     return awaitData(
             () -> rpc.getPrivacyTransactionReceipt(receipt),
             "Failed to retrieve the private transaction receipt with hash: %s",

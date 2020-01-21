@@ -14,11 +14,11 @@ package tech.pegasys.peeps.network;
 
 import tech.pegasys.peeps.node.model.Hash;
 
-public class AwaitNetwork {
+public class NetworkAwait {
 
   private final Network network;
 
-  public AwaitNetwork(final Network network) {
+  public NetworkAwait(final Network network) {
     this.network = network;
   }
 

@@ -61,8 +61,8 @@ public class EthSignerConfigurationBuilder {
   }
 
   public EthSignerConfigurationBuilder witWallet(final SignerWallet wallet) {
-    this.keyFile = wallet.getKeyResource();
-    this.passwordFile = wallet.getPasswordResource();
+    this.keyFile = wallet.keyResource();
+    this.passwordFile = wallet.passwordResource();
     return this;
   }
 

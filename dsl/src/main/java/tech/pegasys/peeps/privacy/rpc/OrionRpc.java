@@ -13,6 +13,7 @@
 package tech.pegasys.peeps.privacy.rpc;
 
 import tech.pegasys.peeps.json.rpc.RpcClient;
+import tech.pegasys.peeps.privacy.model.OrionKey;
 import tech.pegasys.peeps.privacy.rpc.receive.ReceiveRequest;
 import tech.pegasys.peeps.privacy.rpc.receive.ReceiveResponse;
 import tech.pegasys.peeps.privacy.rpc.send.SendRequest;
@@ -36,13 +37,12 @@ public class OrionRpc extends RpcClient {
     this.pubKey = pubKey;
   }
 
-  public String send(final String to, final String payload) {
+  public OrionKey send(final String to, final String payload) {
     return post("/send", new SendRequest(pubKey, new String[] {to}, payload), SendResponse.class)
         .getKey();
   }
 
-  public String receive(final String receipt) {
-    return post("/receive", new ReceiveRequest(pubKey, receipt), ReceiveResponse.class)
-        .getPayload();
+  public String receive(final OrionKey key) {
+    return post("/receive", new ReceiveRequest(pubKey, key), ReceiveResponse.class).getPayload();
   }
 }

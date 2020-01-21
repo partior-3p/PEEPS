@@ -13,14 +13,13 @@
 package tech.pegasys.peeps.consensus;
 
 import tech.pegasys.peeps.NetworkTest;
+import tech.pegasys.peeps.network.ConsensusMechanism;
 import tech.pegasys.peeps.network.Network;
-import tech.pegasys.peeps.node.Besu;
-import tech.pegasys.peeps.node.GenesisAccounts;
+import tech.pegasys.peeps.node.Account;
 import tech.pegasys.peeps.node.NodeKey;
 import tech.pegasys.peeps.node.model.Hash;
 import tech.pegasys.peeps.node.verification.ValueReceived;
 import tech.pegasys.peeps.node.verification.ValueSent;
-import tech.pegasys.peeps.signer.EthSigner;
 import tech.pegasys.peeps.signer.SignerWallet;
 
 import org.apache.tuweni.eth.Address;
@@ -29,43 +28,37 @@ import org.junit.jupiter.api.Test;
 
 public class EthHashConsensusTest extends NetworkTest {
 
-  private Besu nodeAlpha;
-  private EthSigner signerAlpha;
+  private final NodeKey node = NodeKey.ALPHA;
+  private final SignerWallet signer = SignerWallet.ALPHA;
 
   @Override
   protected void setUpNetwork(final Network network) {
-
-    this.nodeAlpha = network.addNode(NodeKey.ALPHA);
-
+    network.addNode(node);
     network.addNode(NodeKey.BETA);
-
-    this.signerAlpha = network.addSigner(SignerWallet.ALPHA, nodeAlpha);
+    network.set(ConsensusMechanism.ETH_HASH, node);
+    network.addSigner(signer, node);
   }
 
   @Test
   public void consensusAfterMiningMustHappen() {
 
-    // TODO The sender account should be retrieved from the Signer (as it know which accounts it has
-    // unlocked)
-    final Address sender = GenesisAccounts.GAMMA.address();
-    final Address receiver = GenesisAccounts.BETA.address();
+    final Address sender = signer.address();
+    final Address receiver = Account.BETA.address();
     final Wei transderAmount = Wei.valueOf(5000L);
 
     verify().consensusOnValue(sender, receiver);
 
-    final Wei senderStartBalance = nodeAlpha.rpc().getBalance(sender);
-    final Wei receiverStartBalance = nodeAlpha.rpc().getBalance(receiver);
+    final Wei senderStartBalance = execute(node).getBalance(sender);
+    final Wei receiverStartBalance = execute(node).getBalance(receiver);
 
-    final Hash receipt = signerAlpha.rpc().transfer(sender, receiver, transderAmount);
+    final Hash receipt = execute(signer).transfer(sender, receiver, transderAmount);
 
     await().consensusOnTransactionReciept(receipt);
 
-    // verify state transform
-    final ValueSent sent = new ValueSent(sender, senderStartBalance, receipt);
-    final ValueReceived received =
-        new ValueReceived(receiver, receiverStartBalance, transderAmount);
-
-    nodeAlpha.verifyTransition(sent, received);
+    verify(node)
+        .transistion(
+            new ValueSent(sender, senderStartBalance, receipt),
+            new ValueReceived(receiver, receiverStartBalance, transderAmount));
 
     verify().consensusOnValue(sender, receiver);
   }

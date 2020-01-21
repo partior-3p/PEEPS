@@ -39,8 +39,8 @@ public class OrionConfigurationBuilder {
     this.privKeys = new ArrayList<>();
 
     for (final OrionKeyPair keyPair : keyPairs) {
-      pubKeys.add(keyPair.getPublicKey());
-      privKeys.add(keyPair.getPrivateKey());
+      pubKeys.add(keyPair.getPublicKeyResource());
+      privKeys.add(keyPair.getPrivateKeyResource());
     }
 
     return this;

@@ -13,30 +13,53 @@
 package tech.pegasys.peeps.consensus;
 
 import tech.pegasys.peeps.NetworkTest;
+import tech.pegasys.peeps.network.ConsensusMechanism;
 import tech.pegasys.peeps.network.Network;
+import tech.pegasys.peeps.node.Account;
+import tech.pegasys.peeps.node.NodeKey;
+import tech.pegasys.peeps.node.model.Hash;
+import tech.pegasys.peeps.node.verification.ValueReceived;
+import tech.pegasys.peeps.node.verification.ValueSent;
+import tech.pegasys.peeps.signer.SignerWallet;
 
+import org.apache.tuweni.eth.Address;
+import org.apache.tuweni.units.ethereum.Wei;
 import org.junit.jupiter.api.Test;
 
 public class CliqueConsensusTest extends NetworkTest {
+
+  private final NodeKey node = NodeKey.ALPHA;
+  private final SignerWallet signer = SignerWallet.ALPHA;
+
   @Override
   protected void setUpNetwork(final Network network) {
-    // TODO Auto-generated method stub
-
+    network.addNode(node);
+    network.addNode(NodeKey.BETA);
+    network.set(ConsensusMechanism.CLIQUE, node);
+    network.addSigner(signer, node);
   }
 
   @Test
   public void consensusAfterMiningMustHappen() {
 
-    // TODO no in-line comments - implement clean code!
+    final Address sender = signer.address();
+    final Address receiver = Account.BETA.address();
+    final Wei transderAmount = Wei.valueOf(5000L);
 
-    // Network Two Besus, no EthSigners or Orions
+    verify().consensusOnValue(sender, receiver);
 
-    // Choose Clique as consensus mechanism
+    final Wei senderStartBalance = execute(node).getBalance(sender);
+    final Wei receiverStartBalance = execute(node).getBalance(receiver);
 
-    // Mine: transfer
+    final Hash receipt = execute(signer).transfer(sender, receiver, transderAmount);
 
-    // After suitable time / number of blocks both nodes but agree on state change &
-    // have identical receipt (block number)
+    await().consensusOnTransactionReciept(receipt);
 
+    verify(node)
+        .transistion(
+            new ValueSent(sender, senderStartBalance, receipt),
+            new ValueReceived(receiver, receiverStartBalance, transderAmount));
+
+    verify().consensusOnValue(sender, receiver);
   }
 }
