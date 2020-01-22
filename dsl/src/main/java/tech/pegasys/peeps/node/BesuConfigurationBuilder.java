@@ -14,9 +14,8 @@ package tech.pegasys.peeps.node;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import tech.pegasys.peeps.node.genesis.BesuGenesisFile;
 import tech.pegasys.peeps.privacy.Orion;
-
-import java.nio.file.Path;
 
 import io.vertx.core.Vertx;
 import org.testcontainers.containers.Network;
@@ -27,7 +26,7 @@ public class BesuConfigurationBuilder {
   private static final String DEFAULT_PRIVACY_MARKER_SIGNER_PRIVATE_KEY_FILE =
       "node/keys/pmt_signing.priv";
 
-  private Path genesisFile;
+  private BesuGenesisFile genesisFile;
   private NodeKey identity;
 
   // TODO better typing then String
@@ -46,7 +45,7 @@ public class BesuConfigurationBuilder {
     this.privacyMarkerSigningPrivateKeyFile = DEFAULT_PRIVACY_MARKER_SIGNER_PRIVATE_KEY_FILE;
   }
 
-  public BesuConfigurationBuilder withGenesisFile(final Path genesisFile) {
+  public BesuConfigurationBuilder withGenesisFile(final BesuGenesisFile genesisFile) {
     this.genesisFile = genesisFile;
     return this;
   }
@@ -100,7 +99,7 @@ public class BesuConfigurationBuilder {
     checkNotNull(containerNetwork, "Container network is mandatory");
 
     return new BesuConfiguration(
-        genesisFile,
+        genesisFile.getGenesisFile(),
         privacyManagerPublicKeyFile,
         privacyTransactionManagerUrl,
         privacyMarkerSigningPrivateKeyFile,

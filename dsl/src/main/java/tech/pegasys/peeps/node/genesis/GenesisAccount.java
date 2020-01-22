@@ -12,12 +12,14 @@
  */
 package tech.pegasys.peeps.node.genesis;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 
 public class GenesisAccount {
 
   private final String balance;
 
+  @JsonCreator
   public GenesisAccount(final String balance) {
     this.balance = balance;
   }

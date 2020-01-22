@@ -17,11 +17,11 @@ import static com.google.common.base.Preconditions.checkState;
 import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.peeps.util.Await.await;
 
-import tech.pegasys.peeps.json.Json;
 import tech.pegasys.peeps.node.Account;
 import tech.pegasys.peeps.node.Besu;
 import tech.pegasys.peeps.node.BesuConfigurationBuilder;
 import tech.pegasys.peeps.node.NodeKey;
+import tech.pegasys.peeps.node.genesis.BesuGenesisFile;
 import tech.pegasys.peeps.node.genesis.Genesis;
 import tech.pegasys.peeps.node.genesis.GenesisAccount;
 import tech.pegasys.peeps.node.genesis.GenesisConfig;
@@ -54,11 +54,7 @@ import tech.pegasys.peeps.signer.rpc.SignerRpcExpectingData;
 import tech.pegasys.peeps.util.PathGenerator;
 
 import java.io.Closeable;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -68,13 +64,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.vertx.core.Vertx;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.eth.Address;
 
 public class Network implements Closeable {
-
-  private static final Logger LOG = LogManager.getLogger();
 
   private final List<NetworkMember> members;
   private final Map<OrionKeyPair, Orion> privacyManagers;
@@ -85,7 +77,7 @@ public class Network implements Closeable {
   private final org.testcontainers.containers.Network network;
   private final PathGenerator pathGenerator;
   private final Vertx vertx;
-  private final Path genesisFile;
+  private final BesuGenesisFile genesisFile;
 
   private Genesis genesis;
 
@@ -100,12 +92,14 @@ public class Network implements Closeable {
     this.vertx = Vertx.vertx();
     this.subnet = new Subnet();
     this.network = subnet.createContainerNetwork();
-    this.genesisFile = pathGenerator.uniqueFile();
+    this.genesisFile = new BesuGenesisFile(pathGenerator.uniqueFile());
 
     set(ConsensusMechanism.ETH_HASH);
   }
 
   public void start() {
+    genesisFile.ensureExists(genesis);
+
     members.parallelStream().forEach(member -> member.start());
 
     awaitConnectivity();
@@ -139,15 +133,11 @@ public class Network implements Closeable {
   // TODO validators hacky, dynamically figure out after the nodes are all added
   public void set(final ConsensusMechanism consensus, final Besu... validators) {
 
-    // TODO deny is network is live
+    // TODO network cannot be live
 
-    // TODO delay node loading of genesis until after start
-    //    checkState(nodes.isEmpty(), "Cannot change consensus mechanism after creating nodes");
     checkState(signers.isEmpty(), "Cannot change consensus mechanism after creating signers");
 
     this.genesis = createGenesis(consensus, validators);
-
-    writeGenesisFile();
   }
 
   public Besu addNode(final NodeKey identity) {
@@ -165,8 +155,6 @@ public class Network implements Closeable {
   }
 
   public Besu addNode(final BesuConfigurationBuilder config) {
-
-    // TODO supplier for the genesis file?
     final Besu besu =
         new Besu(
             config
@@ -192,7 +180,6 @@ public class Network implements Closeable {
   }
 
   public Orion addPrivacyManager(final OrionKeyPair... keys) {
-
     final OrionConfiguration configuration =
         new OrionConfigurationBuilder()
             .withVertx(vertx)
@@ -402,33 +389,7 @@ public class Network implements Closeable {
     return new Genesis(genesisConfig, genesisAccounts, extraData);
   }
 
-  private void writeGenesisFile() {
-
-    // TODO delay creation of alloc & extra data until after all nodes addded & validators /
-    // accounts known
-
-    final String encodedBesuGenesis = Json.encode(genesis);
-    LOG.info(
-        "Creating Besu genesis file\n\tLocation: {} \n\tContents: {}",
-        genesisFile,
-        encodedBesuGenesis);
-
-    try {
-      Files.write(
-          genesisFile,
-          encodedBesuGenesis.getBytes(StandardCharsets.UTF_8),
-          StandardOpenOption.CREATE);
-    } catch (final IOException e) {
-      final String message =
-          String.format(
-              "Problem creating the Besu config file in the file system: %s, %s",
-              genesisFile, e.getLocalizedMessage());
-      throw new IllegalStateException(message);
-    }
-  }
-
   private void awaitConnectivity() {
-
     nodes.values().parallelStream().forEach(node -> node.awaitConnectivity(nodes.values()));
 
     privacyManagers

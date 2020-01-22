@@ -17,6 +17,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public class GenesisAddress {
@@ -25,6 +26,7 @@ public class GenesisAddress {
 
   private final String hex;
 
+  @JsonCreator
   public GenesisAddress(final String address) {
     checkNotNull(address);
     checkArgument(

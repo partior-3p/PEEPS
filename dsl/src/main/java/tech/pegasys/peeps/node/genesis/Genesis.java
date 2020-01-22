@@ -16,23 +16,26 @@ import tech.pegasys.peeps.node.model.GenesisAddress;
 
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 
 @JsonInclude(Include.NON_NULL)
 public class Genesis {
 
   private final GenesisConfig config;
   private final Map<GenesisAddress, GenesisAccount> accountBalances;
-  private final GenesisExtraData extraData;
+  private GenesisExtraData extraData;
 
-  @JsonCreator
   public Genesis(
-      @JsonProperty("config") final GenesisConfig config,
-      @JsonProperty("alloc") final Map<GenesisAddress, GenesisAccount> accountBalances,
+      final GenesisConfig config, final Map<GenesisAddress, GenesisAccount> accountBalances) {
+    this(config, accountBalances, null);
+  }
+
+  public Genesis(
+      final GenesisConfig config,
+      final Map<GenesisAddress, GenesisAccount> accountBalances,
       final GenesisExtraData extraData) {
     this.config = config;
     this.accountBalances = accountBalances;
@@ -47,6 +50,11 @@ public class Genesis {
   @JsonGetter("extraData")
   public GenesisExtraData getExtraData() {
     return extraData;
+  }
+
+  @JsonSetter("extraData")
+  public void setExtraData(final GenesisExtraData extraData) {
+    this.extraData = extraData;
   }
 
   @JsonGetter("alloc")
