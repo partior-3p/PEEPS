@@ -17,6 +17,8 @@ import static tech.pegasys.peeps.privacy.rpc.send.SendPayload.generateUniquePayl
 
 import tech.pegasys.peeps.network.NetworkMember;
 import tech.pegasys.peeps.privacy.model.OrionKey;
+import tech.pegasys.peeps.privacy.model.PrivacyPrivateKeyResource;
+import tech.pegasys.peeps.privacy.model.PrivacyPublicKeyResource;
 import tech.pegasys.peeps.privacy.rpc.OrionRpc;
 import tech.pegasys.peeps.privacy.rpc.OrionRpcExpectingData;
 import tech.pegasys.peeps.util.ClasspathResources;
@@ -77,7 +79,7 @@ public class Orion implements NetworkMember {
 
     // TODO just using the first key, selecting the identity could be an option for
     // multi-key Orion
-    this.id = ClasspathResources.read(config.getPublicKeys().get(0));
+    this.id = ClasspathResources.read(config.getPublicKeys().get(0).get());
     this.orionRpc = new OrionRpc(config.getVertx(), id);
     this.rpc = new OrionRpcExpectingData(orionRpc);
   }
@@ -149,16 +151,18 @@ public class Orion implements NetworkMember {
 
   private void addPrivateKeys(
       final OrionConfiguration config, final GenericContainer<?> container) {
-    for (final String key : config.getPrivateKeys()) {
+    for (final PrivacyPrivateKeyResource key : config.getPrivateKeys()) {
+      final String location = key.get();
       container.withClasspathResourceMapping(
-          key, containerWorkingDirectory(key), BindMode.READ_ONLY);
+          location, containerWorkingDirectory(location), BindMode.READ_ONLY);
     }
   }
 
   private void addPublicKeys(final OrionConfiguration config, final GenericContainer<?> container) {
-    for (final String key : config.getPublicKeys()) {
+    for (final PrivacyPublicKeyResource key : config.getPublicKeys()) {
+      final String location = key.get();
       container.withClasspathResourceMapping(
-          key, containerWorkingDirectory(key), BindMode.READ_ONLY);
+          location, containerWorkingDirectory(location), BindMode.READ_ONLY);
     }
   }
 

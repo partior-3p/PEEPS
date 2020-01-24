@@ -13,41 +13,50 @@
 package tech.pegasys.peeps.privacy;
 
 import tech.pegasys.peeps.NetworkTest;
+import tech.pegasys.peeps.NodeConfiguration;
+import tech.pegasys.peeps.PrivacyManagerConfiguration;
+import tech.pegasys.peeps.SignerConfiguration;
 import tech.pegasys.peeps.contract.SimpleStorage;
 import tech.pegasys.peeps.network.Network;
-import tech.pegasys.peeps.node.NodeKey;
 import tech.pegasys.peeps.node.model.Hash;
-import tech.pegasys.peeps.signer.SignerWallet;
 
 import org.apache.commons.codec.DecoderException;
 import org.junit.jupiter.api.Test;
 
 public class PrivacyContracDeploymentTest extends NetworkTest {
 
-  private final NodeKey nodeAlpha = NodeKey.ALPHA;
-  private final SignerWallet signerAlpha = SignerWallet.ALPHA;
-  private final OrionKeyPair privacyManagerAlpha = OrionKeyPair.ALPHA;
-  private final OrionKeyPair privacyManagerBeta = OrionKeyPair.BETA;
+  private final NodeConfiguration nodeAlpha = NodeConfiguration.ALPHA;
+  private final SignerConfiguration signer = SignerConfiguration.ALPHA;
+  private final PrivacyManagerConfiguration privacyManagerAlpha = PrivacyManagerConfiguration.ALPHA;
+  private final PrivacyManagerConfiguration privacyManagerBeta = PrivacyManagerConfiguration.BETA;
 
   @Override
   protected void setUpNetwork(final Network network) {
-    network.addPrivacyManager(privacyManagerAlpha);
-    network.addPrivacyManager(privacyManagerBeta);
-    network.addNode(nodeAlpha, privacyManagerAlpha);
-    network.addNode(NodeKey.BETA, privacyManagerBeta);
-    network.addSigner(SignerWallet.ALPHA, nodeAlpha);
+    network.addPrivacyManager(privacyManagerAlpha.id(), privacyManagerAlpha.keyPair());
+    network.addPrivacyManager(privacyManagerBeta.id(), privacyManagerBeta.keyPair());
+    network.addNode(
+        nodeAlpha.id(),
+        nodeAlpha.keys(),
+        privacyManagerAlpha.id(),
+        privacyManagerAlpha.keyPair().getPublicKey());
+    network.addNode(
+        NodeConfiguration.BETA.id(),
+        NodeConfiguration.BETA.keys(),
+        privacyManagerBeta.id(),
+        privacyManagerBeta.keyPair().getPublicKey());
+    network.addSigner(signer.id(), signer.resources(), nodeAlpha.id());
   }
 
   @Test
   public void deploymentMustSucceed() throws DecoderException {
 
     final Hash pmt =
-        execute(signerAlpha)
+        execute(signer)
             .deployContractToPrivacyGroup(
-                signerAlpha.address(),
+                signer.address(),
                 SimpleStorage.BINARY,
-                privacyManagerAlpha,
-                privacyManagerBeta);
+                privacyManagerAlpha.address(),
+                privacyManagerBeta.address());
 
     await().consensusOnTransactionReciept(pmt);
 
@@ -55,7 +64,7 @@ public class PrivacyContracDeploymentTest extends NetworkTest {
     verify().consensusOnTransaction(pmt);
     verify().consensusOnPrivacyTransactionReceipt(pmt);
     verify()
-        .privacyGroup(privacyManagerAlpha, privacyManagerBeta)
+        .privacyGroup(privacyManagerAlpha.id(), privacyManagerBeta.id())
         .consensusOnPrivacyPayload(execute(nodeAlpha).getTransactionByHash(pmt));
   }
 }

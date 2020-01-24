@@ -14,7 +14,7 @@ package tech.pegasys.peeps.signer.rpc;
 
 import tech.pegasys.peeps.node.model.Hash;
 import tech.pegasys.peeps.node.rpc.NodeRpcExpectingData;
-import tech.pegasys.peeps.privacy.OrionKeyPair;
+import tech.pegasys.peeps.privacy.model.PrivacyAddreess;
 
 import java.util.function.Supplier;
 
@@ -44,16 +44,16 @@ public class SignerRpcExpectingData extends NodeRpcExpectingData {
   public Hash deployContractToPrivacyGroup(
       final Address sender,
       final String binary,
-      final OrionKeyPair privacySender,
-      final OrionKeyPair... privacyRecipients) {
+      final PrivacyAddreess privacySender,
+      final PrivacyAddreess... privacyRecipients) {
     final String[] privateRecipients = new String[privacyRecipients.length];
     for (int i = 0; i < privacyRecipients.length; i++) {
-      privateRecipients[i] = privacyRecipients[i].getPublicKey();
+      privateRecipients[i] = privacyRecipients[i].get();
     }
 
     try {
       return rpc.deployContractToPrivacyGroup(
-          sender, binary, privacySender.getPublicKey(), privateRecipients);
+          sender, binary, privacySender.get(), privateRecipients);
     } catch (final RuntimeException e) {
       LOG.error(signerLogs.get());
       LOG.error(downstreamLogs.get());

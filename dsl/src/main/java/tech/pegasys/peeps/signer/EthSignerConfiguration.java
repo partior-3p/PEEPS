@@ -13,6 +13,8 @@
 package tech.pegasys.peeps.signer;
 
 import tech.pegasys.peeps.node.Besu;
+import tech.pegasys.peeps.signer.model.SignerKeyFileResource;
+import tech.pegasys.peeps.signer.model.SignerPasswordFileResource;
 
 import io.vertx.core.Vertx;
 import org.testcontainers.containers.Network;
@@ -29,8 +31,8 @@ public class EthSignerConfiguration {
 
   // TODO move these file specific ones out into their own config, encapsulate (i.e refactor
   // EthSigner)
-  private final String keyFile;
-  private final String passwordFile;
+  private SignerKeyFileResource keyFile;
+  private SignerPasswordFileResource passwordFile;
 
   public EthSignerConfiguration(
       final long chainId,
@@ -38,8 +40,8 @@ public class EthSignerConfiguration {
       final Network containerNetwork,
       final String ipAddress,
       final Vertx vertx,
-      final String keyFile,
-      final String passwordFile) {
+      final SignerKeyFileResource keyFile,
+      final SignerPasswordFileResource passwordFile) {
     this.chainId = chainId;
     this.downstream = downstream;
     this.containerNetwork = containerNetwork;
@@ -69,11 +71,11 @@ public class EthSignerConfiguration {
     return downstream;
   }
 
-  public String getKeyFile() {
+  public SignerKeyFileResource getKeyFile() {
     return keyFile;
   }
 
-  public String getPasswordFile() {
+  public SignerPasswordFileResource getPasswordFile() {
     return passwordFile;
   }
 }

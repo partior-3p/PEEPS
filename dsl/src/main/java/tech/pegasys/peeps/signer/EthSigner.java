@@ -199,11 +199,11 @@ public class EthSigner implements NetworkMember {
     commandLineOptions.add("--key-file");
     commandLineOptions.add(CONTAINER_KEY_FILE);
     container.withClasspathResourceMapping(
-        config.getKeyFile(), CONTAINER_KEY_FILE, BindMode.READ_ONLY);
+        config.getKeyFile().get(), CONTAINER_KEY_FILE, BindMode.READ_ONLY);
 
     commandLineOptions.add("--password-file");
     commandLineOptions.add(CONTAINER_PASSWORD_FILE);
     container.withClasspathResourceMapping(
-        config.getPasswordFile(), CONTAINER_PASSWORD_FILE, BindMode.READ_ONLY);
+        config.getPasswordFile().get(), CONTAINER_PASSWORD_FILE, BindMode.READ_ONLY);
   }
 }

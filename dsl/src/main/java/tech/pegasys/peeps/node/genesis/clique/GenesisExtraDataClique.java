@@ -37,7 +37,7 @@ public class GenesisExtraDataClique extends GenesisExtraData {
             .map(
                 validator ->
                     Address.fromBytes(
-                        Hash.keccak256(Bytes.fromHexString(validator.identity().getPublicKey()))
+                        Hash.keccak256(Bytes.fromHexString(validator.nodePublicKey()))
                             .slice(12, 20)))
             .collect(Collectors.toList()));
   }

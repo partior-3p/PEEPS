@@ -15,6 +15,10 @@ package tech.pegasys.peeps.privacy;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import tech.pegasys.peeps.privacy.model.PrivacyKeyPair;
+import tech.pegasys.peeps.privacy.model.PrivacyPrivateKeyResource;
+import tech.pegasys.peeps.privacy.model.PrivacyPublicKeyResource;
+
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +28,8 @@ import org.testcontainers.containers.Network;
 
 public class OrionConfigurationBuilder {
 
-  private List<String> privKeys;
-  private List<String> pubKeys;
+  private List<PrivacyPrivateKeyResource> privKeys;
+  private List<PrivacyPublicKeyResource> pubKeys;
   private List<String> bootnodeUrls;
   private Path fileSystemConfigFile;
 
@@ -34,13 +38,13 @@ public class OrionConfigurationBuilder {
   private String ipAddress;
   private Vertx vertx;
 
-  public OrionConfigurationBuilder withKeyPairs(final OrionKeyPair... keyPairs) {
+  public OrionConfigurationBuilder withKeyPairs(final PrivacyKeyPair... keyPairs) {
     this.pubKeys = new ArrayList<>();
     this.privKeys = new ArrayList<>();
 
-    for (final OrionKeyPair keyPair : keyPairs) {
-      pubKeys.add(keyPair.getPublicKeyResource());
-      privKeys.add(keyPair.getPrivateKeyResource());
+    for (final PrivacyKeyPair keyPair : keyPairs) {
+      pubKeys.add(keyPair.getPublicKey());
+      privKeys.add(keyPair.getPrivateKey());
     }
 
     return this;

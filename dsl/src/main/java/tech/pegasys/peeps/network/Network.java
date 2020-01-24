@@ -12,6 +12,7 @@
  */
 package tech.pegasys.peeps.network;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,7 +21,6 @@ import static tech.pegasys.peeps.util.Await.await;
 import tech.pegasys.peeps.node.Account;
 import tech.pegasys.peeps.node.Besu;
 import tech.pegasys.peeps.node.BesuConfigurationBuilder;
-import tech.pegasys.peeps.node.NodeKey;
 import tech.pegasys.peeps.node.genesis.BesuGenesisFile;
 import tech.pegasys.peeps.node.genesis.Genesis;
 import tech.pegasys.peeps.node.genesis.GenesisAccount;
@@ -36,6 +36,8 @@ import tech.pegasys.peeps.node.genesis.ibft2.GenesisExtraDataIbft2;
 import tech.pegasys.peeps.node.genesis.ibft2.Ibft2Config;
 import tech.pegasys.peeps.node.model.GenesisAddress;
 import tech.pegasys.peeps.node.model.Hash;
+import tech.pegasys.peeps.node.model.NodeIdentifier;
+import tech.pegasys.peeps.node.model.NodeKey;
 import tech.pegasys.peeps.node.model.PrivacyTransactionReceipt;
 import tech.pegasys.peeps.node.model.Transaction;
 import tech.pegasys.peeps.node.model.TransactionReceipt;
@@ -45,11 +47,14 @@ import tech.pegasys.peeps.privacy.Orion;
 import tech.pegasys.peeps.privacy.OrionConfiguration;
 import tech.pegasys.peeps.privacy.OrionConfigurationBuilder;
 import tech.pegasys.peeps.privacy.OrionConfigurationFile;
-import tech.pegasys.peeps.privacy.OrionKeyPair;
 import tech.pegasys.peeps.privacy.PrivacyGroupVerify;
+import tech.pegasys.peeps.privacy.model.PrivacyKeyPair;
+import tech.pegasys.peeps.privacy.model.PrivacyManagerIdentifier;
+import tech.pegasys.peeps.privacy.model.PrivacyPublicKeyResource;
 import tech.pegasys.peeps.signer.EthSigner;
 import tech.pegasys.peeps.signer.EthSignerConfigurationBuilder;
-import tech.pegasys.peeps.signer.SignerWallet;
+import tech.pegasys.peeps.signer.model.SignerIdentifier;
+import tech.pegasys.peeps.signer.model.WalletFileResources;
 import tech.pegasys.peeps.signer.rpc.SignerRpcExpectingData;
 import tech.pegasys.peeps.util.PathGenerator;
 
@@ -60,18 +65,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.vertx.core.Vertx;
 import org.apache.tuweni.eth.Address;
 
 public class Network implements Closeable {
 
+  private enum NetworkState {
+    STARTED,
+    STOPPED,
+    CLOSED
+  }
+
   private final List<NetworkMember> members;
-  private final Map<OrionKeyPair, Orion> privacyManagers;
-  private final Map<SignerWallet, EthSigner> signers;
-  private final Map<NodeKey, Besu> nodes;
+  private final Map<PrivacyManagerIdentifier, Orion> privacyManagers;
+  private final Map<SignerIdentifier, EthSigner> signers;
+  private final Map<NodeIdentifier, Besu> nodes;
 
   private final Subnet subnet;
   private final org.testcontainers.containers.Network network;
@@ -80,9 +93,10 @@ public class Network implements Closeable {
   private final BesuGenesisFile genesisFile;
 
   private Genesis genesis;
+  private NetworkState state;
 
   public Network(final Path configurationDirectory) {
-    checkNotNull(configurationDirectory, "Path to configuration directory is mandatory");
+    checkArgument(configurationDirectory != null, "Path to configuration directory is mandatory");
 
     this.privacyManagers = new HashMap<>();
     this.members = new ArrayList<>();
@@ -93,27 +107,35 @@ public class Network implements Closeable {
     this.subnet = new Subnet();
     this.network = subnet.createContainerNetwork();
     this.genesisFile = new BesuGenesisFile(pathGenerator.uniqueFile());
+    this.state = NetworkState.STOPPED;
 
     set(ConsensusMechanism.ETH_HASH);
   }
 
+  // TODO validate state transition better - encapsulate
+
   public void start() {
+    checkState(state != NetworkState.STARTED, "Cannot start an already started Network");
     genesisFile.ensureExists(genesis);
-
-    members.parallelStream().forEach(member -> member.start());
-
+    everyMember(NetworkMember::start);
     awaitConnectivity();
+    state = NetworkState.STARTED;
   }
 
   public void stop() {
-    members.parallelStream().forEach(member -> member.stop());
+    checkState(state != NetworkState.STOPPED, "Cannot stop an already stopped Network");
+    everyMember(NetworkMember::stop);
+    state = NetworkState.STOPPED;
   }
 
   @Override
   public void close() {
-    stop();
+    if (state == NetworkState.STARTED) {
+      everyMember(NetworkMember::stop);
+    }
     vertx.close();
     network.close();
+    state = NetworkState.CLOSED;
   }
 
   // TODO temporary hack to support overloading of set with varargs
@@ -121,7 +143,8 @@ public class Network implements Closeable {
     set(consensus, (Besu) null);
   }
 
-  public void set(final ConsensusMechanism consensus, final NodeKey... validators) {
+  public void set(final ConsensusMechanism consensus, final NodeIdentifier... validators) {
+    // TODO check arg - validators must be in nodes (perform during steam mapping
     set(
         consensus,
         Stream.of(validators)
@@ -132,29 +155,42 @@ public class Network implements Closeable {
 
   // TODO validators hacky, dynamically figure out after the nodes are all added
   public void set(final ConsensusMechanism consensus, final Besu... validators) {
-
-    // TODO network cannot be live
-
+    checkState(
+        state != NetworkState.STARTED,
+        "Cannot set consensus mechanism while the Network is already started");
     checkState(signers.isEmpty(), "Cannot change consensus mechanism after creating signers");
 
-    this.genesis = createGenesis(consensus, validators);
+    this.genesis =
+        createGenesis(
+            consensus, Account.of(Account.ALPHA, Account.BETA, Account.GAMMA), validators);
   }
 
-  public Besu addNode(final NodeKey identity) {
-    return addNode(new BesuConfigurationBuilder().withIdentity(identity));
+  public Besu addNode(final NodeIdentifier frameworkIdentity, final NodeKey ethereumIdentiity) {
+    return addNode(
+        new BesuConfigurationBuilder()
+            .withIdentity(frameworkIdentity)
+            .withNodeKey(ethereumIdentiity));
   }
 
-  public Besu addNode(final NodeKey identity, final OrionKeyPair privacyManager) {
-    // TODO check privacy manager exists
+  public Besu addNode(
+      final NodeIdentifier identity,
+      final NodeKey ethereumIdentiity,
+      final PrivacyManagerIdentifier privacyManager,
+      final PrivacyPublicKeyResource privacyAddressResource) {
+    checkArgument(
+        privacyManagers.containsKey(privacyManager),
+        "Privacy Manager: {}, is not a member of the Network",
+        privacyManager);
 
     return addNode(
         new BesuConfigurationBuilder()
             .withIdentity(identity)
+            .withNodeKey(ethereumIdentiity)
             .withPrivacyUrl(privacyManagers.get(privacyManager))
-            .withPrivacyManagerPublicKey(privacyManager.getPublicKeyResource()));
+            .withPrivacyManagerPublicKey(privacyAddressResource.get()));
   }
 
-  public Besu addNode(final BesuConfigurationBuilder config) {
+  private Besu addNode(final BesuConfigurationBuilder config) {
     final Besu besu =
         new Besu(
             config
@@ -165,21 +201,11 @@ public class Network implements Closeable {
                 .withBootnodeEnodeAddress(bootnodeEnodeAddresses())
                 .build());
 
-    nodes.put(besu.identity(), besu);
-    members.add(besu);
-
-    return besu;
+    return addNode(besu);
   }
 
-  private String bootnodeEnodeAddresses() {
-    return nodes
-        .values()
-        .parallelStream()
-        .map(node -> node.identity().enodeAddress(node.ipAddress(), node.p2pPort()))
-        .collect(Collectors.joining(","));
-  }
-
-  public Orion addPrivacyManager(final OrionKeyPair... keys) {
+  public Orion addPrivacyManager(
+      final PrivacyManagerIdentifier identity, final PrivacyKeyPair... keys) {
     final OrionConfiguration configuration =
         new OrionConfigurationBuilder()
             .withVertx(vertx)
@@ -195,19 +221,22 @@ public class Network implements Closeable {
 
     final Orion manager = new Orion(configuration);
 
-    Stream.of(keys).parallel().forEach(key -> privacyManagers.put(key, manager));
-
+    privacyManagers.put(identity, manager);
     members.add(manager);
 
     return manager;
   }
 
-  public EthSigner addSigner(final SignerWallet wallet, final NodeKey downstream) {
+  public EthSigner addSigner(
+      final SignerIdentifier wallet,
+      final WalletFileResources resources,
+      final NodeIdentifier downstream) {
     checkNodeExistsFor(downstream);
-    return addSigner(wallet, nodes.get(downstream));
+    return addSigner(wallet, resources, nodes.get(downstream));
   }
 
-  public EthSigner addSigner(final SignerWallet wallet, final Besu downstream) {
+  private EthSigner addSigner(
+      final SignerIdentifier wallet, final WalletFileResources resources, final Besu downstream) {
     final EthSigner signer =
         new EthSigner(
             new EthSignerConfigurationBuilder()
@@ -216,7 +245,7 @@ public class Network implements Closeable {
                 .withIpAddress(subnet.getAddressAndIncrement())
                 .withDownstream(downstream)
                 .withChainId(genesis.getConfig().getChainId())
-                .witWallet(wallet)
+                .witWallet(resources)
                 .build());
 
     signers.put(wallet, signer);
@@ -309,13 +338,13 @@ public class Network implements Closeable {
   }
 
   // TODO these Mediator method could be refactored elsewhere?
-  public NodeVerify verify(final NodeKey id) {
+  public NodeVerify verify(final NodeIdentifier id) {
     checkNodeExistsFor(id);
 
     return new NodeVerify(nodes.get(id));
   }
 
-  public SignerRpcExpectingData rpc(final SignerWallet id) {
+  public SignerRpcExpectingData rpc(final SignerIdentifier id) {
     checkNotNull(id, "Signer Identifier is mandatory");
     checkState(
         signers.containsKey(id),
@@ -326,13 +355,13 @@ public class Network implements Closeable {
     return signers.get(id).rpc();
   }
 
-  public NodeRpcExpectingData rpc(final NodeKey id) {
+  public NodeRpcExpectingData rpc(final NodeIdentifier id) {
     checkNodeExistsFor(id);
 
     return nodes.get(id).rpc();
   }
 
-  public PrivacyGroupVerify privacyGroup(final OrionKeyPair... members) {
+  public PrivacyGroupVerify privacyGroup(final PrivacyManagerIdentifier... members) {
     return new PrivacyGroupVerify(
         Stream.of(members)
             .parallel()
@@ -340,7 +369,15 @@ public class Network implements Closeable {
             .collect(Collectors.toSet()));
   }
 
-  private void checkNodeExistsFor(final NodeKey id) {
+  @VisibleForTesting
+  Besu addNode(final Besu besu) {
+    nodes.put(besu.identity(), besu);
+    members.add(besu);
+
+    return besu;
+  }
+
+  private void checkNodeExistsFor(final NodeIdentifier id) {
     checkNotNull(id, "Node Identifier is mandatory");
     checkState(
         nodes.containsKey(id),
@@ -349,7 +386,22 @@ public class Network implements Closeable {
         nodes.keySet());
   }
 
-  private Genesis createGenesis(final ConsensusMechanism consensus, final Besu... validators) {
+  private String bootnodeEnodeAddresses() {
+    return nodes
+        .values()
+        .parallelStream()
+        .map(node -> node.enodeAddress())
+        .collect(Collectors.joining(","));
+  }
+
+  private void everyMember(Consumer<NetworkMember> action) {
+    members.parallelStream().forEach(action);
+  }
+
+  private Genesis createGenesis(
+      final ConsensusMechanism consensus,
+      final Map<GenesisAddress, GenesisAccount> genesisAccounts,
+      final Besu... validators) {
     final long chainId = Math.round(Math.random() * Long.MAX_VALUE);
 
     final GenesisConfig genesisConfig;
@@ -366,10 +418,6 @@ public class Network implements Closeable {
         genesisConfig = new GenesisConfigEthHash(chainId, new EthHashConfig());
         break;
     }
-
-    // TODO configurable somehow?
-    final Map<GenesisAddress, GenesisAccount> genesisAccounts =
-        Account.of(Account.ALPHA, Account.BETA, Account.GAMMA);
 
     final GenesisExtraData extraData;
 
@@ -397,6 +445,7 @@ public class Network implements Closeable {
         .parallelStream()
         .distinct()
         .forEach(privacyManger -> privacyManger.awaitConnectivity(privacyManagers.values()));
+
     signers.values().parallelStream().forEach(signer -> signer.awaitConnectivityToDownstream());
   }
 

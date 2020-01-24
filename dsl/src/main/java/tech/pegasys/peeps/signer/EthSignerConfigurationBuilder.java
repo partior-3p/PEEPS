@@ -16,6 +16,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import tech.pegasys.peeps.node.Besu;
+import tech.pegasys.peeps.signer.model.SignerKeyFileResource;
+import tech.pegasys.peeps.signer.model.SignerPasswordFileResource;
+import tech.pegasys.peeps.signer.model.WalletFileResources;
 
 import io.vertx.core.Vertx;
 import org.testcontainers.containers.Network;
@@ -32,8 +35,8 @@ public class EthSignerConfigurationBuilder {
 
   // TOFO move these file specific ones out into their own config, encapsulate (i.e refactor
   // EthSigner)
-  private String keyFile;
-  private String passwordFile;
+  private SignerKeyFileResource keyFile;
+  private SignerPasswordFileResource passwordFile;
 
   public EthSignerConfigurationBuilder withContainerNetwork(final Network containerNetwork) {
     this.containerNetwork = containerNetwork;
@@ -60,9 +63,9 @@ public class EthSignerConfigurationBuilder {
     return this;
   }
 
-  public EthSignerConfigurationBuilder witWallet(final SignerWallet wallet) {
-    this.keyFile = wallet.keyResource();
-    this.passwordFile = wallet.passwordResource();
+  public EthSignerConfigurationBuilder witWallet(final WalletFileResources wallet) {
+    this.keyFile = wallet.getKey();
+    this.passwordFile = wallet.getPassword();
     return this;
   }
 
@@ -72,8 +75,8 @@ public class EthSignerConfigurationBuilder {
     checkNotNull(vertx, "A Vertx instance is mandatory");
     checkNotNull(ipAddress, "Container IP Address is mandatory");
     checkNotNull(containerNetwork, "Container network is mandatory");
-    checkNotNull(keyFile, "The key file is mandatory");
-    checkNotNull(passwordFile, "The password file is mandatory");
+    checkNotNull(keyFile, "The key file resource is mandatory");
+    checkNotNull(passwordFile, "The password file resource is mandatory");
 
     return new EthSignerConfiguration(
         chainId, downstream, containerNetwork, ipAddress, vertx, keyFile, passwordFile);

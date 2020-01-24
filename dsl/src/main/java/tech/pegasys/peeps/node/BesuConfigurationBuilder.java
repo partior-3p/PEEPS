@@ -15,6 +15,8 @@ package tech.pegasys.peeps.node;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import tech.pegasys.peeps.node.genesis.BesuGenesisFile;
+import tech.pegasys.peeps.node.model.NodeIdentifier;
+import tech.pegasys.peeps.node.model.NodeKey;
 import tech.pegasys.peeps.privacy.Orion;
 
 import io.vertx.core.Vertx;
@@ -27,7 +29,7 @@ public class BesuConfigurationBuilder {
       "node/keys/pmt_signing.priv";
 
   private BesuGenesisFile genesisFile;
-  private NodeKey identity;
+  private NodeIdentifier frameworkIdentity;
 
   // TODO better typing then String
   private String privacyManagerPublicKeyFile;
@@ -35,6 +37,7 @@ public class BesuConfigurationBuilder {
   private String privacyTransactionManagerUrl;
   private String cors;
   private String bootnodeEnodeAddress;
+  private NodeKey ethereumIdentity;
 
   // TODO these into their own builder, not node related but test container related
   private Network containerNetwork;
@@ -70,8 +73,8 @@ public class BesuConfigurationBuilder {
     return this;
   }
 
-  public BesuConfigurationBuilder withIdentity(final NodeKey identity) {
-    this.identity = identity;
+  public BesuConfigurationBuilder withIdentity(final NodeIdentifier identity) {
+    this.frameworkIdentity = identity;
     return this;
   }
 
@@ -91,12 +94,24 @@ public class BesuConfigurationBuilder {
     return this;
   }
 
+  public BesuConfigurationBuilder withNodeKey(final NodeKey ethereumIdentity) {
+    this.ethereumIdentity = ethereumIdentity;
+    return this;
+  }
+
   public BesuConfiguration build() {
     checkNotNull(genesisFile, "A genesis file path is mandatory");
-    checkNotNull(identity, "A NodeKey is mandatory");
+    checkNotNull(frameworkIdentity, "A NodeKey is mandatory");
     checkNotNull(vertx, "A Vertx instance is mandatory");
     checkNotNull(ipAddress, "Container IP address is mandatory");
     checkNotNull(containerNetwork, "Container network is mandatory");
+    checkNotNull(ethereumIdentity, "Ethereum identity is mandatory");
+    checkNotNull(
+        ethereumIdentity.nodePrivateKeyResource(),
+        "Private key resource for the Node Key is mandatory");
+    checkNotNull(
+        ethereumIdentity.nodePublicKeyResource(),
+        "Public key resource for the Node Key is mandatory");
 
     return new BesuConfiguration(
         genesisFile.getGenesisFile(),
@@ -107,7 +122,8 @@ public class BesuConfigurationBuilder {
         containerNetwork,
         vertx,
         ipAddress,
-        identity,
+        frameworkIdentity,
+        ethereumIdentity,
         bootnodeEnodeAddress);
   }
 }

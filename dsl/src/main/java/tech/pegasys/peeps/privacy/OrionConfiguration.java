@@ -12,6 +12,9 @@
  */
 package tech.pegasys.peeps.privacy;
 
+import tech.pegasys.peeps.privacy.model.PrivacyPrivateKeyResource;
+import tech.pegasys.peeps.privacy.model.PrivacyPublicKeyResource;
+
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -21,8 +24,8 @@ import org.testcontainers.containers.Network;
 
 public class OrionConfiguration {
 
-  private final List<String> privKeys;
-  private final List<String> pubKeys;
+  private final List<PrivacyPrivateKeyResource> privKeys;
+  private final List<PrivacyPublicKeyResource> pubKeys;
   private final List<String> bootnodeUrls;
   private final Path fileSystemConfigurationFile;
 
@@ -32,8 +35,8 @@ public class OrionConfiguration {
   private final Vertx vertx;
 
   public OrionConfiguration(
-      final List<String> privKeys,
-      final List<String> pubKeys,
+      final List<PrivacyPrivateKeyResource> privKeys,
+      final List<PrivacyPublicKeyResource> pubKeys,
       final List<String> bootnodeUrls,
       final String ipAddress,
       final Network containerNetwork,
@@ -60,11 +63,11 @@ public class OrionConfiguration {
     return containerNetwork;
   }
 
-  public List<String> getPrivateKeys() {
+  public List<PrivacyPrivateKeyResource> getPrivateKeys() {
     return privKeys;
   }
 
-  public List<String> getPublicKeys() {
+  public List<PrivacyPublicKeyResource> getPublicKeys() {
     return pubKeys;
   }
 

@@ -10,13 +10,17 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.signer;
+package tech.pegasys.peeps;
 
 import tech.pegasys.peeps.node.Account;
+import tech.pegasys.peeps.signer.model.SignerIdentifier;
+import tech.pegasys.peeps.signer.model.SignerKeyFileResource;
+import tech.pegasys.peeps.signer.model.SignerPasswordFileResource;
+import tech.pegasys.peeps.signer.model.WalletFileResources;
 
 import org.apache.tuweni.eth.Address;
 
-public enum SignerWallet {
+public enum SignerConfiguration {
   ALPHA(
       "signer/account/funded/wallet_a.v3",
       "signer/account/funded/wallet_a.pass",
@@ -26,25 +30,40 @@ public enum SignerWallet {
       "signer/account/funded/wallet_b.pass",
       Account.BETA.address());
 
-  private final String keyResource;
-  private final String passwordResource;
   private final Address address;
+  private final SignerIdentifier id;
+  private final WalletFileResources resources;
 
-  SignerWallet(final String keyResource, final String passwordResource, final Address address) {
-    this.keyResource = keyResource;
-    this.passwordResource = passwordResource;
+  SignerConfiguration(
+      final String keyResource, final String passwordResource, final Address address) {
     this.address = address;
+
+    this.resources =
+        new WalletFileResources() {
+
+          @Override
+          public SignerPasswordFileResource getPassword() {
+            return new SignerPasswordFileResource(passwordResource);
+          }
+
+          @Override
+          public SignerKeyFileResource getKey() {
+            return new SignerKeyFileResource(keyResource);
+          }
+        };
+
+    this.id = new SignerIdentifier(name());
   }
 
-  public String keyResource() {
-    return keyResource;
-  }
-
-  public String passwordResource() {
-    return passwordResource;
+  public SignerIdentifier id() {
+    return id;
   }
 
   public Address address() {
     return address;
+  }
+
+  public WalletFileResources resources() {
+    return resources;
   }
 }

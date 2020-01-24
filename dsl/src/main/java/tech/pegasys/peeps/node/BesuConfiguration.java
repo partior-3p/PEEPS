@@ -12,6 +12,11 @@
  */
 package tech.pegasys.peeps.node;
 
+import tech.pegasys.peeps.node.model.NodeIdentifier;
+import tech.pegasys.peeps.node.model.NodeKey;
+import tech.pegasys.peeps.node.model.NodePrivateKeyResource;
+import tech.pegasys.peeps.node.model.NodePublicKeyResource;
+
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -21,12 +26,13 @@ import org.testcontainers.containers.Network;
 public class BesuConfiguration {
 
   private final Path genesisFile;
-  private final String enclavePublicKeyFile;
+  private final String enclavePublicKeyResource;
   private final String cors;
-  private final NodeKey identity;
+  private final NodeIdentifier identity;
   private final String bootnodeEnodeAddress;
   private final String privacyUrl;
   private final String privacyMarkerSigningPrivateKeyFile;
+  private final NodeKey ethereumIdentity;
 
   // TODO move these out, they are not related to the node, but test container setups
   private final Network containerNetwork;
@@ -35,17 +41,18 @@ public class BesuConfiguration {
 
   public BesuConfiguration(
       final Path genesisFile,
-      final String privacyManagerPublicKeyFile,
+      final String privacyManagerPublicKeyResource,
       final String privacyUrl,
       final String privacyMarkerSigningPrivateKeyFile,
       final String cors,
       final Network containerNetwork,
       final Vertx vertx,
       final String ipAddress,
-      final NodeKey identity,
+      final NodeIdentifier identity,
+      final NodeKey ethereumIdentity,
       final String bootnodeEnodeAddress) {
     this.genesisFile = genesisFile;
-    this.enclavePublicKeyFile = privacyManagerPublicKeyFile;
+    this.enclavePublicKeyResource = privacyManagerPublicKeyResource;
     this.privacyMarkerSigningPrivateKeyFile = privacyMarkerSigningPrivateKeyFile;
     this.privacyUrl = privacyUrl;
     this.cors = cors;
@@ -53,6 +60,7 @@ public class BesuConfiguration {
     this.vertx = vertx;
     this.ipAddress = ipAddress;
     this.identity = identity;
+    this.ethereumIdentity = ethereumIdentity;
     this.bootnodeEnodeAddress = bootnodeEnodeAddress;
   }
 
@@ -60,8 +68,8 @@ public class BesuConfiguration {
     return genesisFile;
   }
 
-  public String getPrivacyPublicKeyFile() {
-    return enclavePublicKeyFile;
+  public String getPrivacyPublicKeyResource() {
+    return enclavePublicKeyResource;
   }
 
   public Optional<String> getCors() {
@@ -76,7 +84,7 @@ public class BesuConfiguration {
     return ipAddress;
   }
 
-  public NodeKey getIdentity() {
+  public NodeIdentifier getIdentity() {
     return identity;
   }
 
@@ -86,6 +94,14 @@ public class BesuConfiguration {
 
   public Vertx getVertx() {
     return vertx;
+  }
+
+  public NodePrivateKeyResource getNodeKeyPrivateKeyResource() {
+    return ethereumIdentity.nodePrivateKeyResource();
+  }
+
+  public NodePublicKeyResource getNodeKeyPublicKeyResource() {
+    return ethereumIdentity.nodePublicKeyResource();
   }
 
   // TODO maybe split out privacy

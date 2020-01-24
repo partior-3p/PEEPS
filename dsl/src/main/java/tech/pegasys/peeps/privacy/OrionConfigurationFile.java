@@ -12,6 +12,9 @@
  */
 package tech.pegasys.peeps.privacy;
 
+import tech.pegasys.peeps.privacy.model.PrivacyPrivateKeyResource;
+import tech.pegasys.peeps.privacy.model.PrivacyPublicKeyResource;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -37,8 +40,9 @@ public class OrionConfigurationFile {
         String.format("clienturl = \"http://%s:%d\"\n", confg.getIpAddress(), HTTP_RPC_PORT));
     content.append(String.format("nodeport = %d\n", PEER_TO_PEER_PORT));
     content.append(String.format("clientport = %d\n", HTTP_RPC_PORT));
-    content.append(String.format("publickeys = [%s]\n", flatten(confg.getPublicKeys())));
-    content.append(String.format("privatekeys = [%s]\n", flatten(confg.getPrivateKeys())));
+    content.append(String.format("publickeys = [%s]\n", flattenPublicKeys(confg.getPublicKeys())));
+    content.append(
+        String.format("privatekeys = [%s]\n", flattenPrivateKeys(confg.getPrivateKeys())));
 
     content.append("nodenetworkinterface = \"0.0.0.0\"\n");
     content.append("clientnetworkinterface = \"0.0.0.0\"\n");
@@ -67,7 +71,15 @@ public class OrionConfigurationFile {
     }
   }
 
+  private static String flattenPrivateKeys(final List<PrivacyPrivateKeyResource> values) {
+    return flatten(values.parallelStream().map(v -> v.get()).collect(Collectors.toList()));
+  }
+
+  private static String flattenPublicKeys(final List<PrivacyPublicKeyResource> values) {
+    return flatten(values.parallelStream().map(v -> v.get()).collect(Collectors.toList()));
+  }
+
   private static String flatten(final List<String> values) {
-    return values.stream().map(k -> "\"" + k + "\"").collect(Collectors.joining(","));
+    return values.stream().map(v -> "\"" + v + "\"").collect(Collectors.joining(","));
   }
 }
