@@ -15,8 +15,8 @@ package tech.pegasys.peeps;
 import tech.pegasys.peeps.network.Network;
 import tech.pegasys.peeps.network.NetworkAwait;
 import tech.pegasys.peeps.network.NetworkVerify;
-import tech.pegasys.peeps.network.NodeVerify;
 import tech.pegasys.peeps.network.subnet.Subnet;
+import tech.pegasys.peeps.node.NodeVerify;
 import tech.pegasys.peeps.node.rpc.NodeRpc;
 import tech.pegasys.peeps.signer.rpc.SignerRpc;
 

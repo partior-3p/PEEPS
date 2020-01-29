@@ -22,6 +22,7 @@ import tech.pegasys.peeps.network.subnet.Subnet;
 import tech.pegasys.peeps.node.Account;
 import tech.pegasys.peeps.node.Besu;
 import tech.pegasys.peeps.node.BesuConfigurationBuilder;
+import tech.pegasys.peeps.node.NodeVerify;
 import tech.pegasys.peeps.node.genesis.BesuGenesisFile;
 import tech.pegasys.peeps.node.genesis.Genesis;
 import tech.pegasys.peeps.node.genesis.GenesisAccount;
@@ -76,24 +77,18 @@ import org.apache.tuweni.eth.Address;
 
 public class Network implements Closeable {
 
-  private enum NetworkState {
-    STARTED,
-    STOPPED,
-    CLOSED
-  }
-
-  private final List<NetworkMember> members;
   private final Map<PrivacyManagerIdentifier, Orion> privacyManagers;
   private final Map<SignerIdentifier, EthSigner> signers;
   private final Map<NodeIdentifier, Besu> nodes;
+  private final List<NetworkMember> members;
 
-  private final Subnet subnet;
-  private final PathGenerator pathGenerator;
-  private final Vertx vertx;
   private final BesuGenesisFile genesisFile;
+  private final PathGenerator pathGenerator;
+  private final Subnet subnet;
+  private final Vertx vertx;
 
-  private Genesis genesis;
   private NetworkState state;
+  private Genesis genesis;
 
   public Network(final Path configurationDirectory, final Subnet subnet) {
     checkArgument(configurationDirectory != null, "Path to configuration directory is mandatory");
@@ -106,35 +101,30 @@ public class Network implements Closeable {
     this.vertx = Vertx.vertx();
     this.subnet = subnet;
     this.genesisFile = new BesuGenesisFile(pathGenerator.uniqueFile());
-    this.state = NetworkState.STOPPED;
+    this.state = new NetworkState();
 
     set(ConsensusMechanism.ETH_HASH);
   }
 
-  // TODO validate state transition better - encapsulate
-
   public void start() {
-    checkState(state != NetworkState.STARTED, "Cannot start an already started Network");
+    state.start();
     genesisFile.ensureExists(genesis);
     everyMember(NetworkMember::start);
     awaitConnectivity();
-    state = NetworkState.STARTED;
   }
 
   public void stop() {
-    checkState(state != NetworkState.STOPPED, "Cannot stop an already stopped Network");
+    state.stop();
     everyMember(NetworkMember::stop);
-    state = NetworkState.STOPPED;
   }
 
   @Override
   public void close() {
-    if (state == NetworkState.STARTED) {
+    if (state.isStarted()) {
       everyMember(NetworkMember::stop);
     }
     vertx.close();
     subnet.close();
-    state = NetworkState.CLOSED;
   }
 
   // TODO temporary hack to support overloading of set with varargs
@@ -155,7 +145,7 @@ public class Network implements Closeable {
   // TODO validators hacky, dynamically figure out after the nodes are all added
   public void set(final ConsensusMechanism consensus, final Besu... validators) {
     checkState(
-        state != NetworkState.STARTED,
+        state.isUninitialized(),
         "Cannot set consensus mechanism while the Network is already started");
     checkState(signers.isEmpty(), "Cannot change consensus mechanism after creating signers");
 

@@ -10,9 +10,8 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.network;
+package tech.pegasys.peeps.node;
 
-import tech.pegasys.peeps.node.Besu;
 import tech.pegasys.peeps.node.model.Hash;
 import tech.pegasys.peeps.node.verification.NodeValueTransition;
 

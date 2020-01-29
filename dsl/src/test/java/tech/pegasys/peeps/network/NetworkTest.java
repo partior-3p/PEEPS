@@ -78,7 +78,9 @@ public class NetworkTest {
               network.start();
             });
 
-    assertThat(exception.getMessage()).isEqualTo("Cannot start an already started Network");
+    assertThat(exception.getMessage())
+        .isEqualTo(
+            "Only a Network in an uninitialized or stopped state can be started. Current state: STARTED");
   }
 
   @Test
@@ -92,7 +94,8 @@ public class NetworkTest {
               network.stop();
             });
 
-    assertThat(exception.getMessage()).isEqualTo("Cannot stop an already stopped Network");
+    assertThat(exception.getMessage())
+        .isEqualTo("Only a Network in a started state can be stopped. Current state: STOPPED");
   }
 
   @Test
