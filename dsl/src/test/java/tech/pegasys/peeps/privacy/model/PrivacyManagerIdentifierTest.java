@@ -10,16 +10,14 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.signer;
+package tech.pegasys.peeps.privacy.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import tech.pegasys.peeps.signer.model.SignerIdentifier;
-
 import org.junit.jupiter.api.Test;
 
-public class SignerIdentifierTest {
+public class PrivacyManagerIdentifierTest {
 
   @Test
   public void missingIdMustException() {
@@ -27,7 +25,7 @@ public class SignerIdentifierTest {
         assertThrows(
             IllegalArgumentException.class,
             () -> {
-              new SignerIdentifier(null);
+              new PrivacyManagerIdentifier(null);
             });
 
     assertThat(exception.getMessage()).isEqualTo("Identifier is mandatory");
@@ -37,14 +35,15 @@ public class SignerIdentifierTest {
   public void hashCodeMustMatchIdHashCode() {
     final String id = "A very unique identifier";
 
-    final SignerIdentifier nodeId = new SignerIdentifier(id);
+    final PrivacyManagerIdentifier nodeId = new PrivacyManagerIdentifier(id);
 
     assertThat(nodeId.hashCode()).isEqualTo(id.hashCode());
   }
 
   @Test
   public void selfReferenceEqualityMustSucced() {
-    final SignerIdentifier nodeId = new SignerIdentifier("I am a real identity value!");
+    final PrivacyManagerIdentifier nodeId =
+        new PrivacyManagerIdentifier("I am a real identity value!");
 
     assertThat(nodeId).isEqualTo(nodeId);
   }
@@ -52,8 +51,8 @@ public class SignerIdentifierTest {
   @Test
   public void identicalIdEqualityMustSucced() {
     final String id = "A not so unique identifier";
-    final SignerIdentifier nodeIdAlpha = new SignerIdentifier(id);
-    final SignerIdentifier nodeIdBeta = new SignerIdentifier(id);
+    final PrivacyManagerIdentifier nodeIdAlpha = new PrivacyManagerIdentifier(id);
+    final PrivacyManagerIdentifier nodeIdBeta = new PrivacyManagerIdentifier(id);
 
     final boolean isEquals = nodeIdAlpha.equals(nodeIdBeta);
 
@@ -62,7 +61,8 @@ public class SignerIdentifierTest {
 
   @Test
   public void noReferenceEqualityMustFail() {
-    final SignerIdentifier nodeId = new SignerIdentifier("I am a real identity value!");
+    final PrivacyManagerIdentifier nodeId =
+        new PrivacyManagerIdentifier("I am a real identity value!");
 
     final boolean isEquals = nodeId.equals(null);
 
@@ -71,7 +71,8 @@ public class SignerIdentifierTest {
 
   @Test
   public void differentTypeEqualityMustFail() {
-    final SignerIdentifier nodeId = new SignerIdentifier("I am a real identity value!");
+    final PrivacyManagerIdentifier nodeId =
+        new PrivacyManagerIdentifier("I am a real identity value!");
     final Object other = "Type of String";
 
     final boolean isEquals = nodeId.equals(other);
@@ -81,8 +82,8 @@ public class SignerIdentifierTest {
 
   @Test
   public void differentIdEqualityMustFail() {
-    final SignerIdentifier nodeIdAlpha = new SignerIdentifier("First identifier");
-    final SignerIdentifier nodeIdBeta = new SignerIdentifier("Second identifier");
+    final PrivacyManagerIdentifier nodeIdAlpha = new PrivacyManagerIdentifier("First identifier");
+    final PrivacyManagerIdentifier nodeIdBeta = new PrivacyManagerIdentifier("Second identifier");
 
     final boolean isEquals = nodeIdAlpha.equals(nodeIdBeta);
 
@@ -92,7 +93,7 @@ public class SignerIdentifierTest {
   @Test
   public void hashCodeMustEqualIdHashCode() {
     final String id = "The one and only idenitity!";
-    final SignerIdentifier nodeId = new SignerIdentifier(id);
+    final PrivacyManagerIdentifier nodeId = new PrivacyManagerIdentifier(id);
 
     final int expected = id.hashCode();
     final int actual = nodeId.hashCode();

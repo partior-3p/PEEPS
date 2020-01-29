@@ -10,14 +10,13 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.node;
+package tech.pegasys.peeps.node.genesis;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import tech.pegasys.peeps.json.Json;
-import tech.pegasys.peeps.node.genesis.BesuGenesisFile;
-import tech.pegasys.peeps.node.genesis.Genesis;
+import tech.pegasys.peeps.node.Account;
 import tech.pegasys.peeps.node.genesis.ethhash.EthHashConfig;
 import tech.pegasys.peeps.node.genesis.ethhash.GenesisConfigEthHash;
 
