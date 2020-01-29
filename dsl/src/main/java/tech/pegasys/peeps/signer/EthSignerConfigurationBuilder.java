@@ -15,6 +15,7 @@ package tech.pegasys.peeps.signer;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import tech.pegasys.peeps.network.subnet.SubnetAddress;
 import tech.pegasys.peeps.node.Besu;
 import tech.pegasys.peeps.signer.model.SignerKeyFileResource;
 import tech.pegasys.peeps.signer.model.SignerPasswordFileResource;
@@ -30,7 +31,7 @@ public class EthSignerConfigurationBuilder {
 
   // TODO these into their own builder, not node related but test container related
   private Network containerNetwork;
-  private String ipAddress;
+  private SubnetAddress ipAddress;
   private Vertx vertx;
 
   // TOFO move these file specific ones out into their own config, encapsulate (i.e refactor
@@ -48,7 +49,7 @@ public class EthSignerConfigurationBuilder {
     return this;
   }
 
-  public EthSignerConfigurationBuilder withIpAddress(final String networkIpAddress) {
+  public EthSignerConfigurationBuilder withIpAddress(final SubnetAddress networkIpAddress) {
     this.ipAddress = networkIpAddress;
     return this;
   }

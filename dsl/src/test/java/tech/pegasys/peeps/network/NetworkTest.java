@@ -19,6 +19,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import tech.pegasys.peeps.network.subnet.Subnet;
 import tech.pegasys.peeps.node.Besu;
 import tech.pegasys.peeps.node.model.NodeIdentifier;
 

@@ -18,6 +18,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.peeps.util.Await.await;
 
+import tech.pegasys.peeps.network.subnet.Subnet;
 import tech.pegasys.peeps.node.Account;
 import tech.pegasys.peeps.node.Besu;
 import tech.pegasys.peeps.node.BesuConfigurationBuilder;

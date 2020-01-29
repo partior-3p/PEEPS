@@ -10,7 +10,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.network;
+package tech.pegasys.peeps.network.subnet;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -20,7 +20,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.github.dockerjava.api.model.Network.Ipam;
 import com.github.dockerjava.api.model.Network.Ipam.Config;
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testcontainers.containers.Network;
@@ -66,8 +65,7 @@ public class Subnet implements Closeable {
     this.addresses = new SubnetAddresses(subnetAddressFormat(subnet));
   }
 
-  // TODO stricter typing then String
-  public String getAddressAndIncrement() {
+  public SubnetAddress getAddressAndIncrement() {
     return addresses.getAddressAndIncrement();
   }
 
@@ -78,11 +76,6 @@ public class Subnet implements Closeable {
   @Override
   public void close() {
     network.close();
-  }
-
-  @VisibleForTesting
-  String nextSubnet() {
-    return String.format(SUBNET_FORMAT, THIRD_OCTET.get());
   }
 
   private String getNextSubnetAndIncrement() {

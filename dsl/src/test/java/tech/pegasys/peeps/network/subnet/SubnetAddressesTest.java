@@ -10,7 +10,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.network;
+package tech.pegasys.peeps.network.subnet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -25,7 +25,7 @@ public class SubnetAddressesTest {
   public void firstAddressHostOctetMustBeTwo() {
     final SubnetAddresses addresses = new SubnetAddresses(ADDRESS_FORMAT);
 
-    assertThat(addresses.getAddressAndIncrement()).isEqualTo("172.20.0.2");
+    assertThat(addresses.getAddressAndIncrement()).isEqualTo(new SubnetAddress("172.20.0.2"));
   }
 
   @Test
@@ -33,7 +33,8 @@ public class SubnetAddressesTest {
     final SubnetAddresses addresses = new SubnetAddresses(ADDRESS_FORMAT);
 
     for (int i = 2; i < 256; i++) {
-      assertThat(addresses.getAddressAndIncrement()).isEqualTo(String.format(ADDRESS_FORMAT, i));
+      assertThat(addresses.getAddressAndIncrement())
+          .isEqualTo(new SubnetAddress(String.format(ADDRESS_FORMAT, i)));
     }
 
     final Exception exception =

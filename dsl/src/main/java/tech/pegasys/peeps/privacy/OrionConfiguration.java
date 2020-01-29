@@ -12,6 +12,7 @@
  */
 package tech.pegasys.peeps.privacy;
 
+import tech.pegasys.peeps.network.subnet.SubnetAddress;
 import tech.pegasys.peeps.privacy.model.PrivacyPrivateKeyResource;
 import tech.pegasys.peeps.privacy.model.PrivacyPublicKeyResource;
 
@@ -31,14 +32,14 @@ public class OrionConfiguration {
 
   // TODO move these out, they are not related to the node, but test container setups
   private final Network containerNetwork;
-  private final String ipAddress;
+  private final SubnetAddress ipAddress;
   private final Vertx vertx;
 
   public OrionConfiguration(
       final List<PrivacyPrivateKeyResource> privKeys,
       final List<PrivacyPublicKeyResource> pubKeys,
       final List<String> bootnodeUrls,
-      final String ipAddress,
+      final SubnetAddress ipAddress,
       final Network containerNetwork,
       final Vertx vertx,
       final Path fileSystemConfigurationFile) {
@@ -55,7 +56,7 @@ public class OrionConfiguration {
     return fileSystemConfigurationFile;
   }
 
-  public String getIpAddress() {
+  public SubnetAddress getIpAddress() {
     return ipAddress;
   }
 

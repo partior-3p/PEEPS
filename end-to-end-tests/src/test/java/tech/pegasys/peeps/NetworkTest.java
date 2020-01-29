@@ -16,7 +16,7 @@ import tech.pegasys.peeps.network.Network;
 import tech.pegasys.peeps.network.NetworkAwait;
 import tech.pegasys.peeps.network.NetworkVerify;
 import tech.pegasys.peeps.network.NodeVerify;
-import tech.pegasys.peeps.network.Subnet;
+import tech.pegasys.peeps.network.subnet.Subnet;
 import tech.pegasys.peeps.node.rpc.NodeRpcExpectingData;
 import tech.pegasys.peeps.signer.rpc.SignerRpcExpectingData;
 

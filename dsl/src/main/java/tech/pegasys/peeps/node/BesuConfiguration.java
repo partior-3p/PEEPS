@@ -12,6 +12,7 @@
  */
 package tech.pegasys.peeps.node;
 
+import tech.pegasys.peeps.network.subnet.SubnetAddress;
 import tech.pegasys.peeps.node.model.NodeIdentifier;
 import tech.pegasys.peeps.node.model.NodeKey;
 import tech.pegasys.peeps.node.model.NodePrivateKeyResource;
@@ -36,7 +37,7 @@ public class BesuConfiguration {
 
   // TODO move these out, they are not related to the node, but test container setups
   private final Network containerNetwork;
-  private final String ipAddress;
+  private final SubnetAddress ipAddress;
   private final Vertx vertx;
 
   public BesuConfiguration(
@@ -47,7 +48,7 @@ public class BesuConfiguration {
       final String cors,
       final Network containerNetwork,
       final Vertx vertx,
-      final String ipAddress,
+      final SubnetAddress ipAddress,
       final NodeIdentifier identity,
       final NodeKey ethereumIdentity,
       final String bootnodeEnodeAddress) {
@@ -80,7 +81,7 @@ public class BesuConfiguration {
     return containerNetwork;
   }
 
-  public String getIpAddress() {
+  public SubnetAddress getIpAddress() {
     return ipAddress;
   }
 

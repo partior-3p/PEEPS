@@ -14,6 +14,8 @@ package tech.pegasys.peeps.network;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import tech.pegasys.peeps.network.subnet.Subnet;
+
 import java.util.ArrayList;
 import java.util.List;
 

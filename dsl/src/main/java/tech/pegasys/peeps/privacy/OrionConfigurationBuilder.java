@@ -15,6 +15,7 @@ package tech.pegasys.peeps.privacy;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import tech.pegasys.peeps.network.subnet.SubnetAddress;
 import tech.pegasys.peeps.privacy.model.PrivacyKeyPair;
 import tech.pegasys.peeps.privacy.model.PrivacyPrivateKeyResource;
 import tech.pegasys.peeps.privacy.model.PrivacyPublicKeyResource;
@@ -35,7 +36,7 @@ public class OrionConfigurationBuilder {
 
   // TODO these into their own builder, not node related but test container related
   private Network containerNetwork;
-  private String ipAddress;
+  private SubnetAddress ipAddress;
   private Vertx vertx;
 
   public OrionConfigurationBuilder withKeyPairs(final PrivacyKeyPair... keyPairs) {
@@ -60,7 +61,7 @@ public class OrionConfigurationBuilder {
     return this;
   }
 
-  public OrionConfigurationBuilder withIpAddress(final String networkIpAddress) {
+  public OrionConfigurationBuilder withIpAddress(final SubnetAddress networkIpAddress) {
     this.ipAddress = networkIpAddress;
     return this;
   }

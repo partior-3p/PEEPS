@@ -35,9 +35,10 @@ public class OrionConfigurationFile {
 
     final StringBuilder content = new StringBuilder();
     content.append(
-        String.format("nodeurl = \"http://%s:%d\"\n", confg.getIpAddress(), PEER_TO_PEER_PORT));
+        String.format(
+            "nodeurl = \"http://%s:%d\"\n", confg.getIpAddress().get(), PEER_TO_PEER_PORT));
     content.append(
-        String.format("clienturl = \"http://%s:%d\"\n", confg.getIpAddress(), HTTP_RPC_PORT));
+        String.format("clienturl = \"http://%s:%d\"\n", confg.getIpAddress().get(), HTTP_RPC_PORT));
     content.append(String.format("nodeport = %d\n", PEER_TO_PEER_PORT));
     content.append(String.format("clientport = %d\n", HTTP_RPC_PORT));
     content.append(String.format("publickeys = [%s]\n", flattenPublicKeys(confg.getPublicKeys())));

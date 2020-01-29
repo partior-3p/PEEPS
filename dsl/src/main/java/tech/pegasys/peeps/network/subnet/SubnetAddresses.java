@@ -10,7 +10,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.network;
+package tech.pegasys.peeps.network.subnet;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -44,11 +44,11 @@ public class SubnetAddresses {
   }
 
   /** Retrieves the next available IP address and now considers it as unavailable. */
-  public String getAddressAndIncrement() {
+  public SubnetAddress getAddressAndIncrement() {
     if (hostAddress.get() > HOST_MAXIMUM) {
       throw new IllegalStateException("Subnet addresses have been exhaused");
     }
 
-    return String.format(addressFormat, hostAddress.getAndIncrement());
+    return new SubnetAddress(String.format(addressFormat, hostAddress.getAndIncrement()));
   }
 }

@@ -12,6 +12,7 @@
  */
 package tech.pegasys.peeps.signer;
 
+import tech.pegasys.peeps.network.subnet.SubnetAddress;
 import tech.pegasys.peeps.node.Besu;
 import tech.pegasys.peeps.signer.model.SignerKeyFileResource;
 import tech.pegasys.peeps.signer.model.SignerPasswordFileResource;
@@ -26,7 +27,7 @@ public class EthSignerConfiguration {
 
   // TODO move these out, they are not related to the node, but test container setups
   private final Network containerNetwork;
-  private final String ipAddress;
+  private final SubnetAddress ipAddress;
   private final Vertx vertx;
 
   // TODO move these file specific ones out into their own config, encapsulate (i.e refactor
@@ -38,7 +39,7 @@ public class EthSignerConfiguration {
       final long chainId,
       final Besu downstream,
       final Network containerNetwork,
-      final String ipAddress,
+      final SubnetAddress ipAddress,
       final Vertx vertx,
       final SignerKeyFileResource keyFile,
       final SignerPasswordFileResource passwordFile) {
@@ -55,7 +56,7 @@ public class EthSignerConfiguration {
     return containerNetwork;
   }
 
-  public String getIpAddress() {
+  public SubnetAddress getIpAddress() {
     return ipAddress;
   }
 

@@ -72,10 +72,10 @@ public class Orion implements NetworkMember {
     this.orion = container.withCommand(CONTAINER_CONFIG_FILE).waitingFor(liveliness());
 
     this.orionNetworkAddress =
-        String.format("http://%s:%s", config.getIpAddress(), CONTAINER_PEER_TO_PEER_PORT);
+        String.format("http://%s:%s", config.getIpAddress().get(), CONTAINER_PEER_TO_PEER_PORT);
 
     this.networkRpcAddress =
-        String.format("http://%s:%s", config.getIpAddress(), CONTAINER_HTTP_RPC_PORT);
+        String.format("http://%s:%s", config.getIpAddress().get(), CONTAINER_HTTP_RPC_PORT);
 
     // TODO just using the first key, selecting the identity could be an option for
     // multi-key Orion
@@ -210,7 +210,7 @@ public class Orion implements NetworkMember {
   private void addContainerIpAddress(
       final OrionConfiguration config, final GenericContainer<?> container) {
     container.withCreateContainerCmdModifier(
-        modifier -> modifier.withIpv4Address(config.getIpAddress()));
+        modifier -> modifier.withIpv4Address(config.getIpAddress().get()));
   }
 
   private void addConfigurationFile(

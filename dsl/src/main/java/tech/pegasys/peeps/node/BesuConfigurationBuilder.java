@@ -14,6 +14,7 @@ package tech.pegasys.peeps.node;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import tech.pegasys.peeps.network.subnet.SubnetAddress;
 import tech.pegasys.peeps.node.genesis.BesuGenesisFile;
 import tech.pegasys.peeps.node.model.NodeIdentifier;
 import tech.pegasys.peeps.node.model.NodeKey;
@@ -41,7 +42,7 @@ public class BesuConfigurationBuilder {
 
   // TODO these into their own builder, not node related but test container related
   private Network containerNetwork;
-  private String ipAddress;
+  private SubnetAddress ipAddress;
   private Vertx vertx;
 
   public BesuConfigurationBuilder() {
@@ -63,7 +64,7 @@ public class BesuConfigurationBuilder {
     return this;
   }
 
-  public BesuConfigurationBuilder withIpAddress(final String ipAddress) {
+  public BesuConfigurationBuilder withIpAddress(final SubnetAddress ipAddress) {
     this.ipAddress = ipAddress;
     return this;
   }
