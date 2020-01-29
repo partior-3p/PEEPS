@@ -16,6 +16,7 @@ import tech.pegasys.peeps.network.Network;
 import tech.pegasys.peeps.network.NetworkAwait;
 import tech.pegasys.peeps.network.NetworkVerify;
 import tech.pegasys.peeps.network.NodeVerify;
+import tech.pegasys.peeps.network.Subnet;
 import tech.pegasys.peeps.node.rpc.NodeRpcExpectingData;
 import tech.pegasys.peeps.signer.rpc.SignerRpcExpectingData;
 
@@ -43,7 +44,7 @@ public abstract class NetworkTest {
   @BeforeEach
   public void setUpNetwork() {
     Runtime.getRuntime().addShutdownHook(new Thread(this::tearDownNetwork));
-    network = new Network(configurationDirectory);
+    network = new Network(configurationDirectory, new Subnet());
     setUpNetwork(network);
     network.start();
 

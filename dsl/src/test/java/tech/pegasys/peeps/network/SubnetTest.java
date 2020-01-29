@@ -24,7 +24,7 @@ import org.testcontainers.containers.Network;
 
 public class SubnetTest {
 
-  private final List<Network> cleanUp = new ArrayList<>();
+  private List<Subnet> cleanUp = new ArrayList<>();
 
   @BeforeEach
   public void setUp() {
@@ -34,42 +34,44 @@ public class SubnetTest {
 
   @AfterEach
   public void tearDown() {
-    cleanUp.stream().forEach(network -> network.close());
+    cleanUp.parallelStream().forEach(Subnet::close);
   }
 
   @Test
   public void canCreateNetwork() {
-    final Network network = create();
+    final Network alpha = createNetwork();
 
-    assertThat(network).isNotNull();
-    assertThat(network.getId()).isNotBlank();
+    assertValidNetwork(alpha);
   }
 
   @Test
   public void canCreateNetworkWhenFirstSubnetUnavailable() {
-    final Network first = create();
-    assertThat(first).isNotNull();
-    assertThat(first.getId()).isNotBlank();
+    final Network alpha = createNetwork();
+    assertValidNetwork(alpha);
 
-    final Network second = create();
-    assertThat(second).isNotNull();
-    assertThat(second.getId()).isNotBlank();
+    final Network beta = createNetwork();
+    assertValidNetwork(beta);
 
-    assertThat(first.getId()).isNotEqualTo(second.getId());
+    assertThat(alpha.getId()).isNotEqualTo(beta.getId());
   }
 
   @Test
   public void canCreateConcurrentNetworks() {
-    final Network networkA = create();
-    final Network networkB = create();
+    final Network alpha = createNetwork();
+    final Network beta = createNetwork();
 
-    assertThat(networkA).isNotEqualTo(networkB);
-    assertThat(networkA.getId()).isNotEqualTo(networkB.getId());
+    assertThat(alpha).isNotEqualTo(beta);
+    assertThat(alpha.getId()).isNotEqualTo(beta.getId());
   }
 
-  private Network create() {
-    final Network network = new Subnet().createContainerNetwork();
-    cleanUp.add(network);
-    return network;
+  private void assertValidNetwork(final Network network) {
+    assertThat(network).isNotNull();
+    assertThat(network.getId()).isNotBlank();
+  }
+
+  private Network createNetwork() {
+    final Subnet subnet = new Subnet();
+    cleanUp.add(subnet);
+    return subnet.network();
   }
 }

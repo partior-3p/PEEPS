@@ -87,7 +87,6 @@ public class Network implements Closeable {
   private final Map<NodeIdentifier, Besu> nodes;
 
   private final Subnet subnet;
-  private final org.testcontainers.containers.Network network;
   private final PathGenerator pathGenerator;
   private final Vertx vertx;
   private final BesuGenesisFile genesisFile;
@@ -95,7 +94,7 @@ public class Network implements Closeable {
   private Genesis genesis;
   private NetworkState state;
 
-  public Network(final Path configurationDirectory) {
+  public Network(final Path configurationDirectory, final Subnet subnet) {
     checkArgument(configurationDirectory != null, "Path to configuration directory is mandatory");
 
     this.privacyManagers = new HashMap<>();
@@ -104,8 +103,7 @@ public class Network implements Closeable {
     this.nodes = new HashMap<>();
     this.pathGenerator = new PathGenerator(configurationDirectory);
     this.vertx = Vertx.vertx();
-    this.subnet = new Subnet();
-    this.network = subnet.createContainerNetwork();
+    this.subnet = subnet;
     this.genesisFile = new BesuGenesisFile(pathGenerator.uniqueFile());
     this.state = NetworkState.STOPPED;
 
@@ -134,7 +132,7 @@ public class Network implements Closeable {
       everyMember(NetworkMember::stop);
     }
     vertx.close();
-    network.close();
+    subnet.close();
     state = NetworkState.CLOSED;
   }
 
@@ -195,7 +193,7 @@ public class Network implements Closeable {
         new Besu(
             config
                 .withVertx(vertx)
-                .withContainerNetwork(network)
+                .withContainerNetwork(subnet.network())
                 .withIpAddress(subnet.getAddressAndIncrement())
                 .withGenesisFile(genesisFile)
                 .withBootnodeEnodeAddress(bootnodeEnodeAddresses())
@@ -209,7 +207,7 @@ public class Network implements Closeable {
     final OrionConfiguration configuration =
         new OrionConfigurationBuilder()
             .withVertx(vertx)
-            .withContainerNetwork(network)
+            .withContainerNetwork(subnet.network())
             .withIpAddress(subnet.getAddressAndIncrement())
             .withFileSystemConfigurationFile(pathGenerator.uniqueFile())
             .withBootnodeUrls(privacyManagerBootnodeUrls())
@@ -241,7 +239,7 @@ public class Network implements Closeable {
         new EthSigner(
             new EthSignerConfigurationBuilder()
                 .withVertx(vertx)
-                .withContainerNetwork(network)
+                .withContainerNetwork(subnet.network())
                 .withIpAddress(subnet.getAddressAndIncrement())
                 .withDownstream(downstream)
                 .withChainId(genesis.getConfig().getChainId())

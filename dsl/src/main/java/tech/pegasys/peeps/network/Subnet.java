@@ -14,45 +14,70 @@ package tech.pegasys.peeps.network;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import java.io.Closeable;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.github.dockerjava.api.model.Network.Ipam;
 import com.github.dockerjava.api.model.Network.Ipam.Config;
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.testcontainers.containers.Network;
 
-public class Subnet {
+public class Subnet implements Closeable {
+
+  private static final Logger LOG = LogManager.getLogger();
 
   private static final int MAXIMUM_ATTEMPTS = 25;
   private static final int OCTET_MAXIMUM = 255;
   private static final String SUBNET_FORMAT = "172.20.%d.0/24";
   private static final AtomicInteger THIRD_OCTET = new AtomicInteger(0);
 
-  private SubnetAddresses addresses;
+  private final SubnetAddresses addresses;
+  private final Network network;
 
-  public Network createContainerNetwork() {
+  public Subnet() {
 
-    for (int attempt = 0; attempt < MAXIMUM_ATTEMPTS; attempt++) {
+    int attempt = 0;
+    String subnet = null;
+    Network possibleNetwork = null;
 
-      final String subnet = getNextSubnetAndIncrement();
+    while (attempt < MAXIMUM_ATTEMPTS && possibleNetwork == null) {
+      subnet = getNextSubnetAndIncrement();
 
       try {
-        final Network network = createDockerNetwork(subnet);
-        addresses = new SubnetAddresses(subnetAddressFormat(subnet));
-        return network;
+        possibleNetwork = createDockerNetwork(attempt, subnet);
       } catch (final UndeclaredThrowableException e) {
-        // Try creating with the next subnet
+        logSubnetUnavailable(attempt, subnet);
       }
+
+      attempt++;
     }
 
-    throw new IllegalStateException(
-        String.format("Failed to create a Docker network within %s attempts", MAXIMUM_ATTEMPTS));
+    checkState(
+        possibleNetwork != null,
+        "Failed to create a Docker network within %s attempts",
+        MAXIMUM_ATTEMPTS);
+
+    logNetworkAndSubnet(possibleNetwork, subnet);
+
+    this.network = possibleNetwork;
+    this.addresses = new SubnetAddresses(subnetAddressFormat(subnet));
   }
 
   // TODO stricter typing then String
   public String getAddressAndIncrement() {
     return addresses.getAddressAndIncrement();
+  }
+
+  public Network network() {
+    return network;
+  }
+
+  @Override
+  public void close() {
+    network.close();
   }
 
   @VisibleForTesting
@@ -62,6 +87,14 @@ public class Subnet {
 
   private String getNextSubnetAndIncrement() {
     return String.format(SUBNET_FORMAT, consumeNextThirdOctet());
+  }
+
+  private void logSubnetUnavailable(final int attempt, final String subnet) {
+    LOG.warn("Attempt: {}, failed to create Network with subnet: {}", attempt, subnet);
+  }
+
+  private void logNetworkAndSubnet(final Network network, final String subnet) {
+    LOG.info("Created Network: {}, with subnet: {}", network.getId(), subnet);
   }
 
   private synchronized int consumeNextThirdOctet() {
@@ -81,7 +114,7 @@ public class Subnet {
    * TestContainers uses lazy initialization of Docker networks, creation with the Docker client
    * being triggered by getId().
    */
-  private Network createDockerNetwork(final String subnet) {
+  private Network createDockerNetwork(final int attempt, final String subnet) {
     final Network network =
         Network.builder()
             .createNetworkCmdModifier(
@@ -89,8 +122,10 @@ public class Subnet {
                     modifier.withIpam(new Ipam().withConfig(new Config().withSubnet(subnet))))
             .build();
 
-    checkState(network.getId() != null);
-    checkState(!network.getId().isBlank());
+    LOG.info("Attempt: {}, creating Network with subnet: {}", attempt, subnet);
+
+    checkState(network.getId() != null, "Creation of Network failed, no Id returned");
+    checkState(!network.getId().isBlank(), "Network created with an empty Id returned");
 
     return network;
   }
