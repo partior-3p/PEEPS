@@ -12,6 +12,8 @@
  */
 package tech.pegasys.peeps.signer.rpc.eea;
 
+import tech.pegasys.peeps.privacy.model.PrivacyAddreess;
+
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -27,18 +29,16 @@ public class SendPrivacyTransactionRequest {
 
   private final Address sender;
   private final Address recipient;
-
-  // TODO better typing than String
   private final String data;
-  private final String privateSender;
-  private final String[] privateRecipients;
+  private final PrivacyAddreess privateSender;
+  private final PrivacyAddreess[] privateRecipients;
 
   public SendPrivacyTransactionRequest(
       final Address sender,
       final Address recipient,
       final String data,
-      final String privateSender,
-      final String[] privateRecipients) {
+      final PrivacyAddreess privateSender,
+      final PrivacyAddreess[] privateRecipients) {
     this.sender = sender;
     this.recipient = recipient;
     this.data = data;
@@ -63,12 +63,12 @@ public class SendPrivacyTransactionRequest {
   }
 
   @JsonGetter("privateFrom")
-  public String getPrivateSender() {
+  public PrivacyAddreess getPrivateSender() {
     return privateSender;
   }
 
   @JsonGetter("privateFor")
-  public String[] getPrivateRecipients() {
+  public PrivacyAddreess[] getPrivateRecipients() {
     return privateRecipients;
   }
 

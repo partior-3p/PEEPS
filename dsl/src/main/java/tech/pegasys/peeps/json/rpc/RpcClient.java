@@ -20,8 +20,10 @@ import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 import tech.pegasys.peeps.json.Json;
 
 import java.time.Duration;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
@@ -36,14 +38,20 @@ public abstract class RpcClient {
   private final Vertx vertx;
   private final Logger log;
   private final Duration connectionTimeout;
+  private final Set<Supplier<String>> dockerLogs;
 
   private HttpClient rpc;
   private String containerId;
 
-  public RpcClient(final Vertx vertx, final Duration connectionTimeout, final Logger log) {
+  public RpcClient(
+      final Vertx vertx,
+      final Duration connectionTimeout,
+      final Logger log,
+      final Set<Supplier<String>> dockerLogs) {
     this.connectionTimeout = connectionTimeout;
     this.vertx = vertx;
     this.log = log;
+    this.dockerLogs = dockerLogs;
   }
 
   public void bind(final String containerId, final String ipAddress, final int httpJsonRpcPort) {
@@ -72,6 +80,17 @@ public abstract class RpcClient {
   }
 
   protected <T> T post(final String relativeUri, final Object requestPojo, final Class<T> clazz) {
+    try {
+      return performPost(relativeUri, requestPojo, clazz);
+
+    } catch (final RuntimeException e) {
+      dockerLogs.stream().forEach(dockerLog -> log.error(dockerLog.get()));
+      throw e;
+    }
+  }
+
+  private <T> T performPost(
+      final String relativeUri, final Object requestPojo, final Class<T> clazz) {
     final CompletableFuture<T> future = new CompletableFuture<>();
     final String json = Json.encode(requestPojo);
 

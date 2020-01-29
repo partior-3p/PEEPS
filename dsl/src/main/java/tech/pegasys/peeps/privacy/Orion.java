@@ -22,8 +22,11 @@ import tech.pegasys.peeps.privacy.model.PrivacyPublicKeyResource;
 import tech.pegasys.peeps.privacy.rpc.OrionRpc;
 import tech.pegasys.peeps.privacy.rpc.OrionRpcExpectingData;
 import tech.pegasys.peeps.util.ClasspathResources;
+import tech.pegasys.peeps.util.DockerLogs;
 
 import java.util.Collection;
+import java.util.Set;
+import java.util.function.Supplier;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -80,7 +83,7 @@ public class Orion implements NetworkMember {
     // TODO just using the first key, selecting the identity could be an option for
     // multi-key Orion
     this.id = ClasspathResources.read(config.getPublicKeys().get(0).get());
-    this.orionRpc = new OrionRpc(config.getVertx(), id);
+    this.orionRpc = new OrionRpc(config.getVertx(), id, dockerLogs());
     this.rpc = new OrionRpcExpectingData(orionRpc);
   }
 
@@ -134,6 +137,10 @@ public class Orion implements NetworkMember {
     return rpc.receive(key);
   }
 
+  private Set<Supplier<String>> dockerLogs() {
+    return Set.of(() -> getLogs());
+  }
+
   private void awaitConnectivity(final Orion peer) {
     final String message = generateUniquePayload();
 
@@ -164,6 +171,10 @@ public class Orion implements NetworkMember {
       container.withClasspathResourceMapping(
           location, containerWorkingDirectory(location), BindMode.READ_ONLY);
     }
+  }
+
+  public String getLogs() {
+    return DockerLogs.format("Orion", orion);
   }
 
   private String containerWorkingDirectory(final String relativePath) {

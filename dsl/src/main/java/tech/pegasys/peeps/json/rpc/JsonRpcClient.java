@@ -13,6 +13,8 @@
 package tech.pegasys.peeps.json.rpc;
 
 import java.time.Duration;
+import java.util.Set;
+import java.util.function.Supplier;
 
 import io.vertx.core.Vertx;
 import org.apache.logging.log4j.Logger;
@@ -22,8 +24,12 @@ public class JsonRpcClient extends RpcClient {
   private static final String JSON_RPC_VERSION = "2.0";
   private static final String JSON_RPC_CONTEXT_PATH = "/";
 
-  public JsonRpcClient(final Vertx vertx, final Duration timeout, final Logger log) {
-    super(vertx, timeout, log);
+  public JsonRpcClient(
+      final Vertx vertx,
+      final Duration timeout,
+      final Logger log,
+      final Set<Supplier<String>> dockerLogs) {
+    super(vertx, timeout, log, dockerLogs);
   }
 
   public <T> T post(final String method, final Class<T> clazz) {

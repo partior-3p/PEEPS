@@ -13,49 +13,67 @@
 package tech.pegasys.peeps.node.rpc;
 
 import static tech.pegasys.peeps.util.Await.awaitData;
+import static tech.pegasys.peeps.util.Await.awaitPresence;
 
 import tech.pegasys.peeps.node.model.Hash;
 import tech.pegasys.peeps.node.model.PrivacyTransactionReceipt;
 import tech.pegasys.peeps.node.model.Transaction;
 import tech.pegasys.peeps.node.model.TransactionReceipt;
+import tech.pegasys.peeps.node.rpc.admin.NodeInfo;
+
+import java.util.Set;
 
 import org.apache.tuweni.eth.Address;
 import org.apache.tuweni.units.ethereum.Wei;
 
-public class NodeRpcExpectingData {
+public class NodeRpcMandatoryResponse implements NodeRpc {
 
-  private final NodeRpc rpc;
+  private final NodeRpcClient rpc;
 
-  public NodeRpcExpectingData(final NodeRpc rpc) {
+  public NodeRpcMandatoryResponse(final NodeRpcClient rpc) {
     this.rpc = rpc;
   }
 
+  @Override
   public PrivacyTransactionReceipt getPrivacyTransactionReceipt(final Hash receipt) {
-    return awaitData(
+    return awaitPresence(
             () -> rpc.getPrivacyTransactionReceipt(receipt),
             "Failed to retrieve the private transaction receipt with hash: %s",
             receipt)
         .get();
   }
 
+  @Override
   public TransactionReceipt getTransactionReceipt(final Hash receipt) {
-    return awaitData(
+    return awaitPresence(
             () -> rpc.getTransactionReceipt(receipt),
             "Failed to retrieve the transaction receipt with hash: %s",
             receipt)
         .get();
   }
 
+  @Override
   public Transaction getTransactionByHash(final Hash transaction) {
-    return awaitData(
+    return awaitPresence(
             () -> rpc.getTransactionByHash(transaction),
             "Failed to retrieve the transaction with hash: %s",
             transaction)
         .get();
   }
 
+  @Override
   public Wei getBalance(final Address account) {
     return awaitData(
         () -> rpc.getBalance(account), "Failed to retrieve the balance for address: %s", account);
+  }
+
+  @Override
+  public Set<String> getConnectedPeerIds() {
+    return rpc.getConnectedPeerIds();
+  }
+
+  @Override
+  public NodeInfo nodeInfo() {
+    return rpc.nodeInfo();
   }
 }

@@ -14,52 +14,17 @@ package tech.pegasys.peeps.signer.rpc;
 
 import tech.pegasys.peeps.node.model.Hash;
 import tech.pegasys.peeps.node.rpc.NodeRpc;
-import tech.pegasys.peeps.signer.rpc.eea.SendPrivacyTransactionRequest;
-import tech.pegasys.peeps.signer.rpc.eea.SendPrivacyTransactionResponse;
-import tech.pegasys.peeps.signer.rpc.eth.SendTransactionRequest;
-import tech.pegasys.peeps.signer.rpc.eth.SendTransactionResponse;
-import tech.pegasys.peeps.signer.rpc.net.EnodeResponse;
+import tech.pegasys.peeps.privacy.model.PrivacyAddreess;
 
-import java.time.Duration;
-
-import io.vertx.core.Vertx;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.eth.Address;
 import org.apache.tuweni.units.ethereum.Wei;
 
-public class SignerRpc extends NodeRpc {
+public interface SignerRpc extends NodeRpc {
 
-  private static final Logger LOG = LogManager.getLogger();
-  private static final Address NO_RECIPIENT = null;
+  Hash transfer(Address sender, Address receiver, Wei amount);
 
-  public SignerRpc(final Vertx vertx, final Duration timeout) {
-    super(vertx, timeout, LOG);
-  }
+  String enode();
 
-  // TODO all the RPCs should use addresses and privacy address instead of String
-  public Hash deployContractToPrivacyGroup(
-      final Address sender,
-      final String binary,
-      final String privateSender,
-      final String[] privateRecipients) {
-    return post(
-            "eea_sendTransaction",
-            SendPrivacyTransactionResponse.class,
-            new SendPrivacyTransactionRequest(
-                sender, NO_RECIPIENT, binary, privateSender, privateRecipients))
-        .getResult();
-  }
-
-  public Hash transfer(final Address sender, final Address receiver, final Wei amount) {
-    return post(
-            "eth_sendTransaction",
-            SendTransactionResponse.class,
-            new SendTransactionRequest(sender, receiver, null, amount))
-        .getResult();
-  }
-
-  public String enode() {
-    return post("net_enode", EnodeResponse.class).getResult();
-  }
+  Hash deployContractToPrivacyGroup(
+      Address sender, String binary, PrivacyAddreess string, PrivacyAddreess... privateRecipients);
 }

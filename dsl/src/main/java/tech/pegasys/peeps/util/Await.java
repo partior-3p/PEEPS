@@ -14,6 +14,7 @@ package tech.pegasys.peeps.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -24,6 +25,21 @@ import org.awaitility.core.ThrowingRunnable;
 public class Await {
 
   private static final int DEFAULT_TIMEOUT_IN_SECONDS = 20;
+
+  public static <T> Optional<T> awaitPresence(
+      final Supplier<Optional<T>> operation,
+      final String errorMessage,
+      final Object... errorMessageParameters) {
+
+    await(
+        () -> {
+          assertThat(operation.get()).isPresent();
+        },
+        errorMessage,
+        errorMessageParameters);
+
+    return operation.get();
+  }
 
   public static <T> T awaitData(
       final Supplier<T> operation,

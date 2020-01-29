@@ -14,7 +14,7 @@ package tech.pegasys.peeps.node.verification;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import tech.pegasys.peeps.node.rpc.NodeRpcExpectingData;
+import tech.pegasys.peeps.node.rpc.NodeRpc;
 
 import org.apache.tuweni.eth.Address;
 import org.apache.tuweni.units.ethereum.Wei;
@@ -29,7 +29,7 @@ public class AccountValue {
     this.value = value;
   }
 
-  public void verify(final NodeRpcExpectingData rpc) {
+  public void verify(final NodeRpc rpc) {
     assertThat(rpc.getBalance(account)).isEqualTo(value);
   }
 }

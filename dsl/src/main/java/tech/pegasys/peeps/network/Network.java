@@ -42,7 +42,7 @@ import tech.pegasys.peeps.node.model.NodeKey;
 import tech.pegasys.peeps.node.model.PrivacyTransactionReceipt;
 import tech.pegasys.peeps.node.model.Transaction;
 import tech.pegasys.peeps.node.model.TransactionReceipt;
-import tech.pegasys.peeps.node.rpc.NodeRpcExpectingData;
+import tech.pegasys.peeps.node.rpc.NodeRpc;
 import tech.pegasys.peeps.node.verification.AccountValue;
 import tech.pegasys.peeps.privacy.Orion;
 import tech.pegasys.peeps.privacy.OrionConfiguration;
@@ -56,7 +56,7 @@ import tech.pegasys.peeps.signer.EthSigner;
 import tech.pegasys.peeps.signer.EthSignerConfigurationBuilder;
 import tech.pegasys.peeps.signer.model.SignerIdentifier;
 import tech.pegasys.peeps.signer.model.WalletFileResources;
-import tech.pegasys.peeps.signer.rpc.SignerRpcExpectingData;
+import tech.pegasys.peeps.signer.rpc.SignerRpc;
 import tech.pegasys.peeps.util.PathGenerator;
 
 import java.io.Closeable;
@@ -343,7 +343,7 @@ public class Network implements Closeable {
     return new NodeVerify(nodes.get(id));
   }
 
-  public SignerRpcExpectingData rpc(final SignerIdentifier id) {
+  public SignerRpc rpc(final SignerIdentifier id) {
     checkNotNull(id, "Signer Identifier is mandatory");
     checkState(
         signers.containsKey(id),
@@ -354,7 +354,7 @@ public class Network implements Closeable {
     return signers.get(id).rpc();
   }
 
-  public NodeRpcExpectingData rpc(final NodeIdentifier id) {
+  public NodeRpc rpc(final NodeIdentifier id) {
     checkNodeExistsFor(id);
 
     return nodes.get(id).rpc();

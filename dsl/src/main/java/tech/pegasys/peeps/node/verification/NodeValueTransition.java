@@ -12,9 +12,9 @@
  */
 package tech.pegasys.peeps.node.verification;
 
-import tech.pegasys.peeps.node.rpc.NodeRpcExpectingData;
+import tech.pegasys.peeps.node.rpc.NodeRpc;
 
 public interface NodeValueTransition {
 
-  void verify(NodeRpcExpectingData rpc);
+  void verify(NodeRpc rpc);
 }

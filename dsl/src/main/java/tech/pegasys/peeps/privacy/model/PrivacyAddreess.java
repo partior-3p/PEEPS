@@ -14,6 +14,8 @@ package tech.pegasys.peeps.privacy.model;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public class PrivacyAddreess {
 
   private final String address;
@@ -23,6 +25,7 @@ public class PrivacyAddreess {
     this.address = address;
   }
 
+  @JsonValue
   public String get() {
     return address;
   }

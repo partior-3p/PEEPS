@@ -20,6 +20,8 @@ import tech.pegasys.peeps.privacy.rpc.send.SendRequest;
 import tech.pegasys.peeps.privacy.rpc.send.SendResponse;
 
 import java.time.Duration;
+import java.util.Set;
+import java.util.function.Supplier;
 
 import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
@@ -32,8 +34,8 @@ public class OrionRpc extends RpcClient {
 
   private final String pubKey;
 
-  public OrionRpc(final Vertx vertx, final String pubKey) {
-    super(vertx, DEFAULT_TIMEOUT, LOG);
+  public OrionRpc(final Vertx vertx, final String pubKey, final Set<Supplier<String>> dockerLogs) {
+    super(vertx, DEFAULT_TIMEOUT, LOG, dockerLogs);
     this.pubKey = pubKey;
   }
 
