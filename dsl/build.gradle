@@ -12,7 +12,7 @@
  */
 
 jar {
-  baseName 'dsl'
+  archiveBaseName = 'dsl'
   manifest {
     attributes(
       'Specification-Title': getArchiveBaseName(),

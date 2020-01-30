@@ -1,16 +1,3 @@
-/*
- * Copyright 2018 ConsenSys AG.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- */
-
 /**
  * Check that the licenses of our 3rd parties are in our acceptedLicenses list.
  *
@@ -49,6 +36,7 @@ ext.acceptedLicenses = [
         'CC0'
 ]*.toLowerCase()
 
+
 /**
  * This is the configuration we need for our licenses plugin: 'com.github.hierynomus.license'
  * This plugin generates a list of dependencies.
@@ -57,7 +45,7 @@ downloadLicenses {
   includeProjectDependencies = true
   reportByDependency = false
   reportByLicenseType = true
-  dependencyConfiguration = 'testCompile'
+  dependencyConfiguration = 'testCompileClasspath'
 
   ext.apache = license('Apache License, Version 2.0', 'http://opensource.org/licenses/Apache-2.0')
   ext.mit = license('MIT License', 'http://www.opensource.org/licenses/mit-license.php')
@@ -79,12 +67,16 @@ downloadLicenses {
                   'Apache 2',
                   'Apache 2.0',
                   'Apache License 2.0',
+                  'Apache License v2.0',
                   'Apache-2.0',
                   license('Apache License', 'http://www.apache.org/licenses/LICENSE-2.0'),
                   license('Apache Software Licenses', 'http://www.apache.org/licenses/LICENSE-2.0.txt'),
                   license('Apache', 'http://www.opensource.org/licenses/Apache-2.0')
           ],
-          (mit)       : ['The MIT License'],
+          (mit)       : [
+          		  'The MIT License',
+          		  'MIT'
+          ],
           (bsd)       : [
                   'BSD',
                   'BSD licence',
@@ -94,6 +86,7 @@ downloadLicenses {
           ],
           (bsd3Clause): [
                   'BSD 3-Clause',
+                  'BSD Licence 3',
                   'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)',
                   license('BSD 3-clause', 'http://opensource.org/licenses/BSD-3-Clause'),
                   license('BSD 3-Clause', 'http://www.scala-lang.org/license.html')
@@ -118,6 +111,7 @@ downloadLicenses {
                   'CDDL',
                   'Common Development and Distribution License 1.0',
                   'CDDL + GPLv2 with classpath exception',
+                  'CDDL/GPLv2+CE',
                   'Dual license consisting of the CDDL v1.1 and GPL v2'
           ],
           (cddl1_1): [
@@ -126,33 +120,27 @@ downloadLicenses {
           ],
           (epl_2): [
                   'Eclipse Public License 2.0',
+                  'Eclipse Public License v2.0',
                   'Eclipse Public License - v 2.0'
           ]
-
   ]
 
   licenses = [
-          (group('ethsigner'))       : apache,
-          (group('ethsigner.ethsigner'))       : apache,
-          (group('ethsigner.ethsigner.signer'))       : apache,
-
+          (group('peeps')): apache,
           // https://checkerframework.org/manual/#license
           // The more permissive MIT License applies to code that you might want
           // to include in your own program, such as the annotations and run-time utility classes.
           (group('org.checkerframework')): mit,
-          // RocksDB is dual licensed under Apache v2.0 and GPL 2 licenses
-          // Explicitly declare that we are using the Apache v2.0 license
-          (group('org.rocksdb')): apache,
           /// Explicilitly declare Apache 2.0 license for javassist
           (group('org.javassist')): apache,
-          /// Explicilitly declare Apache 2.0 license for javassist
-          (group('javax.ws.rs')): cddl1_1,
-          (group('org.glassfish.jersey.core')): apache,
+          (group('javax.ws.rs')): cddl1_1,          
           (group('org.glassfish.jersey.bundles.repackaged')): apache,
           (group('org.glassfish.jersey.connectors')): apache,
           (group('com.github.jnr')): epl_2,
           (group('javax.mail')): cddl,
-          (group('net.jcip')): apache
+          (group('net.jcip')): apache,
+          (group('net.java.dev.jna')): apache,
+          (group('javax.xml.bind')): cddl,                             
   ]
 }
 
@@ -181,4 +169,5 @@ task checkLicenses {
     }
   }
 }
+
 check.dependsOn checkLicenses
