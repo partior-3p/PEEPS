@@ -9,12 +9,12 @@
 import net.ltgt.gradle.errorprone.CheckSeverity
 
 plugins {
-  id 'com.diffplug.gradle.spotless' version '3.19.0'
+  id 'com.diffplug.gradle.spotless' version '3.27.0'
   id 'com.jfrog.bintray' version '1.8.4'
   id 'com.github.ben-manes.versions' version '0.21.0'
   id 'com.github.hierynomus.license' version '0.15.0'
   id 'io.spring.dependency-management' version '1.0.7.RELEASE'
-  id 'net.ltgt.errorprone' version '0.7.1'
+  id 'net.ltgt.errorprone' version '1.1.1'
   id 'net.researchgate.release' version '2.7.0'
   id "de.undercouch.download" version '4.0.0'
 }
@@ -120,7 +120,7 @@ allprojects {
     ]
 
     options.errorprone {
-      excludedPaths '.*/(generated/*.*|.*ReferenceTest_.*)'
+      excludedPaths = '.*/(generated/*.*)'
 
       // Our equals need to be symmetric, this checker doesn't respect that.
       check('EqualsGetClass', CheckSeverity.OFF)
@@ -249,7 +249,7 @@ task distZip(type: Zip) {
   archiveBaseName = distributionIdentifier
   from installDist.outputs.getFiles()
   archiveBaseName
-  extension 'zip'
+  archiveExtension = 'zip'
 }
 
 // Takes the version, and if -SNAPSHOT is part of it replaces SNAPSHOT

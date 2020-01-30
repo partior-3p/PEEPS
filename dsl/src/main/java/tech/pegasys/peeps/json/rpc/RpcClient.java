@@ -57,12 +57,12 @@ public abstract class RpcClient {
   public void bind(final String containerId, final String ipAddress, final int httpJsonRpcPort) {
     this.containerId = containerId;
 
-    if (rpc != null) {
-      rpc.close();
-    }
-
     checkNotNull(ipAddress, "Container IP address must be set");
     checkState(httpJsonRpcPort > 0, "Container HTTP PRC port must be set");
+    checkState(
+        rpc == null,
+        "The underlying HttpClient is still open. Perform close() before a creating new binding.");
+
     log.info("Binding HttpClient on {}:{}", ipAddress, httpJsonRpcPort);
 
     rpc =
@@ -76,6 +76,7 @@ public abstract class RpcClient {
   public void close() {
     if (rpc != null) {
       rpc.close();
+      rpc = null;
     }
   }
 

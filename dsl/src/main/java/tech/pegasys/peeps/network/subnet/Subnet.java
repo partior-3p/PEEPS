@@ -15,9 +15,9 @@ package tech.pegasys.peeps.network.subnet;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.io.Closeable;
-import java.lang.reflect.UndeclaredThrowableException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.github.dockerjava.api.exception.DockerException;
 import com.github.dockerjava.api.model.Network.Ipam;
 import com.github.dockerjava.api.model.Network.Ipam.Config;
 import org.apache.logging.log4j.LogManager;
@@ -47,7 +47,7 @@ public class Subnet implements Closeable {
 
       try {
         possibleNetwork = createDockerNetwork(attempt, subnet);
-      } catch (final UndeclaredThrowableException e) {
+      } catch (final DockerException e) {
         logSubnetUnavailable(attempt, subnet);
       }
 
