@@ -268,7 +268,8 @@ public class Network implements Closeable {
             assertThat(receipt).usingRecursiveComparison().isEqualTo(firstReceipt);
           }
         },
-        "Consensus was not reached in time for Transaction Receipt with hash: " + transaction);
+        "Consensus was not reached in time for Transaction Receipt with hash: %s",
+        transaction);
   }
 
   public void verifyConsensusOnValue(final Address... accounts) {

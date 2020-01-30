@@ -54,7 +54,9 @@ public abstract class NetworkTest {
 
   @AfterEach
   public void tearDownNetwork() {
-    network.close();
+    if (network != null) {
+      network.close();
+    }
   }
 
   protected abstract void setUpNetwork(Network network);

@@ -14,10 +14,11 @@ package tech.pegasys.peeps.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import com.google.errorprone.annotations.FormatMethod;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 import org.awaitility.core.ThrowingRunnable;
@@ -26,6 +27,7 @@ public class Await {
 
   private static final int DEFAULT_TIMEOUT_IN_SECONDS = 20;
 
+  @FormatMethod
   public static <T> Optional<T> awaitPresence(
       final Supplier<Optional<T>> operation,
       final String errorMessage,
@@ -41,6 +43,7 @@ public class Await {
     return operation.get();
   }
 
+  @FormatMethod
   public static <T> T awaitData(
       final Supplier<T> operation,
       final String errorMessage,
@@ -56,6 +59,7 @@ public class Await {
     return operation.get();
   }
 
+  @FormatMethod
   public static void await(
       final ThrowingRunnable condition,
       final String errorMessage,
@@ -70,7 +74,7 @@ public class Await {
   private static void await(final int timeout, final ThrowingRunnable condition) {
     Awaitility.await()
         .ignoreExceptions()
-        .atMost(timeout, TimeUnit.SECONDS)
+        .atMost(Duration.ofSeconds(timeout))
         .untilAsserted(condition);
   }
 }

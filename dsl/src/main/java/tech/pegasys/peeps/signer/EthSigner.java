@@ -116,7 +116,8 @@ public class EthSigner implements NetworkMember {
   public void awaitConnectivityToDownstream() {
     await(
         () -> assertThat(signerRpc.enode()).isEqualTo(downstream.enodeId()),
-        String.format("Failed to connect to node: %s", downstream.enodeId()));
+        "Failed to connect to node: %s",
+        downstream.enodeId());
   }
 
   private String getLogs() {

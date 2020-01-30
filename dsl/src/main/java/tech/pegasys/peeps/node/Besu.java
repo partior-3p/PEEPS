@@ -215,7 +215,8 @@ public class Besu implements NetworkMember {
   private void awaitPeerIdConnections(final Set<String> peerIds) {
     await(
         () -> assertThat(nodeRpc.getConnectedPeerIds().containsAll(peerIds)).isTrue(),
-        String.format("Failed to connect in time to peers: %s", peerIds));
+        "Failed to connect in time to peers: %s",
+        peerIds);
   }
 
   private Set<String> expectedPeerIds(final Collection<Besu> peers) {

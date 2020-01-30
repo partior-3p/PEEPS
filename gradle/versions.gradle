@@ -28,44 +28,44 @@ dependencyManagement {
     dependency 'org.assertj:assertj-core:3.14.0'
 
     // Awaitility
-    dependency 'org.awaitility:awaitility:4.0.1'
+    dependency 'org.awaitility:awaitility:4.0.2'
 
 	// BouncyCastle
     dependency 'org.bouncycastle:bcprov-jdk15on:1.64'
     
     // Error prone
-    dependency 'com.google.errorprone:error_prone_check_api:2.3.3'
-    dependency 'com.google.errorprone:error_prone_core:2.3.3'
-    dependency 'com.google.errorprone:error_prone_annotation:2.3.3'
-    dependency 'com.google.errorprone:error_prone_test_helpers:2.3.3'
+    dependency 'com.google.errorprone:error_prone_check_api:2.3.4'
+    dependency 'com.google.errorprone:error_prone_core:2.3.4'
+    dependency 'com.google.errorprone:error_prone_annotation:2.3.4'
+    dependency 'com.google.errorprone:error_prone_test_helpers:2.3.4'
     dependency 'com.google.errorprone:javac:9+181-r4173-1'
 
     // Guava
-    dependency 'com.google.guava:guava:27.0.1-jre'
+    dependency 'com.google.guava:guava:28.2-jre'
 
     // Junit 5
     dependency 'org.junit.jupiter:junit-jupiter-engine:5.6.0'
     dependency 'org.junit.jupiter:junit-jupiter-api:5.6.0'
 
     // Log4j
-    dependency 'org.apache.logging.log4j:log4j-api:2.11.1'
-    dependency 'org.apache.logging.log4j:log4j-core:2.11.1'
-    dependency 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.1'
+    dependency 'org.apache.logging.log4j:log4j-api:2.13.0'
+    dependency 'org.apache.logging.log4j:log4j-core:2.13.0'
+    dependency 'org.apache.logging.log4j:log4j-slf4j-impl:2.13.0'
 
 	// Mockito
 	dependency 'org.mockito:mockito-core:3.2.4'
 	dependency 'org.mockito:mockito-junit-jupiter:3.2.4'	
 
     // TestContainers (Docker client wrapper)
-    dependency "org.testcontainers:testcontainers:1.12.3"
+    dependency "org.testcontainers:testcontainers:1.12.5"
 
     // Web3j
-    dependency 'org.web3j:abi:4.5.1'
-    dependency 'org.web3j:core:4.5.1'
-    dependency 'org.web3j:crypto:4.5.1'
+    dependency 'org.web3j:abi:4.5.13'
+    dependency 'org.web3j:core:4.5.13'
+    dependency 'org.web3j:crypto:4.5.13'
 
     // Vertx
-    dependency 'io.vertx:vertx-core:3.8.3'
-    dependency 'io.vertx:vertx-web-client:3.8.3'
+    dependency 'io.vertx:vertx-core:3.8.5'
+    dependency 'io.vertx:vertx-web-client:3.8.5'
   }
 }
