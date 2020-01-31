@@ -43,22 +43,22 @@ public class Ibft2ConsensusTest extends NetworkTest {
   public void consensusAfterMiningMustHappen() {
     final Address sender = signer.address();
     final Address receiver = Account.BETA.address();
-    final Wei transderAmount = Wei.valueOf(5000L);
+    final Wei transferAmount = Wei.valueOf(5000L);
 
-    verify().consensusOnValue(sender, receiver);
+    verify().consensusOnValueAt(sender, receiver);
 
     final Wei senderStartBalance = execute(node).getBalance(sender);
     final Wei receiverStartBalance = execute(node).getBalance(receiver);
 
-    final Hash receipt = execute(signer).transfer(sender, receiver, transderAmount);
+    final Hash receipt = execute(signer).transferTo(receiver, transferAmount);
 
     await().consensusOnTransactionReciept(receipt);
 
-    verify(node)
+    verifyOn(node)
         .transistion(
             new ValueSent(sender, senderStartBalance, receipt),
-            new ValueReceived(receiver, receiverStartBalance, transderAmount));
+            new ValueReceived(receiver, receiverStartBalance, transferAmount));
 
-    verify().consensusOnValue(sender, receiver);
+    verify().consensusOnValueAt(sender, receiver);
   }
 }

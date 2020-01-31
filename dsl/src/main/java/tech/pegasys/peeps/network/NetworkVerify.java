@@ -14,7 +14,7 @@ package tech.pegasys.peeps.network;
 
 import tech.pegasys.peeps.node.model.Hash;
 import tech.pegasys.peeps.privacy.PrivacyGroupVerify;
-import tech.pegasys.peeps.privacy.model.PrivacyManagerIdentifier;
+import tech.pegasys.peeps.privacy.model.PrivacyGroup;
 
 import org.apache.tuweni.eth.Address;
 
@@ -25,7 +25,7 @@ public class NetworkVerify {
     this.network = network;
   }
 
-  public void consensusOnValue(final Address... accounts) {
+  public void consensusOnValueAt(final Address... accounts) {
     network.verifyConsensusOnValue(accounts);
   }
 
@@ -38,7 +38,7 @@ public class NetworkVerify {
     network.verifyConsensusOnPrivacyTransactionReceipt(transaction);
   }
 
-  public PrivacyGroupVerify privacyGroup(final PrivacyManagerIdentifier... members) {
-    return network.privacyGroup(members);
+  public PrivacyGroupVerify privacyGroup(final PrivacyGroup group) {
+    return network.privacyGroup(group);
   }
 }

@@ -50,6 +50,7 @@ import tech.pegasys.peeps.privacy.OrionConfiguration;
 import tech.pegasys.peeps.privacy.OrionConfigurationBuilder;
 import tech.pegasys.peeps.privacy.OrionConfigurationFile;
 import tech.pegasys.peeps.privacy.PrivacyGroupVerify;
+import tech.pegasys.peeps.privacy.model.PrivacyGroup;
 import tech.pegasys.peeps.privacy.model.PrivacyKeyPair;
 import tech.pegasys.peeps.privacy.model.PrivacyManagerIdentifier;
 import tech.pegasys.peeps.privacy.model.PrivacyPublicKeyResource;
@@ -57,7 +58,7 @@ import tech.pegasys.peeps.signer.EthSigner;
 import tech.pegasys.peeps.signer.EthSignerConfigurationBuilder;
 import tech.pegasys.peeps.signer.model.SignerIdentifier;
 import tech.pegasys.peeps.signer.model.WalletFileResources;
-import tech.pegasys.peeps.signer.rpc.SignerRpc;
+import tech.pegasys.peeps.signer.rpc.SignerRpcSenderKnown;
 import tech.pegasys.peeps.util.PathGenerator;
 
 import java.io.Closeable;
@@ -334,7 +335,7 @@ public class Network implements Closeable {
     return new NodeVerify(nodes.get(id));
   }
 
-  public SignerRpc rpc(final SignerIdentifier id) {
+  public SignerRpcSenderKnown rpc(final SignerIdentifier id, final Address sender) {
     checkNotNull(id, "Signer Identifier is mandatory");
     checkState(
         signers.containsKey(id),
@@ -342,7 +343,7 @@ public class Network implements Closeable {
         id,
         signers.keySet());
 
-    return signers.get(id).rpc();
+    return new SignerRpcSenderKnown(signers.get(id).rpc(), sender);
   }
 
   public NodeRpc rpc(final NodeIdentifier id) {
@@ -351,10 +352,10 @@ public class Network implements Closeable {
     return nodes.get(id).rpc();
   }
 
-  public PrivacyGroupVerify privacyGroup(final PrivacyManagerIdentifier... members) {
+  public PrivacyGroupVerify privacyGroup(final PrivacyGroup group) {
     return new PrivacyGroupVerify(
-        Stream.of(members)
-            .parallel()
+        group
+            .parallelStream()
             .map(manager -> privacyManagers.get(manager))
             .collect(Collectors.toSet()));
   }
