@@ -102,6 +102,9 @@ jobs:
           command: |
             ./gradlew --no-daemon --parallel endToEndTest
       - capture_test_results
+      - store_artifacts:
+          path: end-to-end-tests/build/reports
+          destination: end-to-end-tests-reports
 
 workflows:
   version: 2
