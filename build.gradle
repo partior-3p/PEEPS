@@ -38,7 +38,7 @@ allprojects {
   //////
   // Default tasks and build aliases
 
-  defaultTasks 'checkLicenses', 'assemble', 'javadoc', 'test', 'acceptanceTest'
+  defaultTasks 'checkLicenses', 'assemble', 'javadoc', 'test'
 
   def buildAliases = ['dev': [
       'spotlessApply',

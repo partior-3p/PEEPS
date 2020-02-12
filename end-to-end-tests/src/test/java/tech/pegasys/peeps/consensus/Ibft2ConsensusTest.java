@@ -35,7 +35,7 @@ public class Ibft2ConsensusTest extends NetworkTest {
   protected void setUpNetwork(final Network network) {
     network.addNode(node.id(), node.keys());
     network.addNode(NodeConfiguration.BETA.id(), NodeConfiguration.BETA.keys());
-    network.set(ConsensusMechanism.CLIQUE, node.id());
+    network.set(ConsensusMechanism.IBFT2, node.id());
     network.addSigner(signer.id(), signer.resources(), node.id());
   }
 
