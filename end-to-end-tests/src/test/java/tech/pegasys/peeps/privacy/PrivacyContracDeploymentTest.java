@@ -57,7 +57,7 @@ public class PrivacyContracDeploymentTest extends NetworkTest {
             .deployContractToPrivacyGroup(
                 SimpleStorage.BINARY, privacyManagerAlpha.address(), privacyManagerBeta.address());
 
-    await().consensusOnTransactionReciept(pmt);
+    await().consensusOnTransactionReceipt(pmt);
 
     verifyOn(nodeAlpha).successfulTransactionReceipt(pmt);
     verify().consensusOnTransaction(pmt);

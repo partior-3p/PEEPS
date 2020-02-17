@@ -22,7 +22,7 @@ public class NetworkAwait {
     this.network = network;
   }
 
-  public void consensusOnTransactionReciept(final Hash receipt) {
-    network.awaitConsensusOnTransactionReciept(receipt);
+  public void consensusOnTransactionReceipt(final Hash receipt) {
+    network.awaitConsensusOnTransactionReceipt(receipt);
   }
 }

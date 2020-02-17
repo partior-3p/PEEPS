@@ -52,7 +52,7 @@ public class EthHashConsensusTest extends NetworkTest {
 
     final Hash receipt = execute(signer).transferTo(receiver, transferAmount);
 
-    await().consensusOnTransactionReciept(receipt);
+    await().consensusOnTransactionReceipt(receipt);
 
     verifyOn(node)
         .transistion(

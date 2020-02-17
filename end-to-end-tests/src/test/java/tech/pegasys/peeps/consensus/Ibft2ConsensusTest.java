@@ -52,7 +52,7 @@ public class Ibft2ConsensusTest extends NetworkTest {
 
     final Hash receipt = execute(signer).transferTo(receiver, transferAmount);
 
-    await().consensusOnTransactionReciept(receipt);
+    await().consensusOnTransactionReceipt(receipt);
 
     verifyOn(node)
         .transistion(
