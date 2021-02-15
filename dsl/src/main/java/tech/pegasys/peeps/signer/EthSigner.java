@@ -44,8 +44,7 @@ public class EthSigner implements NetworkMember {
   private static final int ALIVE_STATUS_CODE = 200;
 
   //  private static final String ETH_SIGNER_IMAGE = "pegasyseng/ethsigner:latest";
-  private static final String ETH_SIGNER_IMAGE = "pegasyseng/ethsigner:develop";
-  private static final String CONTAINER_DATA_PATH = "/etc/ethsigner/tmp/";
+  private static final String ETH_SIGNER_IMAGE = "consensys/quorum-ethsigner:develop";
   private static final int CONTAINER_HTTP_RPC_PORT = 8545;
   private static final Duration DOWNSTREAM_TIMEOUT = Duration.ofSeconds(10);
   private static final String CONTAINER_KEY_FILE = "/etc/ethsigner/key_file.v3";
@@ -137,9 +136,7 @@ public class EthSigner implements NetworkMember {
   private List<String> standardCommandLineOptions() {
     return Lists.newArrayList(
         "--logging",
-        "INFO",
-        "--data-path",
-        CONTAINER_DATA_PATH,
+        "DEBUG",
         "--http-listen-host",
         "0.0.0.0",
         "--http-listen-port",

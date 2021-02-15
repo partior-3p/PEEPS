@@ -46,7 +46,7 @@ public class Orion implements NetworkMember {
   private static final String AM_I_ALIVE_ENDPOINT = "/upcheck";
 
   // TODO there should be the 'latest' version
-  private static final String ORION_IMAGE = "pegasyseng/orion:develop";
+  private static final String ORION_IMAGE = "consensys/quorum-orion:develop";
 
   private static final int CONTAINER_PEER_TO_PEER_PORT = 8080;
   private static final int CONTAINER_HTTP_RPC_PORT = 8888;

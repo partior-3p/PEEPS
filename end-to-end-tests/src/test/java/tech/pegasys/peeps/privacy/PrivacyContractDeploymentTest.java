@@ -21,10 +21,9 @@ import tech.pegasys.peeps.network.Network;
 import tech.pegasys.peeps.node.model.Hash;
 import tech.pegasys.peeps.privacy.model.PrivacyGroup;
 
-import org.apache.commons.codec.DecoderException;
 import org.junit.jupiter.api.Test;
 
-public class PrivacyContracDeploymentTest extends NetworkTest {
+public class PrivacyContractDeploymentTest extends NetworkTest {
 
   private final NodeConfiguration nodeAlpha = NodeConfiguration.ALPHA;
   private final SignerConfiguration signer = SignerConfiguration.ALPHA;
@@ -49,7 +48,7 @@ public class PrivacyContracDeploymentTest extends NetworkTest {
   }
 
   @Test
-  public void deploymentMustSucceed() throws DecoderException {
+  public void deploymentMustSucceed() {
     final PrivacyGroup group = new PrivacyGroup(privacyManagerAlpha.id(), privacyManagerBeta.id());
 
     final Hash pmt =
