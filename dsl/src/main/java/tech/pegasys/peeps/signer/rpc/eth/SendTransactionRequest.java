@@ -21,7 +21,7 @@ import org.apache.tuweni.units.ethereum.Wei;
 @JsonInclude(Include.NON_NULL)
 public class SendTransactionRequest {
   /* Default gas price of 1000 wei.*/
-  private static final String DEFAULT_GAS_PRICE = "0x3E8";
+  private static final String DEFAULT_GAS_PRICE = "0x0";
 
   /* Default gas limit of 3000000 wei. */
   private static final String DEFAULT_GAS_LIMIT = "0x2DC6C0";

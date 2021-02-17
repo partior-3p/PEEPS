@@ -62,10 +62,6 @@ public class SignerRpcSenderKnown {
     return rpc.transfer(sender, receiver, amount);
   }
 
-  public String enode() {
-    return rpc.enode();
-  }
-
   public Hash deployContractToPrivacyGroup(
       final String binary,
       final PrivacyAddreess string,

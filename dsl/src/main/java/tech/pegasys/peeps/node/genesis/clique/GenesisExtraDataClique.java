@@ -12,7 +12,7 @@
  */
 package tech.pegasys.peeps.node.genesis.clique;
 
-import tech.pegasys.peeps.node.Besu;
+import tech.pegasys.peeps.node.Web3Provider;
 import tech.pegasys.peeps.node.genesis.GenesisExtraData;
 
 import java.util.List;
@@ -25,11 +25,11 @@ import org.apache.tuweni.eth.Address;
 
 public class GenesisExtraDataClique extends GenesisExtraData {
 
-  public GenesisExtraDataClique(final Besu... validators) {
+  public GenesisExtraDataClique(final Web3Provider... validators) {
     super(encode(validators));
   }
 
-  private static Bytes encode(final Besu... validators) {
+  private static Bytes encode(final Web3Provider... validators) {
 
     return encode(
         Stream.of(validators)

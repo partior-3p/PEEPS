@@ -16,7 +16,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.peeps.util.Await.await;
 
 import tech.pegasys.peeps.network.NetworkMember;
-import tech.pegasys.peeps.node.Besu;
+import tech.pegasys.peeps.node.Web3Provider;
+import tech.pegasys.peeps.node.model.EnodeHelpers;
 import tech.pegasys.peeps.signer.rpc.SignerRpc;
 import tech.pegasys.peeps.signer.rpc.SignerRpcClient;
 import tech.pegasys.peeps.signer.rpc.SignerRpcMandatoryResponse;
@@ -53,7 +54,7 @@ public class EthSigner implements NetworkMember {
   private final GenericContainer<?> ethSigner;
   private final SignerRpcClient signerRpc;
   private final SignerRpc rpc;
-  private final Besu downstream;
+  private final Web3Provider downstream;
 
   public EthSigner(final EthSignerConfiguration config) {
 
@@ -114,9 +115,11 @@ public class EthSigner implements NetworkMember {
 
   public void awaitConnectivityToDownstream() {
     await(
-        () -> assertThat(signerRpc.enode()).isEqualTo(downstream.enodeId()),
+        () ->
+            assertThat(EnodeHelpers.extractPubKeyFromEnode(signerRpc.nodeInfo().getEnode()))
+                .isEqualTo(EnodeHelpers.extractPubKeyFromEnode(downstream.getEnodeId())),
         "Failed to connect to node: %s",
-        downstream.enodeId());
+        downstream.getEnodeId());
   }
 
   private String getLogs() {

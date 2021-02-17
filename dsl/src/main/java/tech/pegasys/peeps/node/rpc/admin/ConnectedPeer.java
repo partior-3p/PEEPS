@@ -19,14 +19,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ConnectedPeer {
 
-  private final String id;
+  private final String enode;
 
   @JsonCreator
-  public ConnectedPeer(@JsonProperty("id") final String id) {
-    this.id = id;
+  public ConnectedPeer(@JsonProperty("enode") final String enode) {
+    this.enode = enode;
   }
 
-  public String getId() {
-    return id;
+  public String getEnode() {
+    return enode;
   }
 }

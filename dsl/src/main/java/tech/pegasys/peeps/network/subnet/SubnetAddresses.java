@@ -43,7 +43,11 @@ public class SubnetAddresses {
     this.hostAddress = new AtomicInteger(FIRST_AVAILABLE_HOST_ADDRESS);
   }
 
-  /** Retrieves the next available IP address and now considers it as unavailable. */
+  /**
+   * Retrieves the next available IP address and now considers it as unavailable.
+   *
+   * @return the next available ip address in this subnet.
+   */
   public SubnetAddress getAddressAndIncrement() {
     if (hostAddress.get() > HOST_MAXIMUM) {
       throw new IllegalStateException("Subnet addresses have been exhaused");

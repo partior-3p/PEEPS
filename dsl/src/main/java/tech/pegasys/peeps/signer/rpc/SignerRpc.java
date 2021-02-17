@@ -14,6 +14,7 @@ package tech.pegasys.peeps.signer.rpc;
 
 import tech.pegasys.peeps.node.model.Hash;
 import tech.pegasys.peeps.node.rpc.NodeRpc;
+import tech.pegasys.peeps.node.rpc.admin.NodeInfo;
 import tech.pegasys.peeps.privacy.model.PrivacyAddreess;
 
 import org.apache.tuweni.eth.Address;
@@ -23,7 +24,7 @@ public interface SignerRpc extends NodeRpc {
 
   Hash transfer(Address sender, Address receiver, Wei amount);
 
-  String enode();
+  NodeInfo getConnectedNodeInfo();
 
   Hash deployContractToPrivacyGroup(
       Address sender, String binary, PrivacyAddreess string, PrivacyAddreess... privateRecipients);

@@ -24,7 +24,7 @@ import java.util.Optional;
 import io.vertx.core.Vertx;
 import org.testcontainers.containers.Network;
 
-public class BesuConfiguration {
+public class Web3ProviderConfiguration {
 
   private final Path genesisFile;
   private final String enclavePublicKeyResource;
@@ -40,7 +40,7 @@ public class BesuConfiguration {
   private final SubnetAddress ipAddress;
   private final Vertx vertx;
 
-  public BesuConfiguration(
+  public Web3ProviderConfiguration(
       final Path genesisFile,
       final String privacyManagerPublicKeyResource,
       final String privacyUrl,

@@ -16,7 +16,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import tech.pegasys.peeps.network.subnet.SubnetAddress;
-import tech.pegasys.peeps.node.Besu;
+import tech.pegasys.peeps.node.Web3Provider;
 import tech.pegasys.peeps.signer.model.SignerKeyFileResource;
 import tech.pegasys.peeps.signer.model.SignerPasswordFileResource;
 import tech.pegasys.peeps.signer.model.WalletFileResources;
@@ -27,7 +27,7 @@ import org.testcontainers.containers.Network;
 public class EthSignerConfigurationBuilder {
 
   private long chainId;
-  private Besu downstream;
+  private Web3Provider downstream;
 
   // TODO these into their own builder, not node related but test container related
   private Network containerNetwork;
@@ -59,7 +59,7 @@ public class EthSignerConfigurationBuilder {
     return this;
   }
 
-  public EthSignerConfigurationBuilder withDownstream(final Besu downstream) {
+  public EthSignerConfigurationBuilder withDownstream(final Web3Provider downstream) {
     this.downstream = downstream;
     return this;
   }

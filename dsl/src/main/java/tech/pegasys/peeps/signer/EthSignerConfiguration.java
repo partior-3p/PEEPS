@@ -13,7 +13,7 @@
 package tech.pegasys.peeps.signer;
 
 import tech.pegasys.peeps.network.subnet.SubnetAddress;
-import tech.pegasys.peeps.node.Besu;
+import tech.pegasys.peeps.node.Web3Provider;
 import tech.pegasys.peeps.signer.model.SignerKeyFileResource;
 import tech.pegasys.peeps.signer.model.SignerPasswordFileResource;
 
@@ -23,7 +23,7 @@ import org.testcontainers.containers.Network;
 public class EthSignerConfiguration {
 
   private final long chainId;
-  private final Besu downstream;
+  private final Web3Provider downstream;
 
   // TODO move these out, they are not related to the node, but test container setups
   private final Network containerNetwork;
@@ -37,7 +37,7 @@ public class EthSignerConfiguration {
 
   public EthSignerConfiguration(
       final long chainId,
-      final Besu downstream,
+      final Web3Provider downstream,
       final Network containerNetwork,
       final SubnetAddress ipAddress,
       final Vertx vertx,
@@ -68,7 +68,7 @@ public class EthSignerConfiguration {
     return chainId;
   }
 
-  public Besu getDownstream() {
+  public Web3Provider getDownstream() {
     return downstream;
   }
 

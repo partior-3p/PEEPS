@@ -65,7 +65,7 @@ dependencyManagement {
     dependency 'org.web3j:crypto:4.5.13'
 
     // Vertx
-    dependency 'io.vertx:vertx-core:3.8.5'
-    dependency 'io.vertx:vertx-web-client:3.8.5'
+    dependency 'io.vertx:vertx-core:3.9.5'
+    dependency 'io.vertx:vertx-web-client:3.9.5'
   }
 }

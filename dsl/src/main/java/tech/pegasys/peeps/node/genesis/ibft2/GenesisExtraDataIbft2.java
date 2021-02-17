@@ -12,7 +12,7 @@
  */
 package tech.pegasys.peeps.node.genesis.ibft2;
 
-import tech.pegasys.peeps.node.Besu;
+import tech.pegasys.peeps.node.Web3Provider;
 import tech.pegasys.peeps.node.genesis.GenesisExtraData;
 
 import java.util.Collections;
@@ -28,11 +28,11 @@ import org.apache.tuweni.rlp.RLP;
 
 public class GenesisExtraDataIbft2 extends GenesisExtraData {
 
-  public GenesisExtraDataIbft2(final Besu... validators) {
+  public GenesisExtraDataIbft2(final Web3Provider... validators) {
     super(encode(validators));
   }
 
-  public static Bytes encode(final Besu... validators) {
+  public static Bytes encode(final Web3Provider... validators) {
 
     return encode(
         Stream.of(validators)

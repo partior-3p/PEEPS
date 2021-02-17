@@ -23,7 +23,7 @@ import tech.pegasys.peeps.privacy.Orion;
 import io.vertx.core.Vertx;
 import org.testcontainers.containers.Network;
 
-public class BesuConfigurationBuilder {
+public class Web3ProviderConfigurationBuilder {
 
   // TODO move these into the test
   private static final String DEFAULT_PRIVACY_MARKER_SIGNER_PRIVATE_KEY_FILE =
@@ -45,62 +45,63 @@ public class BesuConfigurationBuilder {
   private SubnetAddress ipAddress;
   private Vertx vertx;
 
-  public BesuConfigurationBuilder() {
+  public Web3ProviderConfigurationBuilder() {
     this.privacyMarkerSigningPrivateKeyFile = DEFAULT_PRIVACY_MARKER_SIGNER_PRIVATE_KEY_FILE;
   }
 
-  public BesuConfigurationBuilder withGenesisFile(final BesuGenesisFile genesisFile) {
+  public Web3ProviderConfigurationBuilder withGenesisFile(final BesuGenesisFile genesisFile) {
     this.genesisFile = genesisFile;
     return this;
   }
 
-  public BesuConfigurationBuilder withCors(final String cors) {
+  public Web3ProviderConfigurationBuilder withCors(final String cors) {
     this.cors = cors;
     return this;
   }
 
-  public BesuConfigurationBuilder withContainerNetwork(final Network containerNetwork) {
+  public Web3ProviderConfigurationBuilder withContainerNetwork(final Network containerNetwork) {
     this.containerNetwork = containerNetwork;
     return this;
   }
 
-  public BesuConfigurationBuilder withIpAddress(final SubnetAddress ipAddress) {
+  public Web3ProviderConfigurationBuilder withIpAddress(final SubnetAddress ipAddress) {
     this.ipAddress = ipAddress;
     return this;
   }
 
-  public BesuConfigurationBuilder withBootnodeEnodeAddress(final String bootnodeEnodeAddress) {
+  public Web3ProviderConfigurationBuilder withBootnodeEnodeAddress(
+      final String bootnodeEnodeAddress) {
     this.bootnodeEnodeAddress = bootnodeEnodeAddress;
     return this;
   }
 
-  public BesuConfigurationBuilder withIdentity(final NodeIdentifier identity) {
+  public Web3ProviderConfigurationBuilder withIdentity(final NodeIdentifier identity) {
     this.frameworkIdentity = identity;
     return this;
   }
 
-  public BesuConfigurationBuilder withVertx(final Vertx vertx) {
+  public Web3ProviderConfigurationBuilder withVertx(final Vertx vertx) {
     this.vertx = vertx;
     return this;
   }
 
-  public BesuConfigurationBuilder withPrivacyUrl(final Orion privacyTransactionManager) {
+  public Web3ProviderConfigurationBuilder withPrivacyUrl(final Orion privacyTransactionManager) {
     this.privacyTransactionManagerUrl = privacyTransactionManager.getNetworkRpcAddress();
     return this;
   }
 
-  public BesuConfigurationBuilder withPrivacyManagerPublicKey(
+  public Web3ProviderConfigurationBuilder withPrivacyManagerPublicKey(
       final String privacyManagerPublicKeyFile) {
     this.privacyManagerPublicKeyFile = privacyManagerPublicKeyFile;
     return this;
   }
 
-  public BesuConfigurationBuilder withNodeKey(final NodeKey ethereumIdentity) {
+  public Web3ProviderConfigurationBuilder withNodeKey(final NodeKey ethereumIdentity) {
     this.ethereumIdentity = ethereumIdentity;
     return this;
   }
 
-  public BesuConfiguration build() {
+  public Web3ProviderConfiguration build() {
     checkNotNull(genesisFile, "A genesis file path is mandatory");
     checkNotNull(frameworkIdentity, "A NodeKey is mandatory");
     checkNotNull(vertx, "A Vertx instance is mandatory");
@@ -114,7 +115,7 @@ public class BesuConfigurationBuilder {
         ethereumIdentity.nodePublicKeyResource(),
         "Public key resource for the Node Key is mandatory");
 
-    return new BesuConfiguration(
+    return new Web3ProviderConfiguration(
         genesisFile.getGenesisFile(),
         privacyManagerPublicKeyFile,
         privacyTransactionManagerUrl,

@@ -56,8 +56,8 @@ public class NodeRpcClient extends JsonRpcClient {
     this(vertx, DEFAULT_TIMEOUT, LOG, dockerLogs);
   }
 
-  public Set<String> getConnectedPeerIds() {
-    return Arrays.stream(connectedPeers()).map(ConnectedPeer::getId).collect(Collectors.toSet());
+  public Set<String> getConnectedPeerEnodes() {
+    return Arrays.stream(connectedPeers()).map(ConnectedPeer::getEnode).collect(Collectors.toSet());
   }
 
   public NodeInfo nodeInfo() {

@@ -69,7 +69,7 @@ public class NodeRpcMandatoryResponse implements NodeRpc {
 
   @Override
   public Set<String> getConnectedPeerIds() {
-    return rpc.getConnectedPeerIds();
+    return rpc.getConnectedPeerEnodes();
   }
 
   @Override

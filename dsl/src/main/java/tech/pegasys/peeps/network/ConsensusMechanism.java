@@ -15,5 +15,7 @@ package tech.pegasys.peeps.network;
 public enum ConsensusMechanism {
   ETH_HASH,
   IBFT2,
-  CLIQUE
+  CLIQUE,
+  QBFT,
+  IBFT
 }

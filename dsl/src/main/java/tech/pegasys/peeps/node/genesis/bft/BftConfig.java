@@ -10,21 +10,22 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.node.genesis.ibft2;
+package tech.pegasys.peeps.node.genesis.bft;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 
-public class Ibft2Config {
+// NOTE: This is only for Besu (GoQuorum needs their own version
+public class BftConfig {
 
   private final int blockPeriodSeconds;
   private final int epochLength;
   private final int requestTimeoutSeconds;
 
-  public Ibft2Config() {
+  public BftConfig() {
     this(2, 30000, 10);
   }
 
-  public Ibft2Config(
+  public BftConfig(
       final int blockPeriodSeconds, final int epochLength, final int requestTimeoutSeconds) {
     this.blockPeriodSeconds = blockPeriodSeconds;
     this.epochLength = epochLength;
