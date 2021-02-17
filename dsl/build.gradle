@@ -47,4 +47,12 @@ dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter-engine'
   testImplementation 'org.mockito:mockito-core'
   testImplementation 'org.mockito:mockito-junit-jupiter'
+  testImplementation 'org.bouncycastle:bcprov-jdk15on'
+
+  testImplementation 'org.bouncycastle:bcprov-jdk15on'
+  testImplementation 'org.apache.tuweni:tuweni-eth'
+  testImplementation 'org.apache.tuweni:tuweni-units'
+  testImplementation 'commons-codec:commons-codec'
+  testImplementation 'org.assertj:assertj-core'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api'
 }

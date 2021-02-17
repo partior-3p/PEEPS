@@ -37,6 +37,9 @@ import tech.pegasys.peeps.node.genesis.clique.GenesisConfigClique;
 import tech.pegasys.peeps.node.genesis.clique.GenesisExtraDataClique;
 import tech.pegasys.peeps.node.genesis.ethhash.EthHashConfig;
 import tech.pegasys.peeps.node.genesis.ethhash.GenesisConfigEthHash;
+import tech.pegasys.peeps.node.genesis.ibft.GenesisConfigIbftLegacy;
+import tech.pegasys.peeps.node.genesis.ibft.GenesisExtraDataIbftLegacy;
+import tech.pegasys.peeps.node.genesis.ibft.IbftLegacyConfig;
 import tech.pegasys.peeps.node.genesis.ibft2.GenesisConfigIbft2;
 import tech.pegasys.peeps.node.genesis.ibft2.GenesisExtraDataIbft2;
 import tech.pegasys.peeps.node.model.GenesisAddress;
@@ -431,6 +434,10 @@ public class Network implements Closeable {
       case IBFT2:
         genesisConfig = new GenesisConfigIbft2(chainId, new BftConfig());
         extraData = new GenesisExtraDataIbft2(validators);
+        break;
+      case IBFT:
+        genesisConfig = new GenesisConfigIbftLegacy(chainId, new IbftLegacyConfig());
+        extraData = new GenesisExtraDataIbftLegacy(validators);
         break;
       case ETH_HASH:
       default:
