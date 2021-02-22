@@ -15,13 +15,11 @@ package tech.pegasys.peeps.network;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import tech.pegasys.peeps.network.subnet.Subnet;
 import tech.pegasys.peeps.node.Besu;
-import tech.pegasys.peeps.node.model.NodeIdentifier;
 
 import java.nio.file.Path;
 
@@ -36,7 +34,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public class NetworkTest {
 
-  @Mock private NodeIdentifier nodeId;
   @Mock private Besu node;
   @Mock private Subnet subnet;
   @TempDir Path configurationDirectory;
@@ -47,8 +44,6 @@ public class NetworkTest {
   public void setUp() {
     Runtime.getRuntime().addShutdownHook(new Thread(this::tearDown));
     network = new Network(configurationDirectory, subnet);
-
-    lenient().when(node.identity()).thenReturn(nodeId);
   }
 
   @AfterEach
@@ -104,7 +99,6 @@ public class NetworkTest {
     network.start();
     network.close();
 
-    verify(node).identity();
     verify(node).awaitConnectivity(anyCollection());
     verify(node).start();
     verify(node).stop();
@@ -112,13 +106,12 @@ public class NetworkTest {
   }
 
   @Test
-  public void stopThenClosenMustStopNodeOnlyOnce() {
+  public void stopThenCloseMustStopNodeOnlyOnce() {
     network.addNode(node);
     network.start();
     network.stop();
     network.close();
 
-    verify(node).identity();
     verify(node).awaitConnectivity(anyCollection());
     verify(node).start();
     verify(node).stop();

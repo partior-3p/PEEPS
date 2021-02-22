@@ -14,13 +14,15 @@ package tech.pegasys.peeps.node;
 
 import tech.pegasys.peeps.util.DockerLogs;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.testcontainers.containers.BindMode;
+import org.apache.tuweni.bytes.Bytes;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.AbstractWaitStrategy;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -97,8 +99,6 @@ public class GoQuorum extends Web3Provider {
         "--nousb",
         "--verbosity",
         "5",
-        "--rpccorsdomain",
-        "\"*\"",
         "--syncmode",
         "full",
         //        "--mine",
@@ -107,11 +107,13 @@ public class GoQuorum extends Web3Provider {
         "--rpc",
         "--rpcaddr",
         "\"0.0.0.0\"",
-        "--rpcport",
+        "--http.port",
         "8545",
-        "--rpcapi",
-        "admin,debug,web3,eth,txpool,personal,clique,miner,net",
+        "--http.api",
+        "admin,debug,web3,eth,txpool,personal,clique,miner,net,istanbul",
         "--ws",
+        "--gasprice",
+        "0",
         "--debug");
   }
 
@@ -138,17 +140,26 @@ public class GoQuorum extends Web3Provider {
       final Web3ProviderConfiguration config, final List<String> commandLineOptions) {
     config
         .getCors()
-        .ifPresent(cors -> commandLineOptions.addAll(Lists.newArrayList("--rpccorsdomain", cors)));
+        .ifPresent(
+            cors -> commandLineOptions.addAll(Lists.newArrayList("--http.corsdomain", cors)));
   }
 
   private void addNodePrivateKey(
       final Web3ProviderConfiguration config,
       final List<String> commandLineOptions,
       final GenericContainer<?> container) {
-    container.withClasspathResourceMapping(
-        config.getNodeKeyPrivateKeyResource().get(),
-        CONTAINER_NODE_PRIVATE_KEY_FILE,
-        BindMode.READ_ONLY);
+    final Path keyFile =
+        createMountableTempFile(
+            Bytes.wrap(
+                config
+                    .getNodeKeys()
+                    .secretKey()
+                    .bytes()
+                    .toUnprefixedHexString()
+                    .getBytes(StandardCharsets.UTF_8)));
+
+    container.withCopyFileToContainer(
+        MountableFile.forHostPath(keyFile), CONTAINER_NODE_PRIVATE_KEY_FILE);
     commandLineOptions.addAll(Lists.newArrayList("--nodekey", CONTAINER_NODE_PRIVATE_KEY_FILE));
   }
 

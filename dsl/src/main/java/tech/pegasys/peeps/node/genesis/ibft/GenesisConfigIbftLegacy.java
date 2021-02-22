@@ -25,7 +25,7 @@ public class GenesisConfigIbftLegacy extends GenesisConfig {
     this.consensusConfig = consensusConfig;
   }
 
-  @JsonGetter("ibft")
+  @JsonGetter("istanbul")
   public IbftLegacyConfig getConsensusConfig() {
     return consensusConfig;
   }

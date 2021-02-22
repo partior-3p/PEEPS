@@ -33,8 +33,18 @@ public class CliqueConfig {
     return blockPeriodSeconds;
   }
 
+  @JsonGetter("period")
+  public int getPeriod() {
+    return blockPeriodSeconds;
+  }
+
   @JsonGetter("epochlength")
   public int getEpochLength() {
+    return epochLength;
+  }
+
+  @JsonGetter("epoch")
+  public int getEpoch() {
     return epochLength;
   }
 }

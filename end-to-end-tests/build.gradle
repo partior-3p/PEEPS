@@ -27,6 +27,8 @@ dependencies {
 test.enabled = false
 
 task endToEndTest(type: Test) {
+  inputs.property "integration.date", LocalTime.now() // so it runs at every invocation
+
   mustRunAfter rootProject.subprojects*.test
   description = 'Runs the End to End tests.'
   group = 'verification'

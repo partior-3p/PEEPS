@@ -15,21 +15,22 @@ package tech.pegasys.peeps.privacy;
 import static tech.pegasys.peeps.privacy.PrivateTransactionManagerType.ORION;
 
 import tech.pegasys.peeps.NetworkTest;
-import tech.pegasys.peeps.NodeConfiguration;
 import tech.pegasys.peeps.PrivacyManagerConfiguration;
 import tech.pegasys.peeps.SignerConfiguration;
 import tech.pegasys.peeps.contract.SimpleStorage;
 import tech.pegasys.peeps.network.Network;
+import tech.pegasys.peeps.node.Web3Provider;
 import tech.pegasys.peeps.node.model.Hash;
 import tech.pegasys.peeps.privacy.model.PrivacyGroup;
 
 import java.util.List;
 
+import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.junit.jupiter.api.Test;
 
 public class PrivacyContractDeploymentTest extends NetworkTest {
 
-  private final NodeConfiguration nodeAlpha = NodeConfiguration.ALPHA;
+  private Web3Provider alphaNode;
   private final SignerConfiguration signer = SignerConfiguration.ALPHA;
   private final PrivacyManagerConfiguration privacyManagerAlpha = PrivacyManagerConfiguration.ALPHA;
   private final PrivacyManagerConfiguration privacyManagerBeta = PrivacyManagerConfiguration.BETA;
@@ -40,17 +41,18 @@ public class PrivacyContractDeploymentTest extends NetworkTest {
         privacyManagerAlpha.id(), List.of(privacyManagerAlpha.keyPair()), ORION);
     network.addPrivacyManager(
         privacyManagerBeta.id(), List.of(privacyManagerBeta.keyPair()), ORION);
+    alphaNode =
+        network.addNode(
+            "alpha",
+            KeyPair.random(),
+            privacyManagerAlpha.id(),
+            privacyManagerAlpha.keyPair().getPublicKey());
     network.addNode(
-        nodeAlpha.id(),
-        nodeAlpha.keys(),
-        privacyManagerAlpha.id(),
-        privacyManagerAlpha.keyPair().getPublicKey());
-    network.addNode(
-        NodeConfiguration.BETA.id(),
-        NodeConfiguration.BETA.keys(),
+        "beta",
+        KeyPair.random(),
         privacyManagerBeta.id(),
         privacyManagerBeta.keyPair().getPublicKey());
-    network.addSigner(signer.id(), signer.resources(), nodeAlpha.id());
+    network.addSigner(signer.id(), signer.resources(), alphaNode);
   }
 
   @Test
@@ -64,11 +66,11 @@ public class PrivacyContractDeploymentTest extends NetworkTest {
 
     await().consensusOnTransactionReceipt(pmt);
 
-    verifyOn(nodeAlpha).successfulTransactionReceipt(pmt);
+    verifyOn(alphaNode).successfulTransactionReceipt(pmt);
     verify().consensusOnTransaction(pmt);
     verify().consensusOnPrivacyTransactionReceipt(pmt);
     verify()
         .privacyGroup(group)
-        .consensusOnPrivacyPayload(execute(nodeAlpha).getTransactionByHash(pmt));
+        .consensusOnPrivacyPayload(execute(alphaNode).getTransactionByHash(pmt));
   }
 }

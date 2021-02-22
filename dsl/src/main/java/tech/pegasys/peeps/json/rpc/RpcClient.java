@@ -12,10 +12,10 @@
  */
 package tech.pegasys.peeps.json.rpc;
 
-import static com.github.dockerjava.core.MediaType.APPLICATION_JSON;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
+import static org.testcontainers.shaded.com.github.dockerjava.core.MediaType.APPLICATION_JSON;
 
 import tech.pegasys.peeps.json.Json;
 

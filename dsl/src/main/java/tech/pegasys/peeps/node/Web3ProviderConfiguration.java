@@ -13,15 +13,12 @@
 package tech.pegasys.peeps.node;
 
 import tech.pegasys.peeps.network.subnet.SubnetAddress;
-import tech.pegasys.peeps.node.model.NodeIdentifier;
-import tech.pegasys.peeps.node.model.NodeKey;
-import tech.pegasys.peeps.node.model.NodePrivateKeyResource;
-import tech.pegasys.peeps.node.model.NodePublicKeyResource;
 
 import java.nio.file.Path;
 import java.util.Optional;
 
 import io.vertx.core.Vertx;
+import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.testcontainers.containers.Network;
 
 public class Web3ProviderConfiguration {
@@ -29,11 +26,11 @@ public class Web3ProviderConfiguration {
   private final Path genesisFile;
   private final String enclavePublicKeyResource;
   private final String cors;
-  private final NodeIdentifier identity;
+  private final String identity;
   private final String bootnodeEnodeAddress;
   private final String privacyUrl;
   private final String privacyMarkerSigningPrivateKeyFile;
-  private final NodeKey ethereumIdentity;
+  private final KeyPair nodeKeys;
 
   // TODO move these out, they are not related to the node, but test container setups
   private final Network containerNetwork;
@@ -49,8 +46,8 @@ public class Web3ProviderConfiguration {
       final Network containerNetwork,
       final Vertx vertx,
       final SubnetAddress ipAddress,
-      final NodeIdentifier identity,
-      final NodeKey ethereumIdentity,
+      final String identity,
+      final KeyPair nodeKeys,
       final String bootnodeEnodeAddress) {
     this.genesisFile = genesisFile;
     this.enclavePublicKeyResource = privacyManagerPublicKeyResource;
@@ -61,7 +58,7 @@ public class Web3ProviderConfiguration {
     this.vertx = vertx;
     this.ipAddress = ipAddress;
     this.identity = identity;
-    this.ethereumIdentity = ethereumIdentity;
+    this.nodeKeys = nodeKeys;
     this.bootnodeEnodeAddress = bootnodeEnodeAddress;
   }
 
@@ -85,7 +82,7 @@ public class Web3ProviderConfiguration {
     return ipAddress;
   }
 
-  public NodeIdentifier getIdentity() {
+  public String getIdentity() {
     return identity;
   }
 
@@ -97,12 +94,8 @@ public class Web3ProviderConfiguration {
     return vertx;
   }
 
-  public NodePrivateKeyResource getNodeKeyPrivateKeyResource() {
-    return ethereumIdentity.nodePrivateKeyResource();
-  }
-
-  public NodePublicKeyResource getNodeKeyPublicKeyResource() {
-    return ethereumIdentity.nodePublicKeyResource();
+  public KeyPair getNodeKeys() {
+    return nodeKeys;
   }
 
   // TODO maybe split out privacy

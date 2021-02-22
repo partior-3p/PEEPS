@@ -16,12 +16,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import tech.pegasys.peeps.util.DockerLogs;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.tuweni.bytes.Bytes;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
@@ -133,10 +136,18 @@ public class Besu extends Web3Provider {
       final List<String> commandLineOptions,
       final GenericContainer<?> container) {
 
-    container.withClasspathResourceMapping(
-        config.getNodeKeyPrivateKeyResource().get(),
-        CONTAINER_NODE_PRIVATE_KEY_FILE,
-        BindMode.READ_ONLY);
+    final Path keyFile =
+        createMountableTempFile(
+            Bytes.wrap(
+                config
+                    .getNodeKeys()
+                    .secretKey()
+                    .bytes()
+                    .toUnprefixedHexString()
+                    .getBytes(StandardCharsets.UTF_8)));
+
+    container.withCopyFileToContainer(
+        MountableFile.forHostPath(keyFile), CONTAINER_NODE_PRIVATE_KEY_FILE);
     commandLineOptions.addAll(
         Lists.newArrayList("--node-private-key-file", CONTAINER_NODE_PRIVATE_KEY_FILE));
   }

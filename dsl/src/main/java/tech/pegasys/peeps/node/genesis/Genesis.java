@@ -74,17 +74,18 @@ public class Genesis {
 
   @JsonGetter("gasLimit")
   public String getGasLimit() {
-    return "0x47b760";
+    return "0x29B92700";
   }
 
   @JsonGetter("difficulty")
   public String getDifficulty() {
-    return "0x10000";
+    return "0x1";
   }
 
   @JsonGetter("mixHash")
   public String getMixHash() {
-    return "0x0000000000000000000000000000000000000000000000000000000000000000";
+    // This is REQUIRED for ibft, but doesn't hurt anything else (I hope).
+    return "0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365";
   }
 
   @JsonGetter("coinbase")

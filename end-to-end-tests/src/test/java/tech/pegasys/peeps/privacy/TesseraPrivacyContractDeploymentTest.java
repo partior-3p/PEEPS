@@ -15,20 +15,21 @@ package tech.pegasys.peeps.privacy;
 import static tech.pegasys.peeps.privacy.PrivateTransactionManagerType.TESSERA;
 
 import tech.pegasys.peeps.NetworkTest;
-import tech.pegasys.peeps.NodeConfiguration;
 import tech.pegasys.peeps.PrivacyManagerConfiguration;
 import tech.pegasys.peeps.SignerConfiguration;
 import tech.pegasys.peeps.contract.SimpleStorage;
 import tech.pegasys.peeps.network.Network;
+import tech.pegasys.peeps.node.Web3Provider;
 import tech.pegasys.peeps.node.model.Hash;
 
 import java.util.List;
 
+import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.junit.jupiter.api.Test;
 
 public class TesseraPrivacyContractDeploymentTest extends NetworkTest {
 
-  private final NodeConfiguration nodeAlpha = NodeConfiguration.ALPHA;
+  private Web3Provider nodeAlpha;
   private final SignerConfiguration signer = SignerConfiguration.ALPHA;
   private final PrivacyManagerConfiguration privacyManagerAlpha = PrivacyManagerConfiguration.ALPHA;
 
@@ -36,12 +37,13 @@ public class TesseraPrivacyContractDeploymentTest extends NetworkTest {
   protected void setUpNetwork(final Network network) {
     network.addPrivacyManager(
         privacyManagerAlpha.id(), List.of(privacyManagerAlpha.keyPair()), TESSERA);
-    network.addNode(
-        nodeAlpha.id(),
-        nodeAlpha.keys(),
-        privacyManagerAlpha.id(),
-        privacyManagerAlpha.keyPair().getPublicKey());
-    network.addSigner(signer.id(), signer.resources(), nodeAlpha.id());
+    nodeAlpha =
+        network.addNode(
+            "alpha",
+            KeyPair.random(),
+            privacyManagerAlpha.id(),
+            privacyManagerAlpha.keyPair().getPublicKey());
+    network.addSigner(signer.id(), signer.resources(), nodeAlpha);
   }
 
   @Test
