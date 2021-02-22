@@ -12,7 +12,7 @@
  */
 package tech.pegasys.peeps.privacy;
 
-import static tech.pegasys.peeps.privacy.PrivateTransactionManagerType.ORION;
+import static tech.pegasys.peeps.privacy.PrivateTransactionManagerType.TESSERA;
 
 import tech.pegasys.peeps.NetworkTest;
 import tech.pegasys.peeps.NodeConfiguration;
@@ -21,54 +21,35 @@ import tech.pegasys.peeps.SignerConfiguration;
 import tech.pegasys.peeps.contract.SimpleStorage;
 import tech.pegasys.peeps.network.Network;
 import tech.pegasys.peeps.node.model.Hash;
-import tech.pegasys.peeps.privacy.model.PrivacyGroup;
 
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-public class PrivacyContractDeploymentTest extends NetworkTest {
+public class TesseraPrivacyContractDeploymentTest extends NetworkTest {
 
   private final NodeConfiguration nodeAlpha = NodeConfiguration.ALPHA;
   private final SignerConfiguration signer = SignerConfiguration.ALPHA;
   private final PrivacyManagerConfiguration privacyManagerAlpha = PrivacyManagerConfiguration.ALPHA;
-  private final PrivacyManagerConfiguration privacyManagerBeta = PrivacyManagerConfiguration.BETA;
 
   @Override
   protected void setUpNetwork(final Network network) {
     network.addPrivacyManager(
-        privacyManagerAlpha.id(), List.of(privacyManagerAlpha.keyPair()), ORION);
-    network.addPrivacyManager(
-        privacyManagerBeta.id(), List.of(privacyManagerBeta.keyPair()), ORION);
+        privacyManagerAlpha.id(), List.of(privacyManagerAlpha.keyPair()), TESSERA);
     network.addNode(
         nodeAlpha.id(),
         nodeAlpha.keys(),
         privacyManagerAlpha.id(),
         privacyManagerAlpha.keyPair().getPublicKey());
-    network.addNode(
-        NodeConfiguration.BETA.id(),
-        NodeConfiguration.BETA.keys(),
-        privacyManagerBeta.id(),
-        privacyManagerBeta.keyPair().getPublicKey());
     network.addSigner(signer.id(), signer.resources(), nodeAlpha.id());
   }
 
   @Test
   public void deploymentMustSucceed() {
-    final PrivacyGroup group = new PrivacyGroup(privacyManagerAlpha.id(), privacyManagerBeta.id());
-
     final Hash pmt =
         execute(signer)
-            .deployContractToPrivacyGroup(
-                SimpleStorage.BINARY, privacyManagerAlpha.address(), privacyManagerBeta.address());
-
-    await().consensusOnTransactionReceipt(pmt);
+            .deployContractToPrivacyGroup(SimpleStorage.BINARY, privacyManagerAlpha.address());
 
     verifyOn(nodeAlpha).successfulTransactionReceipt(pmt);
-    verify().consensusOnTransaction(pmt);
-    verify().consensusOnPrivacyTransactionReceipt(pmt);
-    verify()
-        .privacyGroup(group)
-        .consensusOnPrivacyPayload(execute(nodeAlpha).getTransactionByHash(pmt));
   }
 }

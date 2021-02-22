@@ -23,7 +23,7 @@ import java.util.Optional;
 import io.vertx.core.Vertx;
 import org.testcontainers.containers.Network;
 
-public class OrionConfiguration {
+public class PrivateTransactionManagerConfiguration {
 
   private final List<PrivacyPrivateKeyResource> privKeys;
   private final List<PrivacyPublicKeyResource> pubKeys;
@@ -35,7 +35,7 @@ public class OrionConfiguration {
   private final SubnetAddress ipAddress;
   private final Vertx vertx;
 
-  public OrionConfiguration(
+  public PrivateTransactionManagerConfiguration(
       final List<PrivacyPrivateKeyResource> privKeys,
       final List<PrivacyPublicKeyResource> pubKeys,
       final List<String> bootnodeUrls,

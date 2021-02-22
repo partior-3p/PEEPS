@@ -31,42 +31,44 @@ public class OrionConfigurationFile {
   private static final int HTTP_RPC_PORT = 8888;
   private static final int PEER_TO_PEER_PORT = 8080;
 
-  public static void write(OrionConfiguration confg) {
+  public static void write(PrivateTransactionManagerConfiguration config) {
 
     final StringBuilder content = new StringBuilder();
     content.append(
         String.format(
-            "nodeurl = \"http://%s:%d\"\n", confg.getIpAddress().get(), PEER_TO_PEER_PORT));
+            "nodeurl = \"http://%s:%d\"\n", config.getIpAddress().get(), PEER_TO_PEER_PORT));
     content.append(
-        String.format("clienturl = \"http://%s:%d\"\n", confg.getIpAddress().get(), HTTP_RPC_PORT));
+        String.format(
+            "clienturl = \"http://%s:%d\"\n", config.getIpAddress().get(), HTTP_RPC_PORT));
     content.append(String.format("nodeport = %d\n", PEER_TO_PEER_PORT));
     content.append(String.format("clientport = %d\n", HTTP_RPC_PORT));
-    content.append(String.format("publickeys = [%s]\n", flattenPublicKeys(confg.getPublicKeys())));
+    content.append(String.format("publickeys = [%s]\n", flattenPublicKeys(config.getPublicKeys())));
     content.append(
-        String.format("privatekeys = [%s]\n", flattenPrivateKeys(confg.getPrivateKeys())));
+        String.format("privatekeys = [%s]\n", flattenPrivateKeys(config.getPrivateKeys())));
 
     content.append("nodenetworkinterface = \"0.0.0.0\"\n");
     content.append("clientnetworkinterface = \"0.0.0.0\"\n");
 
-    if (confg.getBootnodeUrls().isPresent()) {
-      content.append(String.format("othernodes  = [%s]\n", flatten(confg.getBootnodeUrls().get())));
+    if (config.getBootnodeUrls().isPresent()) {
+      content.append(
+          String.format("othernodes  = [%s]\n", flatten(config.getBootnodeUrls().get())));
     }
 
     LOG.info(
         "Creating Orion config file\n\tLocation: {} \n\tContents: {}",
-        confg.getFileSystemConfigurationFile(),
+        config.getFileSystemConfigurationFile(),
         content.toString());
 
     try {
       Files.write(
-          confg.getFileSystemConfigurationFile(),
+          config.getFileSystemConfigurationFile(),
           content.toString().getBytes(StandardCharsets.UTF_8),
           StandardOpenOption.CREATE);
     } catch (final IOException e) {
       final String message =
           String.format(
               "Problem creating the Orion config file in the file system: %s, %s",
-              confg.getFileSystemConfigurationFile(), e.getLocalizedMessage());
+              config.getFileSystemConfigurationFile(), e.getLocalizedMessage());
       LOG.error(message);
       throw new IllegalStateException(message);
     }

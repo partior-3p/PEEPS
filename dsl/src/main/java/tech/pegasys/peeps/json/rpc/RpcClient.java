@@ -20,6 +20,7 @@ import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 import tech.pegasys.peeps.json.Json;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -33,7 +34,7 @@ import org.apache.logging.log4j.Logger;
 
 public abstract class RpcClient {
 
-  private static final int HTTP_STATUS_OK = 200;
+  private static final List<Integer> HTTP_OK_STATUSES = List.of(200, 201);
 
   private final Vertx vertx;
   private final Logger log;
@@ -100,7 +101,7 @@ public abstract class RpcClient {
         rpc.post(
             relativeUri,
             result -> {
-              if (result.statusCode() == HTTP_STATUS_OK) {
+              if (HTTP_OK_STATUSES.contains(result.statusCode())) {
                 result.bodyHandler(
                     body -> {
                       log.info(

@@ -26,12 +26,12 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 
-public class OrionKey {
+public class TransactionManagerKey {
 
   private final String key;
 
   @JsonCreator
-  public OrionKey(final String key) {
+  public TransactionManagerKey(final String key) {
     checkArgument(key != null, "A null key is not allowed");
     checkArgument(!key.isBlank(), "An empty key is not allowed");
     checkArgument(
@@ -53,11 +53,11 @@ public class OrionKey {
 
   @Override
   public boolean equals(final Object other) {
-    return other instanceof Hash && key.equals(((OrionKey) other).key);
+    return other instanceof Hash && key.equals(((TransactionManagerKey) other).key);
   }
 
-  public static OrionKey from(final Transaction tx) {
-    return new OrionKey(
+  public static TransactionManagerKey from(final Transaction tx) {
+    return new TransactionManagerKey(
         new String(Base64.encodeBase64(decodeHex(tx.getInput())), StandardCharsets.UTF_8));
   }
 

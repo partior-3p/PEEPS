@@ -12,7 +12,7 @@
  */
 package tech.pegasys.peeps.privacy.rpc.receive;
 
-import tech.pegasys.peeps.privacy.model.OrionKey;
+import tech.pegasys.peeps.privacy.model.TransactionManagerKey;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -21,9 +21,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class ReceiveRequest {
 
   private final String to;
-  private final OrionKey key;
+  private final TransactionManagerKey key;
 
-  public ReceiveRequest(final String to, final OrionKey key) {
+  public ReceiveRequest(final String to, final TransactionManagerKey key) {
     this.to = to;
     this.key = key;
   }
@@ -34,7 +34,7 @@ public class ReceiveRequest {
   }
 
   @JsonGetter("key")
-  public OrionKey getKey() {
+  public TransactionManagerKey getKey() {
     return key;
   }
 }
