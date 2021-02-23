@@ -63,7 +63,7 @@ import tech.pegasys.peeps.privacy.model.PrivacyManagerIdentifier;
 import tech.pegasys.peeps.privacy.model.PrivacyPublicKeyResource;
 import tech.pegasys.peeps.signer.EthSigner;
 import tech.pegasys.peeps.signer.EthSignerConfigurationBuilder;
-import tech.pegasys.peeps.signer.model.SignerIdentifier;
+import tech.pegasys.peeps.signer.SignerConfiguration;
 import tech.pegasys.peeps.signer.model.WalletFileResources;
 import tech.pegasys.peeps.signer.rpc.SignerRpcSenderKnown;
 import tech.pegasys.peeps.util.PathGenerator;
@@ -87,7 +87,7 @@ import org.apache.tuweni.eth.Address;
 public class Network implements Closeable {
 
   private final Map<PrivacyManagerIdentifier, PrivateTransactionManager> privacyManagers;
-  private final Map<SignerIdentifier, EthSigner> signers;
+  private final Map<String, EthSigner> signers;
   private final List<Web3Provider> nodes;
   private final List<NetworkMember> members;
 
@@ -167,6 +167,19 @@ public class Network implements Closeable {
   }
 
   public Web3Provider addNode(
+      final String nodeIdentifier,
+      final KeyPair nodeKey,
+      final Web3ProviderType nodeType,
+      final SignerConfiguration wallet) {
+    return addNode(
+        new Web3ProviderConfigurationBuilder()
+            .withIdentity(nodeIdentifier)
+            .withNodeKey(nodeKey)
+            .withWallet(wallet),
+        nodeType);
+  }
+
+  public Web3Provider addNode(
       final String identity,
       final KeyPair nodeKeys,
       final PrivacyManagerIdentifier privacyManager,
@@ -232,9 +245,7 @@ public class Network implements Closeable {
   }
 
   public EthSigner addSigner(
-      final SignerIdentifier wallet,
-      final WalletFileResources resources,
-      final Web3Provider downstream) {
+      final String wallet, final WalletFileResources resources, final Web3Provider downstream) {
     final EthSigner signer =
         new EthSigner(
             new EthSignerConfigurationBuilder()
@@ -340,15 +351,15 @@ public class Network implements Closeable {
     return new NodeVerify(node);
   }
 
-  public SignerRpcSenderKnown rpc(final SignerIdentifier id, final Address sender) {
-    checkNotNull(id, "Signer Identifier is mandatory");
+  public SignerRpcSenderKnown rpc(final String signerName, final Address sender) {
+    checkNotNull(signerName, "Signer Identifier is mandatory");
     checkState(
-        signers.containsKey(id),
+        signers.containsKey(signerName),
         "Signer Identifier: {}, does not match any available: {}",
-        id,
+        signerName,
         signers.keySet());
 
-    return new SignerRpcSenderKnown(signers.get(id).rpc(), sender);
+    return new SignerRpcSenderKnown(signers.get(signerName).rpc(), sender);
   }
 
   public PrivacyGroupVerify privacyGroup(final PrivacyGroup group) {

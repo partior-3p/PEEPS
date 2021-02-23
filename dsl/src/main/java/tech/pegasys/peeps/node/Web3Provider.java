@@ -22,17 +22,17 @@ import tech.pegasys.peeps.network.subnet.SubnetAddress;
 import tech.pegasys.peeps.node.model.EnodeHelpers;
 import tech.pegasys.peeps.node.model.Hash;
 import tech.pegasys.peeps.node.model.TransactionReceipt;
-import tech.pegasys.peeps.node.rpc.NodeRpc;
-import tech.pegasys.peeps.node.rpc.NodeRpcClient;
-import tech.pegasys.peeps.node.rpc.NodeRpcMandatoryResponse;
 import tech.pegasys.peeps.node.rpc.admin.NodeInfo;
 import tech.pegasys.peeps.node.verification.AccountValue;
 import tech.pegasys.peeps.node.verification.NodeValueTransition;
+import tech.pegasys.peeps.signer.rpc.SignerRpcClient;
+import tech.pegasys.peeps.signer.rpc.SignerRpcMandatoryResponse;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -52,8 +52,9 @@ public abstract class Web3Provider implements NetworkMember {
   public static final int CONTAINER_WS_RPC_PORT = 8546;
   public static final int CONTAINER_P2P_PORT = 30303;
 
-  protected final NodeRpcClient nodeRpc;
-  protected final NodeRpc rpc;
+  protected final SignerRpcClient signerRpcClient;
+  protected final SignerRpcMandatoryResponse signerRpcResponse;
+
   protected GenericContainer<?> container;
   private final SubnetAddress ipAddress;
   private final String identity;
@@ -65,8 +66,9 @@ public abstract class Web3Provider implements NetworkMember {
 
   public Web3Provider(final Web3ProviderConfiguration config, final GenericContainer<?> container) {
     this.container = container;
-    this.nodeRpc = new NodeRpcClient(config.getVertx(), dockerLogs());
-    this.rpc = new NodeRpcMandatoryResponse(nodeRpc);
+    this.signerRpcClient =
+        new SignerRpcClient(config.getVertx(), Duration.ofSeconds(10), dockerLogs());
+    this.signerRpcResponse = new SignerRpcMandatoryResponse(signerRpcClient);
     this.ipAddress = config.getIpAddress();
 
     this.identity = config.getIdentity();
@@ -82,12 +84,12 @@ public abstract class Web3Provider implements NetworkMember {
       container.followOutput(
           outputFrame -> LOG.info("{}: {}", identity, outputFrame.getUtf8String()));
 
-      nodeRpc.bind(
+      signerRpcClient.bind(
           container.getContainerId(),
           container.getContainerIpAddress(),
           container.getMappedPort(CONTAINER_HTTP_RPC_PORT));
 
-      final NodeInfo info = nodeRpc.nodeInfo();
+      final NodeInfo info = signerRpcClient.nodeInfo();
       nodeId = info.getId();
 
       // TODO enode must match enodeAddress - otherwise error
@@ -111,12 +113,10 @@ public abstract class Web3Provider implements NetworkMember {
     if (container != null) {
       container.stop();
     }
-    if (nodeRpc != null) {
-      nodeRpc.close();
+    if (signerRpcClient != null) {
+      signerRpcClient.close();
     }
   }
-
-  public abstract String getNodeName();
 
   public SubnetAddress ipAddress() {
     return ipAddress;
@@ -157,7 +157,7 @@ public abstract class Web3Provider implements NetworkMember {
         () -> {
           final Set<String> peerPubKeys = EnodeHelpers.extractPubKeysFromEnodes(peerEnodes);
           final Set<String> connectedPeerPubKeys =
-              EnodeHelpers.extractPubKeysFromEnodes(nodeRpc.getConnectedPeerEnodes());
+              EnodeHelpers.extractPubKeysFromEnodes(signerRpcClient.getConnectedPeerEnodes());
           assertThat(connectedPeerPubKeys).containsExactlyInAnyOrderElementsOf(peerPubKeys);
         },
         "Failed to connect in time to peers: %s",
@@ -181,7 +181,7 @@ public abstract class Web3Provider implements NetworkMember {
   }
 
   public void verifyValue(final Set<AccountValue> values) {
-    values.parallelStream().forEach(value -> value.verify(rpc));
+    values.parallelStream().forEach(value -> value.verify(signerRpcResponse));
   }
 
   private Set<Supplier<String>> dockerLogs() {
@@ -190,16 +190,16 @@ public abstract class Web3Provider implements NetworkMember {
 
   public abstract String getLogs();
 
-  public NodeRpc rpc() {
-    return rpc;
+  public SignerRpcMandatoryResponse rpc() {
+    return signerRpcResponse;
   }
 
   public void verifyTransition(final NodeValueTransition... changes) {
-    Stream.of(changes).parallel().forEach(change -> change.verify(rpc));
+    Stream.of(changes).parallel().forEach(change -> change.verify(signerRpcResponse));
   }
 
   public void verifySuccessfulTransactionReceipt(final Hash transaction) {
-    final TransactionReceipt receipt = rpc.getTransactionReceipt(transaction);
+    final TransactionReceipt receipt = signerRpcResponse.getTransactionReceipt(transaction);
 
     assertThat(receipt.getTransactionHash()).isEqualTo(transaction);
     assertThat(receipt.isSuccess()).isTrue();

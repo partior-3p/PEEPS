@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.AbstractWaitStrategy;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -38,20 +39,25 @@ public class GoQuorum extends Web3Provider {
   private static final String CONTAINER_GENESIS_FILE = "/etc/genesis.json";
   private static final String CONTAINER_NODE_PRIVATE_KEY_FILE = "/etc/keys/node.priv";
   private static final String DATA_DIR = "/eth";
+  private static final String KEYSTORE_DIR = "/eth/keystore/";
+  private static final String CONTAINER_PASSWORD_FILE = KEYSTORE_DIR + "password";
 
   public GoQuorum(final Web3ProviderConfiguration config) {
     super(
         config,
         new GenericContainer<>(IMAGE_NAME)
             .withImagePullPolicy(PullPolicy.ageBased(Duration.ofHours(1))));
+
     final List<String> commandLineOptions = standardCommandLineOptions();
 
     addCorsOrigins(config, commandLineOptions);
     addBootnodeAddress(config, commandLineOptions);
     addContainerNetwork(config, container);
     addContainerIpAddress(ipAddress(), container);
+    addWallets(config, commandLineOptions, container);
     commandLineOptions.addAll(List.of("--datadir", "\"" + DATA_DIR + "\""));
     commandLineOptions.addAll(List.of("--networkid", "15"));
+    commandLineOptions.addAll(List.of("--identity", config.getIdentity()));
 
     container.withCopyFileToContainer(
         MountableFile.forHostPath(config.getGenesisFile()), CONTAINER_GENESIS_FILE);
@@ -59,11 +65,16 @@ public class GoQuorum extends Web3Provider {
     final String initCmd =
         "mkdir -p '"
             + DATA_DIR
-            + "/geth' && geth --datadir \""
+            + "/geth' && "
+            + "mkdir -p '"
+            + KEYSTORE_DIR
+            + "' && "
+            + "geth --datadir \""
             + DATA_DIR
             + "\" init "
             + CONTAINER_GENESIS_FILE
-            + " && echo '##### GoQuorum INITIALISED #####' && ";
+            + " && "
+            + " echo '##### GoQuorum INITIALISED #####' && ";
 
     addNodePrivateKey(config, commandLineOptions, container);
     //    if (config.isPrivacyEnabled()) {
@@ -81,11 +92,6 @@ public class GoQuorum extends Web3Provider {
   }
 
   @Override
-  public String getNodeName() {
-    return "GoQuorum";
-  }
-
-  @Override
   public String getLogs() {
     return DockerLogs.format("GoQuorum", container);
   }
@@ -97,15 +103,14 @@ public class GoQuorum extends Web3Provider {
   private List<String> standardCommandLineOptions() {
     return Lists.newArrayList(
         "--nousb",
+        "--allow-insecure-unlock",
         "--verbosity",
         "5",
         "--syncmode",
         "full",
-        //        "--mine",
-        //        "--miner.etherbase",
-        //        "fe3b557e8fb62b89f4916b721be55ceb828dbd73",
-        "--rpc",
-        "--rpcaddr",
+        "--mine",
+        "--http",
+        "--http.addr",
         "\"0.0.0.0\"",
         "--http.port",
         "8545",
@@ -161,6 +166,31 @@ public class GoQuorum extends Web3Provider {
     container.withCopyFileToContainer(
         MountableFile.forHostPath(keyFile), CONTAINER_NODE_PRIVATE_KEY_FILE);
     commandLineOptions.addAll(Lists.newArrayList("--nodekey", CONTAINER_NODE_PRIVATE_KEY_FILE));
+  }
+
+  private void addWallets(
+      final Web3ProviderConfiguration config,
+      final List<String> commandLineOptions,
+      final GenericContainer<?> container) {
+    config
+        .getWallet()
+        .ifPresent(
+            wallet -> {
+              container.withClasspathResourceMapping(
+                  wallet.resources().getKey().get(), KEYSTORE_DIR, BindMode.READ_ONLY);
+              container.withClasspathResourceMapping(
+                  wallet.resources().getPassword().get(),
+                  CONTAINER_PASSWORD_FILE,
+                  BindMode.READ_ONLY);
+              commandLineOptions.addAll(
+                  List.of(
+                      "--unlock",
+                      wallet.address().toHexString(),
+                      "--password",
+                      CONTAINER_PASSWORD_FILE));
+              commandLineOptions.addAll(
+                  List.of("--miner.etherbase", wallet.address().toHexString()));
+            });
   }
 
   //  private void addPrivacy(

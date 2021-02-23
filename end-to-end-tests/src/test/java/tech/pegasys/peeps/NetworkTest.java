@@ -18,7 +18,8 @@ import tech.pegasys.peeps.network.NetworkVerify;
 import tech.pegasys.peeps.network.subnet.Subnet;
 import tech.pegasys.peeps.node.NodeVerify;
 import tech.pegasys.peeps.node.Web3Provider;
-import tech.pegasys.peeps.node.rpc.NodeRpc;
+import tech.pegasys.peeps.signer.SignerConfiguration;
+import tech.pegasys.peeps.signer.rpc.SignerRpcMandatoryResponse;
 import tech.pegasys.peeps.signer.rpc.SignerRpcSenderKnown;
 
 import java.nio.file.Path;
@@ -75,11 +76,11 @@ public abstract class NetworkTest {
     return network.verify(node);
   }
 
-  protected SignerRpcSenderKnown execute(final SignerConfiguration id) {
-    return network.rpc(id.id(), id.address());
+  protected SignerRpcSenderKnown execute(final SignerConfiguration signerConfig) {
+    return network.rpc(signerConfig.name(), signerConfig.address());
   }
 
-  protected NodeRpc execute(final Web3Provider web3Provider) {
+  protected SignerRpcMandatoryResponse execute(final Web3Provider web3Provider) {
     return web3Provider.rpc();
   }
 }

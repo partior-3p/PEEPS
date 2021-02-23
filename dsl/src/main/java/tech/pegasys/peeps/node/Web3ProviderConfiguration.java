@@ -13,6 +13,7 @@
 package tech.pegasys.peeps.node;
 
 import tech.pegasys.peeps.network.subnet.SubnetAddress;
+import tech.pegasys.peeps.signer.SignerConfiguration;
 
 import java.nio.file.Path;
 import java.util.Optional;
@@ -28,6 +29,7 @@ public class Web3ProviderConfiguration {
   private final String cors;
   private final String identity;
   private final String bootnodeEnodeAddress;
+  private final Optional<SignerConfiguration> wallet;
   private final String privacyUrl;
   private final String privacyMarkerSigningPrivateKeyFile;
   private final KeyPair nodeKeys;
@@ -48,7 +50,8 @@ public class Web3ProviderConfiguration {
       final SubnetAddress ipAddress,
       final String identity,
       final KeyPair nodeKeys,
-      final String bootnodeEnodeAddress) {
+      final String bootnodeEnodeAddress,
+      final SignerConfiguration wallet) {
     this.genesisFile = genesisFile;
     this.enclavePublicKeyResource = privacyManagerPublicKeyResource;
     this.privacyMarkerSigningPrivateKeyFile = privacyMarkerSigningPrivateKeyFile;
@@ -60,6 +63,7 @@ public class Web3ProviderConfiguration {
     this.identity = identity;
     this.nodeKeys = nodeKeys;
     this.bootnodeEnodeAddress = bootnodeEnodeAddress;
+    this.wallet = Optional.ofNullable(wallet);
   }
 
   public Path getGenesisFile() {
@@ -109,5 +113,9 @@ public class Web3ProviderConfiguration {
 
   public Optional<String> getPrivacyMarkerSigningPrivateKeyFile() {
     return Optional.ofNullable(privacyMarkerSigningPrivateKeyFile);
+  }
+
+  public Optional<SignerConfiguration> getWallet() {
+    return wallet;
   }
 }

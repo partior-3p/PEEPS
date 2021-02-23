@@ -72,11 +72,6 @@ public class Besu extends Web3Provider {
   }
 
   @Override
-  public String getNodeName() {
-    return "Besu";
-  }
-
-  @Override
   public String getLogs() {
     return DockerLogs.format("Besu", container);
   }

@@ -14,13 +14,14 @@ package tech.pegasys.peeps.privacy;
 
 import static tech.pegasys.peeps.privacy.PrivateTransactionManagerType.TESSERA;
 
+import tech.pegasys.peeps.FixedSignerConfigs;
 import tech.pegasys.peeps.NetworkTest;
 import tech.pegasys.peeps.PrivacyManagerConfiguration;
-import tech.pegasys.peeps.SignerConfiguration;
 import tech.pegasys.peeps.contract.SimpleStorage;
 import tech.pegasys.peeps.network.Network;
 import tech.pegasys.peeps.node.Web3Provider;
 import tech.pegasys.peeps.node.model.Hash;
+import tech.pegasys.peeps.signer.SignerConfiguration;
 
 import java.util.List;
 
@@ -30,7 +31,7 @@ import org.junit.jupiter.api.Test;
 public class TesseraPrivacyContractDeploymentTest extends NetworkTest {
 
   private Web3Provider nodeAlpha;
-  private final SignerConfiguration signer = SignerConfiguration.ALPHA;
+  private final SignerConfiguration signer = FixedSignerConfigs.ALPHA;
   private final PrivacyManagerConfiguration privacyManagerAlpha = PrivacyManagerConfiguration.ALPHA;
 
   @Override
@@ -43,7 +44,7 @@ public class TesseraPrivacyContractDeploymentTest extends NetworkTest {
             KeyPair.random(),
             privacyManagerAlpha.id(),
             privacyManagerAlpha.keyPair().getPublicKey());
-    network.addSigner(signer.id(), signer.resources(), nodeAlpha);
+    network.addSigner(signer.name(), signer.resources(), nodeAlpha);
   }
 
   @Test
