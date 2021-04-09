@@ -16,17 +16,17 @@ import tech.pegasys.peeps.node.genesis.GenesisConfig;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 
-public class GenesisConfigIbftLegacy extends GenesisConfig {
+public class GoQuorumIbftConfig extends GenesisConfig {
 
-  private final IbftLegacyConfig consensusConfig;
+  private final GoQuorumIbftOptions consensusConfig;
 
-  public GenesisConfigIbftLegacy(final long chainId, final IbftLegacyConfig consensusConfig) {
+  public GoQuorumIbftConfig(final long chainId, final GoQuorumIbftOptions consensusConfig) {
     super(chainId);
     this.consensusConfig = consensusConfig;
   }
 
   @JsonGetter("istanbul")
-  public IbftLegacyConfig getConsensusConfig() {
+  public GoQuorumIbftOptions getConsensusConfig() {
     return consensusConfig;
   }
 }

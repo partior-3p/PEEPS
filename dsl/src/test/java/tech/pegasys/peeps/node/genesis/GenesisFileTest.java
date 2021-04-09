@@ -31,12 +31,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.testcontainers.shaded.org.bouncycastle.util.Arrays;
 
-public class BesuGenesisFileTest {
+public class GenesisFileTest {
 
   @Test
   public void matchingGenesisFileMustNotBeRecreated(@TempDir Path directory) throws IOException {
     final Path location = directory.resolve("matchingGenesisFileMustNotBeRecreated.json");
-    final BesuGenesisFile genesisFile = new BesuGenesisFile(location);
+    final GenesisFile genesisFile = new GenesisFile(location);
     final Genesis genesis = createGenesis(Account.ALPHA, Account.BETA);
 
     genesisFile.ensureExists(genesis);
@@ -49,7 +49,7 @@ public class BesuGenesisFileTest {
   @Test
   public void nonMatchingGenesisFileMsutException(@TempDir Path directory) {
     final Path location = directory.resolve("nonMatchingGenesisFileMsutException.json");
-    final BesuGenesisFile genesisFile = new BesuGenesisFile(location);
+    final GenesisFile genesisFile = new GenesisFile(location);
     final Genesis genesisAlpha = createGenesis(Account.ALPHA);
     final Genesis genesisBeta = createGenesis(Account.ALPHA, Account.BETA);
 
@@ -64,7 +64,7 @@ public class BesuGenesisFileTest {
   public void createdGenesisMustDeserialize(@TempDir Path directory)
       throws DecodeException, IOException {
     final Path location = directory.resolve("createdGenesisMustDeserialize.json");
-    final BesuGenesisFile genesisFile = new BesuGenesisFile(location);
+    final GenesisFile genesisFile = new GenesisFile(location);
     final Genesis genesis = createGenesis(Account.ALPHA, Account.BETA);
 
     genesisFile.ensureExists(genesis);

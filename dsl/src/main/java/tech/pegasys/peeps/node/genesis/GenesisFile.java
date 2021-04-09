@@ -22,18 +22,26 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import io.vertx.core.json.DecodeException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testcontainers.shaded.org.bouncycastle.util.Arrays;
 
-public class BesuGenesisFile {
+public class GenesisFile {
 
   private static final Logger LOG = LogManager.getLogger();
 
   private final Path genesisFile;
+  private static final ObjectMapper objectMapper =
+      new ObjectMapper()
+          .registerModule(new Jdk8Module())
+          .setSerializationInclusion(Include.NON_ABSENT);
 
-  public BesuGenesisFile(final Path genesisFile) {
+  public GenesisFile(final Path genesisFile) {
     this.genesisFile = genesisFile;
   }
 
@@ -57,12 +65,12 @@ public class BesuGenesisFile {
     } catch (DecodeException e) {
       throw new IllegalStateException(
           String.format(
-              "Problem decoding an existing Besu config file from the file system: %s, %s",
+              "Problem decoding an existing config file from the file system: %s, %s",
               genesisFile, e.getLocalizedMessage()));
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new IllegalStateException(
           String.format(
-              "Problem reading an existing Besu config file in the file system: %s, %s",
+              "Problem reading an existing config file in the file system: %s, %s",
               genesisFile, e.getLocalizedMessage()));
     }
 
@@ -73,16 +81,18 @@ public class BesuGenesisFile {
   }
 
   private void write(final Genesis genesis) {
-    final String encodedBesuGenesis = Json.encode(genesis);
-    LOG.info(
-        "Creating Besu genesis file\n\tLocation: {} \n\tContents: {}",
-        genesisFile,
-        encodedBesuGenesis);
+    final String encodedGenesis;
+    try {
+      encodedGenesis = objectMapper.writeValueAsString(genesis);
+    } catch (final JsonProcessingException e) {
+      throw new RuntimeException("Failed to encode genesis data", e);
+    }
+    LOG.info("Creating genesis file\n\tLocation: {} \n\tContents: {}", genesisFile, encodedGenesis);
 
     try {
       Files.write(
           genesisFile,
-          encodedBesuGenesis.getBytes(StandardCharsets.UTF_8),
+          encodedGenesis.getBytes(StandardCharsets.UTF_8),
           StandardOpenOption.CREATE_NEW);
     } catch (final IOException e) {
       throw new IllegalStateException(

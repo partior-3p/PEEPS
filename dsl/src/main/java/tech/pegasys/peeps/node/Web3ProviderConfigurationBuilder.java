@@ -15,7 +15,7 @@ package tech.pegasys.peeps.node;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import tech.pegasys.peeps.network.subnet.SubnetAddress;
-import tech.pegasys.peeps.node.genesis.BesuGenesisFile;
+import tech.pegasys.peeps.node.genesis.GenesisFile;
 import tech.pegasys.peeps.privacy.PrivateTransactionManager;
 import tech.pegasys.peeps.signer.SignerConfiguration;
 
@@ -29,7 +29,7 @@ public class Web3ProviderConfigurationBuilder {
   private static final String DEFAULT_PRIVACY_MARKER_SIGNER_PRIVATE_KEY_FILE =
       "node/keys/pmt_signing.priv";
 
-  private BesuGenesisFile genesisFile;
+  private GenesisFile genesisFile;
   private String identity;
 
   // TODO better typing then String
@@ -50,7 +50,7 @@ public class Web3ProviderConfigurationBuilder {
     this.privacyMarkerSigningPrivateKeyFile = DEFAULT_PRIVACY_MARKER_SIGNER_PRIVATE_KEY_FILE;
   }
 
-  public Web3ProviderConfigurationBuilder withGenesisFile(final BesuGenesisFile genesisFile) {
+  public Web3ProviderConfigurationBuilder withGenesisFile(final GenesisFile genesisFile) {
     this.genesisFile = genesisFile;
     return this;
   }

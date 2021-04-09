@@ -12,11 +12,15 @@
  */
 package tech.pegasys.peeps.node.genesis;
 
+import tech.pegasys.peeps.node.Web3Provider;
+
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.apache.tuweni.bytes.Bytes;
+import org.hyperledger.besu.crypto.SECP256K1;
+import org.hyperledger.besu.ethereum.core.Address;
 
 public abstract class GenesisExtraData {
-
+  private static final SECP256K1 SECP_256_K_1 = new SECP256K1();
   private final Bytes extraData;
 
   public GenesisExtraData(final Bytes extraData) {
@@ -26,5 +30,10 @@ public abstract class GenesisExtraData {
   @JsonValue
   public String getExtraData() {
     return extraData.toString();
+  }
+
+  protected static Address extractAddress(final Web3Provider validator) {
+    return Address.extract(
+        SECP_256_K_1.createPublicKey(Bytes.fromHexString(validator.nodePublicKey())));
   }
 }

@@ -35,7 +35,7 @@ public class GoQuorum extends Web3Provider {
   private static final Logger LOG = LogManager.getLogger();
 
   //  private static final String IMAGE_NAME = "hyperledger/besu:latest";
-  private static final String IMAGE_NAME = "quorumengineering/quorum:latest";
+  private static final String IMAGE_NAME = "quorumengineering/quorum";
   private static final String CONTAINER_GENESIS_FILE = "/etc/genesis.json";
   private static final String CONTAINER_NODE_PRIVATE_KEY_FILE = "/etc/keys/node.priv";
   private static final String DATA_DIR = "/eth";
@@ -59,6 +59,8 @@ public class GoQuorum extends Web3Provider {
     commandLineOptions.addAll(List.of("--networkid", "15"));
     commandLineOptions.addAll(List.of("--identity", config.getIdentity()));
 
+    // Note: this copy occurs on container start (not now, as the genesis file is empty at this
+    // stage)
     container.withCopyFileToContainer(
         MountableFile.forHostPath(config.getGenesisFile()), CONTAINER_GENESIS_FILE);
     final List<String> entryPoint = Lists.newArrayList("/bin/sh", "-c");

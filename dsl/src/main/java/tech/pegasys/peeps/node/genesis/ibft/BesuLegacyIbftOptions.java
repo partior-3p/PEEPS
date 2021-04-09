@@ -14,17 +14,17 @@ package tech.pegasys.peeps.node.genesis.ibft;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 
-public class IbftLegacyConfig {
+public class BesuLegacyIbftOptions {
 
   private final int blockPeriodSeconds;
   private final int epochLength;
   private final int requestTimeoutSeconds;
 
-  public IbftLegacyConfig() {
+  public BesuLegacyIbftOptions() {
     this(2, 30000, 10);
   }
 
-  public IbftLegacyConfig(
+  public BesuLegacyIbftOptions(
       final int blockPeriodSeconds, final int epochLength, final int requestTimeoutSeconds) {
     this.blockPeriodSeconds = blockPeriodSeconds;
     this.epochLength = epochLength;
