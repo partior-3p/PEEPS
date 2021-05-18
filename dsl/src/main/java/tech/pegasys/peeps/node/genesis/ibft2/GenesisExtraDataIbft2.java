@@ -52,16 +52,16 @@ public class GenesisExtraDataIbft2 extends GenesisExtraData {
     final List<Signature> seals = Collections.emptyList();
 
     return RLP.encode(
-        writer -> {
-          writer.writeList(
-              listWriter -> {
-                listWriter.writeByteArray(vanityData);
-                listWriter.writeList(
-                    validators, (rlp, validator) -> rlp.writeValue(validator.toBytes()));
-                listWriter.writeByteArray(votes);
-                listWriter.writeByteArray(round);
-                listWriter.writeList(seals, (rlp, committer) -> rlp.writeValue(committer.bytes()));
-              });
-        });
+        writer ->
+            writer.writeList(
+                listWriter -> {
+                  listWriter.writeByteArray(vanityData);
+                  listWriter.writeList(
+                      validators, (rlp, validator) -> rlp.writeValue(validator.toBytes()));
+                  listWriter.writeByteArray(votes);
+                  listWriter.writeByteArray(round);
+                  listWriter.writeList(
+                      seals, (rlp, committer) -> rlp.writeValue(committer.bytes()));
+                }));
   }
 }

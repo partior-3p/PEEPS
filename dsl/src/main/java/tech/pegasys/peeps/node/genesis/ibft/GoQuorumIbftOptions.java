@@ -22,7 +22,7 @@ public class GoQuorumIbftOptions {
   private final int epochLength;
   private final int requestTimeoutSeconds;
   private final Optional<Integer> qbftBlock;
-  private Optional<Integer> ceil2nBy3Block;
+  private final Optional<Integer> ceil2nBy3Block;
 
   public GoQuorumIbftOptions() {
     this(2, 30000, 10, Optional.empty(), Optional.empty());

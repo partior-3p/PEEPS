@@ -24,7 +24,7 @@ import org.testcontainers.containers.Network;
 
 public class SubnetTest {
 
-  private List<Subnet> cleanUp = new ArrayList<>();
+  private final List<Subnet> cleanUp = new ArrayList<>();
 
   @BeforeEach
   public void setUp() {

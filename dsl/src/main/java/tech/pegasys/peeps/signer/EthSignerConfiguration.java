@@ -32,8 +32,8 @@ public class EthSignerConfiguration {
 
   // TODO move these file specific ones out into their own config, encapsulate (i.e refactor
   // EthSigner)
-  private SignerKeyFileResource keyFile;
-  private SignerPasswordFileResource passwordFile;
+  private final SignerKeyFileResource keyFile;
+  private final SignerPasswordFileResource passwordFile;
 
   public EthSignerConfiguration(
       final long chainId,

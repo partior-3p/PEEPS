@@ -22,7 +22,7 @@ public class NodeVerify {
     this.node = node;
   }
 
-  public void transistion(final NodeValueTransition... changes) {
+  public void transition(final NodeValueTransition... changes) {
     node.verifyTransition(changes);
   }
 

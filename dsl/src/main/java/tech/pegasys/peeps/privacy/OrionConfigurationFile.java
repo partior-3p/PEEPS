@@ -75,11 +75,13 @@ public class OrionConfigurationFile {
   }
 
   private static String flattenPrivateKeys(final List<PrivacyPrivateKeyResource> values) {
-    return flatten(values.parallelStream().map(v -> v.get()).collect(Collectors.toList()));
+    return flatten(
+        values.parallelStream().map(PrivacyPrivateKeyResource::get).collect(Collectors.toList()));
   }
 
   private static String flattenPublicKeys(final List<PrivacyPublicKeyResource> values) {
-    return flatten(values.parallelStream().map(v -> v.get()).collect(Collectors.toList()));
+    return flatten(
+        values.parallelStream().map(PrivacyPublicKeyResource::get).collect(Collectors.toList()));
   }
 
   private static String flatten(final List<String> values) {

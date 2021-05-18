@@ -34,12 +34,12 @@ public class Web3ProviderConfigurationBuilder {
 
   // TODO better typing then String
   private String privacyManagerPublicKeyFile;
-  private String privacyMarkerSigningPrivateKeyFile;
   private String privacyTransactionManagerUrl;
   private String cors;
   private String bootnodeEnodeAddress;
   private KeyPair nodeKeys;
   private SignerConfiguration wallet;
+  private final String privacyMarkerSigningPrivateKeyFile;
 
   // TODO these into their own builder, not node related but test container related
   private Network containerNetwork;

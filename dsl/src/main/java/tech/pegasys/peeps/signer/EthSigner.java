@@ -133,7 +133,7 @@ public class EthSigner implements NetworkMember {
   }
 
   private Set<Supplier<String>> dockerLogs() {
-    return Set.of(() -> getLogs(), () -> downstream.getLogs());
+    return Set.of(this::getLogs, downstream::getLogs);
   }
 
   private List<String> standardCommandLineOptions() {

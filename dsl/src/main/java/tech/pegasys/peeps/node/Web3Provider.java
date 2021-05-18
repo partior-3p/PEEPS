@@ -185,7 +185,7 @@ public abstract class Web3Provider implements NetworkMember {
   }
 
   private Set<Supplier<String>> dockerLogs() {
-    return Set.of(() -> getLogs());
+    return Set.of(this::getLogs);
   }
 
   public abstract String getLogs();

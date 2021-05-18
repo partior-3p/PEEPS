@@ -45,7 +45,7 @@ public enum Account {
   private final GenesisAddress genesisAddres;
   private final Address address;
 
-  private Account(final String address) {
+  Account(final String address) {
     this.genesisAddres = new GenesisAddress(address);
     this.address = Address.fromHexString(HexFormatter.ensureHexPrefix(address));
   }

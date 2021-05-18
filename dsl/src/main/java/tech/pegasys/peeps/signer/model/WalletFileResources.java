@@ -14,7 +14,7 @@ package tech.pegasys.peeps.signer.model;
 
 public interface WalletFileResources {
 
-  public SignerKeyFileResource getKey();
+  SignerKeyFileResource getKey();
 
-  public SignerPasswordFileResource getPassword();
+  SignerPasswordFileResource getPassword();
 }

@@ -29,7 +29,7 @@ public class SubnetAddresses {
   private static final int FIRST_AVAILABLE_HOST_ADDRESS = 2;
 
   private final String addressFormat;
-  private AtomicInteger hostAddress;
+  private final AtomicInteger hostAddress;
 
   public SubnetAddresses(final String addressFormat) {
     checkNotNull(addressFormat, "An address format is required");

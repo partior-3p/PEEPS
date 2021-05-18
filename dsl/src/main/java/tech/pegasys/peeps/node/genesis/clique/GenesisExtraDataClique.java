@@ -46,11 +46,7 @@ public class GenesisExtraDataClique extends GenesisExtraData {
     final Bytes vanityData = Bytes.wrap(new byte[32]);
     final Bytes proposerSeal = Bytes.wrap(new byte[65]);
     final Bytes genesisValidators =
-        Bytes.concatenate(
-            validators
-                .parallelStream()
-                .map(validator -> validator.toBytes())
-                .toArray(Bytes[]::new));
+        Bytes.concatenate(validators.parallelStream().map(Address::toBytes).toArray(Bytes[]::new));
 
     return Bytes.concatenate(vanityData, genesisValidators, proposerSeal);
   }

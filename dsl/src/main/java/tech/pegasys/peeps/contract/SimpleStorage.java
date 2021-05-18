@@ -18,7 +18,6 @@ import java.util.Collections;
 
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
@@ -88,17 +87,14 @@ public class SimpleStorage extends Contract {
     final Function function =
         new Function(
             FUNC_SET,
-            Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(value)),
-            Collections.<TypeReference<?>>emptyList());
+            Arrays.asList(new org.web3j.abi.datatypes.generated.Uint256(value)),
+            Collections.emptyList());
     return executeRemoteCallTransaction(function);
   }
 
   public RemoteCall<BigInteger> get() {
     final Function function =
-        new Function(
-            FUNC_GET,
-            Arrays.<Type>asList(),
-            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
+        new Function(FUNC_GET, Arrays.asList(), Arrays.asList(new TypeReference<Uint256>() {}));
     return executeRemoteCallSingleValueReturn(function, BigInteger.class);
   }
 
