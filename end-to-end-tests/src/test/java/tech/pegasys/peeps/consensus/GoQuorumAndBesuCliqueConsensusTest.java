@@ -18,6 +18,7 @@ import tech.pegasys.peeps.network.ConsensusMechanism;
 import tech.pegasys.peeps.network.Network;
 import tech.pegasys.peeps.node.Account;
 import tech.pegasys.peeps.node.Web3Provider;
+import tech.pegasys.peeps.node.Web3ProviderType;
 import tech.pegasys.peeps.node.model.Hash;
 import tech.pegasys.peeps.node.verification.ValueReceived;
 import tech.pegasys.peeps.node.verification.ValueSent;
@@ -28,17 +29,18 @@ import org.apache.tuweni.eth.Address;
 import org.apache.tuweni.units.ethereum.Wei;
 import org.junit.jupiter.api.Test;
 
-public class QbftConsensusTest extends NetworkTest {
+public class GoQuorumAndBesuCliqueConsensusTest extends NetworkTest {
 
   private Web3Provider alphaNode;
   private final SignerConfiguration signer = FixedSignerConfigs.ALPHA;
 
   @Override
   protected void setUpNetwork(final Network network) {
-    alphaNode = network.addNode("alpha", KeyPair.random());
-    network.addNode("beta", KeyPair.random());
-    network.set(ConsensusMechanism.QBFT, alphaNode);
-    network.addSigner(signer.name(), signer.resources(), alphaNode);
+    alphaNode =
+        network.addNode(
+            "alpha", KeyPair.random(), Web3ProviderType.GOQUORUM, FixedSignerConfigs.ALPHA);
+    final Web3Provider besuNode = network.addNode("beta", KeyPair.random());
+    network.set(ConsensusMechanism.CLIQUE, besuNode);
   }
 
   @Test
@@ -52,7 +54,7 @@ public class QbftConsensusTest extends NetworkTest {
     final Wei senderStartBalance = execute(alphaNode).getBalance(sender);
     final Wei receiverStartBalance = execute(alphaNode).getBalance(receiver);
 
-    final Hash receipt = execute(signer).transferTo(receiver, transferAmount);
+    final Hash receipt = execute(alphaNode).transfer(signer.address(), receiver, transferAmount);
 
     await().consensusOnTransactionReceipt(receipt);
 

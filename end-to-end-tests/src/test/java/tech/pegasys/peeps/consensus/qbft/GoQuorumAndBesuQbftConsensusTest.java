@@ -10,7 +10,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.consensus;
+package tech.pegasys.peeps.consensus.qbft;
 
 import tech.pegasys.peeps.FixedSignerConfigs;
 import tech.pegasys.peeps.NetworkTest;
@@ -29,18 +29,18 @@ import org.apache.tuweni.eth.Address;
 import org.apache.tuweni.units.ethereum.Wei;
 import org.junit.jupiter.api.Test;
 
-public class GoQuorumCliqueConsensusTest extends NetworkTest {
+public class GoQuorumAndBesuQbftConsensusTest extends NetworkTest {
 
-  private Web3Provider alphaNode;
+  private Web3Provider quorumNode;
   private final SignerConfiguration signer = FixedSignerConfigs.ALPHA;
 
   @Override
   protected void setUpNetwork(final Network network) {
-    alphaNode =
+    final Web3Provider besuNode = network.addNode("besu", KeyPair.random());
+    quorumNode =
         network.addNode(
-            "alpha", KeyPair.random(), Web3ProviderType.GOQUORUM, FixedSignerConfigs.ALPHA);
-    final Web3Provider besuNode = network.addNode("beta", KeyPair.random());
-    network.set(ConsensusMechanism.CLIQUE, besuNode);
+            "quorum", KeyPair.random(), Web3ProviderType.GOQUORUM, FixedSignerConfigs.ALPHA);
+    network.set(ConsensusMechanism.QBFT, besuNode, quorumNode);
   }
 
   @Test
@@ -51,14 +51,14 @@ public class GoQuorumCliqueConsensusTest extends NetworkTest {
 
     verify().consensusOnValueAt(sender, receiver);
 
-    final Wei senderStartBalance = execute(alphaNode).getBalance(sender);
-    final Wei receiverStartBalance = execute(alphaNode).getBalance(receiver);
+    final Wei senderStartBalance = execute(quorumNode).getBalance(sender);
+    final Wei receiverStartBalance = execute(quorumNode).getBalance(receiver);
 
-    final Hash receipt = execute(alphaNode).transfer(signer.address(), receiver, transferAmount);
+    final Hash receipt = execute(quorumNode).transfer(signer.address(), receiver, transferAmount);
 
     await().consensusOnTransactionReceipt(receipt);
 
-    verifyOn(alphaNode)
+    verifyOn(quorumNode)
         .transition(
             new ValueSent(sender, senderStartBalance, receipt),
             new ValueReceived(receiver, receiverStartBalance, transferAmount));
