@@ -81,7 +81,8 @@ public abstract class PrivateTransactionManager implements NetworkMember {
       container.start();
 
       container.followOutput(
-          outputFrame -> LOG.info("{}: {}", getNodeName(), outputFrame.getUtf8String()));
+          outputFrame ->
+              LOG.info("{}: {}", getNodeName(), outputFrame.getUtf8String().stripTrailing()));
 
       transactionManagerRpc.bind(
           container.getContainerId(),

@@ -82,7 +82,7 @@ public abstract class Web3Provider implements NetworkMember {
       container.start();
 
       container.followOutput(
-          outputFrame -> LOG.info("{}: {}", identity, outputFrame.getUtf8String()));
+          outputFrame -> LOG.info("{}: {}", identity, outputFrame.getUtf8String().stripTrailing()));
 
       signerRpcClient.bind(
           container.getContainerId(),
