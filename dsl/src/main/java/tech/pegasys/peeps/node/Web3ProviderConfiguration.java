@@ -33,6 +33,7 @@ public class Web3ProviderConfiguration {
   private final String privacyUrl;
   private final String privacyMarkerSigningPrivateKeyFile;
   private final KeyPair nodeKeys;
+  private final Path staticNodesFile;
 
   // TODO move these out, they are not related to the node, but test container setups
   private final Network containerNetwork;
@@ -51,7 +52,8 @@ public class Web3ProviderConfiguration {
       final String identity,
       final KeyPair nodeKeys,
       final String bootnodeEnodeAddress,
-      final SignerConfiguration wallet) {
+      final SignerConfiguration wallet,
+      final Path staticNodesFile) {
     this.genesisFile = genesisFile;
     this.enclavePublicKeyResource = privacyManagerPublicKeyResource;
     this.privacyMarkerSigningPrivateKeyFile = privacyMarkerSigningPrivateKeyFile;
@@ -64,6 +66,7 @@ public class Web3ProviderConfiguration {
     this.nodeKeys = nodeKeys;
     this.bootnodeEnodeAddress = bootnodeEnodeAddress;
     this.wallet = Optional.ofNullable(wallet);
+    this.staticNodesFile = staticNodesFile;
   }
 
   public Path getGenesisFile() {
@@ -117,5 +120,9 @@ public class Web3ProviderConfiguration {
 
   public Optional<SignerConfiguration> getWallet() {
     return wallet;
+  }
+
+  public Path getStaticNodesFile() {
+    return staticNodesFile;
   }
 }

@@ -22,6 +22,7 @@ import tech.pegasys.peeps.node.rpc.admin.ConnectedPeersResponse;
 import tech.pegasys.peeps.node.rpc.admin.NodeInfo;
 import tech.pegasys.peeps.node.rpc.admin.NodeInfoResponse;
 import tech.pegasys.peeps.node.rpc.eth.GetBalanceResponse;
+import tech.pegasys.peeps.node.rpc.eth.GetBlockNumberResponse;
 import tech.pegasys.peeps.node.rpc.eth.GetTransactionByHashResponse;
 import tech.pegasys.peeps.node.rpc.eth.GetTransactionReceiptResponse;
 import tech.pegasys.peeps.node.rpc.priv.GetPrivateTransactionResponse;
@@ -86,5 +87,9 @@ public class NodeRpcClient extends JsonRpcClient {
   public Wei getBalance(final Address account) {
     return post("eth_getBalance", GetBalanceResponse.class, account.toHexString(), "latest")
         .getResult();
+  }
+
+  public long getBlockNumber() {
+    return post("eth_blockNumber", GetBlockNumberResponse.class).getResult();
   }
 }

@@ -41,6 +41,7 @@ public class Besu extends Web3Provider {
 
   private static final String BESU_IMAGE = "hyperledger/besu";
   private static final String CONTAINER_GENESIS_FILE = "/etc/besu/genesis.json";
+  private static final String CONTAINER_STATIC_NODES_FILE = "/opt/besu/static-nodes.json";
   private static final String CONTAINER_PRIVACY_PUBLIC_KEY_FILE =
       "/etc/besu/privacy_public_key.pub";
   private static final String CONTAINER_NODE_PRIVATE_KEY_FILE = "/etc/besu/keys/node.priv";
@@ -56,11 +57,11 @@ public class Besu extends Web3Provider {
 
     addPeerToPeerHost(config, commandLineOptions);
     addCorsOrigins(config, commandLineOptions);
-    addBootnodeAddress(config, commandLineOptions);
     addContainerNetwork(config, container);
     addContainerIpAddress(config.getIpAddress(), container);
     addNodePrivateKey(config, commandLineOptions, container);
     addGenesisFile(config, commandLineOptions, container);
+    addStaticNodesFile(config, container);
     commandLineOptions.addAll(List.of("--network-id", "15"));
 
     if (config.isPrivacyEnabled()) {
@@ -107,13 +108,6 @@ public class Besu extends Web3Provider {
     commandLineOptions.add(config.getIpAddress().get());
   }
 
-  private void addBootnodeAddress(
-      final Web3ProviderConfiguration config, final List<String> commandLineOptions) {
-    config
-        .getBootnodeEnodeAddress()
-        .ifPresent(enode -> commandLineOptions.addAll(Lists.newArrayList("--bootnodes", enode)));
-  }
-
   private void addContainerNetwork(
       final Web3ProviderConfiguration config, final GenericContainer<?> container) {
     container.withNetwork(config.getContainerNetwork());
@@ -157,6 +151,12 @@ public class Besu extends Web3Provider {
     commandLineOptions.add(CONTAINER_GENESIS_FILE);
     container.withCopyFileToContainer(
         MountableFile.forHostPath(config.getGenesisFile()), CONTAINER_GENESIS_FILE);
+  }
+
+  private void addStaticNodesFile(
+      final Web3ProviderConfiguration config, final GenericContainer<?> container) {
+    container.withCopyFileToContainer(
+        MountableFile.forHostPath(config.getStaticNodesFile()), CONTAINER_STATIC_NODES_FILE);
   }
 
   private void addPrivacy(

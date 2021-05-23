@@ -71,6 +71,19 @@ public class Await {
     }
   }
 
+  @FormatMethod
+  public static void await(
+      final ThrowingRunnable condition,
+      final int timeout,
+      final String errorMessage,
+      final Object... errorMessageParameters) {
+    try {
+      await(timeout, condition);
+    } catch (final ConditionTimeoutException e) {
+      throw new AssertionError(String.format(errorMessage, errorMessageParameters));
+    }
+  }
+
   private static void await(final int timeout, final ThrowingRunnable condition) {
     Awaitility.await()
         .ignoreExceptions()

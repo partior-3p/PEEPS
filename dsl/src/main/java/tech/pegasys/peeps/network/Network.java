@@ -23,6 +23,7 @@ import tech.pegasys.peeps.node.Account;
 import tech.pegasys.peeps.node.Besu;
 import tech.pegasys.peeps.node.GoQuorum;
 import tech.pegasys.peeps.node.NodeVerify;
+import tech.pegasys.peeps.node.StaticNodesFile;
 import tech.pegasys.peeps.node.Web3Provider;
 import tech.pegasys.peeps.node.Web3ProviderConfigurationBuilder;
 import tech.pegasys.peeps.node.Web3ProviderType;
@@ -96,6 +97,7 @@ public class Network implements Closeable {
   private final List<NetworkMember> members;
 
   private final Map<Web3ProviderType, GenesisFile> genesisFiles;
+  private final Map<Web3Provider, StaticNodesFile> staticNodesFiles;
   private final PathGenerator pathGenerator;
   private final Subnet subnet;
   private final Vertx vertx;
@@ -121,6 +123,7 @@ public class Network implements Closeable {
             new GenesisFile(pathGenerator.uniqueFile()));
 
     this.state = new NetworkState();
+    this.staticNodesFiles = new HashMap<>();
 
     set(ConsensusMechanism.ETH_HASH);
   }
@@ -128,11 +131,9 @@ public class Network implements Closeable {
   public void start() {
     state.start();
     genesisFiles.forEach((k, v) -> v.ensureExists(genesisConfigurations.get(k)));
+    staticNodesFiles.forEach((k, v) -> v.ensureExists(k, nodes));
     if (members.size() != 0) {
-      // assume that first node is to act as bootnode, so start it fully before other nodes.
-      // TODO: NetworkMember should have a flag to identify the bootnode(s)
-      members.get(0).start();
-      members.subList(1, members.size()).stream().parallel().forEach(NetworkMember::start);
+      members.stream().parallel().forEach(NetworkMember::start);
     }
     awaitConnectivity();
   }
@@ -216,11 +217,13 @@ public class Network implements Closeable {
   private Web3Provider addNode(
       final Web3ProviderConfigurationBuilder config, final Web3ProviderType providerType) {
     final Web3Provider web3Provider;
+    final StaticNodesFile staticNodesFile = new StaticNodesFile(pathGenerator.uniqueFile());
     config
         .withVertx(vertx)
         .withContainerNetwork(subnet.network())
         .withIpAddress(subnet.getAddressAndIncrement())
         .withGenesisFile(genesisFiles.get(providerType))
+        .withStaticNodesFile(staticNodesFile)
         .withBootnodeEnodeAddress(bootnodeEnodeAddresses());
     if (providerType.equals(Web3ProviderType.BESU)) {
       web3Provider = new Besu(config.build());
@@ -228,6 +231,7 @@ public class Network implements Closeable {
       web3Provider = new GoQuorum(config.build());
     }
 
+    staticNodesFiles.put(web3Provider, staticNodesFile);
     return addNode(web3Provider);
   }
 
@@ -363,6 +367,23 @@ public class Network implements Closeable {
       assertThat(tx).isNotNull();
       assertThat(tx).usingRecursiveComparison().isEqualTo(firstTx);
     }
+  }
+
+  public void verifyConsensusOnBlockNumberIsAtLeast(final long blockNumber) {
+    checkState(
+        nodes.size() > 1, "There must be two or more nodes to be able to verify on consensus");
+
+    await(
+        () ->
+            assertThat(
+                    nodes
+                        .parallelStream()
+                        .map(node -> node.rpc().getBlockNumber())
+                        .allMatch(block -> block >= blockNumber))
+                .isTrue(),
+        60,
+        "Failed to achieve consensus on block number being at least %s",
+        blockNumber);
   }
 
   // TODO these Mediator method could be refactored elsewhere?

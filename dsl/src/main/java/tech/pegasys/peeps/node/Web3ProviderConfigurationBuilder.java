@@ -40,6 +40,7 @@ public class Web3ProviderConfigurationBuilder {
   private KeyPair nodeKeys;
   private SignerConfiguration wallet;
   private final String privacyMarkerSigningPrivateKeyFile;
+  private StaticNodesFile staticNodesFile;
 
   // TODO these into their own builder, not node related but test container related
   private Network containerNetwork;
@@ -108,6 +109,12 @@ public class Web3ProviderConfigurationBuilder {
     return this;
   }
 
+  public Web3ProviderConfigurationBuilder withStaticNodesFile(
+      final StaticNodesFile staticNodesFile) {
+    this.staticNodesFile = staticNodesFile;
+    return this;
+  }
+
   public Web3ProviderConfiguration build() {
     checkNotNull(genesisFile, "A genesis file path is mandatory");
     checkNotNull(identity, "An identity is mandatory");
@@ -115,6 +122,7 @@ public class Web3ProviderConfigurationBuilder {
     checkNotNull(ipAddress, "Container IP address is mandatory");
     checkNotNull(containerNetwork, "Container network is mandatory");
     checkNotNull(nodeKeys, "Node Key is mandatory");
+    checkNotNull(staticNodesFile, "Static nodes file path is mandatory");
 
     return new Web3ProviderConfiguration(
         genesisFile.getGenesisFile(),
@@ -128,6 +136,7 @@ public class Web3ProviderConfigurationBuilder {
         identity,
         nodeKeys,
         bootnodeEnodeAddress,
-        wallet);
+        wallet,
+        staticNodesFile.getStaticNodesFile());
   }
 }

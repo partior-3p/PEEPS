@@ -33,6 +33,10 @@ public class NetworkVerify {
     network.verifyConsensusOnTransaction(transaction);
   }
 
+  public void consensusOnBlockNumberIsAtLeast(final long blockNumber) {
+    network.verifyConsensusOnBlockNumberIsAtLeast(blockNumber);
+  }
+
   // TODO perhaps a separate specialisation - privacy?
   public void consensusOnPrivacyTransactionReceipt(final Hash transaction) {
     network.verifyConsensusOnPrivacyTransactionReceipt(transaction);

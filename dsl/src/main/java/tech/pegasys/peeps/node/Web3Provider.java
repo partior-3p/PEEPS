@@ -158,6 +158,10 @@ public abstract class Web3Provider implements NetworkMember {
           final Set<String> peerPubKeys = EnodeHelpers.extractPubKeysFromEnodes(peerEnodes);
           final Set<String> connectedPeerPubKeys =
               EnodeHelpers.extractPubKeysFromEnodes(signerRpcClient.getConnectedPeerEnodes());
+          LOG.info(
+              "Connected peersPubKeys {} expected peersPubKeys {}",
+              connectedPeerPubKeys,
+              peerPubKeys);
           assertThat(connectedPeerPubKeys).containsExactlyInAnyOrderElementsOf(peerPubKeys);
         },
         "Failed to connect in time to peers: %s",

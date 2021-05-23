@@ -68,6 +68,11 @@ public class NodeRpcMandatoryResponse implements NodeRpc {
   }
 
   @Override
+  public long getBlockNumber() {
+    return awaitData(rpc::getBlockNumber, "Failed to retrieve block number");
+  }
+
+  @Override
   public Set<String> getConnectedPeerIds() {
     return rpc.getConnectedPeerEnodes();
   }

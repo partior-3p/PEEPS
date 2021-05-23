@@ -45,6 +45,8 @@ public class GoQuorumAndBesuQbftConsensusTest extends NetworkTest {
 
   @Test
   public void consensusAfterMiningMustHappen() {
+    verify().consensusOnBlockNumberIsAtLeast(1);
+
     final Address sender = signer.address();
     final Address receiver = Account.BETA.address();
     final Wei transferAmount = Wei.valueOf(5000L);

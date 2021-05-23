@@ -36,6 +36,7 @@ public class GoQuorum extends Web3Provider {
   private static final String IMAGE_NAME =
       "docker.consensys.net/go-quorum-qbft-docker/qbft-quorum:latest";
   private static final String CONTAINER_GENESIS_FILE = "/etc/genesis.json";
+  private static final String CONTAINER_STATIC_NODES_FILE = "/eth/geth/static-nodes.json";
   private static final String CONTAINER_NODE_PRIVATE_KEY_FILE = "/etc/keys/node.priv";
   private static final String DATA_DIR = "/eth";
   private static final String KEYSTORE_DIR = "/eth/keystore/";
@@ -55,10 +56,10 @@ public class GoQuorum extends Web3Provider {
         standardCommandLineOptions(blockPeriodSeconds, requestTimeoutSeconds);
 
     addCorsOrigins(config, commandLineOptions);
-    addBootnodeAddress(config, commandLineOptions);
     addContainerNetwork(config, container);
     addContainerIpAddress(ipAddress(), container);
     addWallets(config, commandLineOptions, container);
+    addStaticNodesFile(config, container);
     commandLineOptions.addAll(List.of("--datadir", "\"" + DATA_DIR + "\""));
     commandLineOptions.addAll(List.of("--networkid", "15"));
     commandLineOptions.addAll(List.of("--identity", config.getIdentity()));
@@ -134,20 +135,6 @@ public class GoQuorum extends Web3Provider {
         Integer.toString(requestTimeMilliseconds));
   }
 
-  private void addBootnodeAddress(
-      final Web3ProviderConfiguration config, final List<String> commandLineOptions) {
-    config
-        .getBootnodeEnodeAddress()
-        .ifPresent(
-            enode -> {
-              if (!enode.isEmpty()) {
-                commandLineOptions.addAll(Lists.newArrayList("--bootnodes", enode));
-              } else {
-                commandLineOptions.addAll(Lists.newArrayList("--bootnodes", "\"\""));
-              }
-            });
-  }
-
   private void addContainerNetwork(
       final Web3ProviderConfiguration config, final GenericContainer<?> container) {
     container.withNetwork(config.getContainerNetwork());
@@ -203,6 +190,12 @@ public class GoQuorum extends Web3Provider {
               commandLineOptions.addAll(
                   List.of("--miner.etherbase", wallet.address().toHexString()));
             });
+  }
+
+  private void addStaticNodesFile(
+      final Web3ProviderConfiguration config, final GenericContainer<?> container) {
+    container.withCopyFileToContainer(
+        MountableFile.forHostPath(config.getStaticNodesFile()), CONTAINER_STATIC_NODES_FILE);
   }
 
   //  private void addPrivacy(

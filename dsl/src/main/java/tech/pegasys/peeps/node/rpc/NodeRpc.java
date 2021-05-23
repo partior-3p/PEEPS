@@ -36,4 +36,6 @@ public interface NodeRpc {
   Transaction getTransactionByHash(Hash transaction);
 
   Wei getBalance(Address account);
+
+  long getBlockNumber();
 }
