@@ -22,6 +22,7 @@ dependencies {
   testImplementation 'commons-codec:commons-codec'
   testImplementation 'org.assertj:assertj-core'
   testImplementation 'org.junit.jupiter:junit-jupiter-api'
+  testImplementation 'org.awaitility:awaitility'
 }
 
 test.enabled = false

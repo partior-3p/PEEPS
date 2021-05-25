@@ -10,7 +10,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.peeps.consensus.qbft;
+package tech.pegasys.peeps.consensus.qbft.quorumbesu;
 
 import tech.pegasys.peeps.FixedSignerConfigs;
 import tech.pegasys.peeps.NetworkTest;
@@ -29,7 +29,7 @@ import org.apache.tuweni.eth.Address;
 import org.apache.tuweni.units.ethereum.Wei;
 import org.junit.jupiter.api.Test;
 
-public class GoQuorumAndBesuQbftConsensusTest extends NetworkTest {
+public class QbftConsensusTest extends NetworkTest {
 
   private Web3Provider quorumNode;
   private final SignerConfiguration signer = FixedSignerConfigs.ALPHA;
