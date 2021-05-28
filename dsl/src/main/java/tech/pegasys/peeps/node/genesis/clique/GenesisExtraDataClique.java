@@ -14,13 +14,13 @@ package tech.pegasys.peeps.node.genesis.clique;
 
 import tech.pegasys.peeps.node.Web3Provider;
 import tech.pegasys.peeps.node.genesis.GenesisExtraData;
+import tech.pegasys.peeps.util.AddressConverter;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.crypto.Hash;
 import org.apache.tuweni.eth.Address;
 
 public class GenesisExtraDataClique extends GenesisExtraData {
@@ -34,11 +34,7 @@ public class GenesisExtraDataClique extends GenesisExtraData {
     return encode(
         Stream.of(validators)
             .parallel()
-            .map(
-                validator ->
-                    Address.fromBytes(
-                        Hash.keccak256(Bytes.fromHexString(validator.nodePublicKey()))
-                            .slice(12, 20)))
+            .map(validator -> AddressConverter.fromPublicKey(validator.nodePublicKey()))
             .collect(Collectors.toList()));
   }
 

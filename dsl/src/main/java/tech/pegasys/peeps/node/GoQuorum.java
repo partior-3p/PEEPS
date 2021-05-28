@@ -13,6 +13,8 @@
 package tech.pegasys.peeps.node;
 
 import tech.pegasys.peeps.node.genesis.bft.BftConfig;
+import tech.pegasys.peeps.node.rpc.QbftRpc;
+import tech.pegasys.peeps.node.rpc.QuorumQbftRpcClient;
 import tech.pegasys.peeps.util.DockerLogs;
 
 import java.nio.charset.StandardCharsets;
@@ -54,7 +56,6 @@ public class GoQuorum extends Web3Provider {
 
     final List<String> commandLineOptions =
         standardCommandLineOptions(blockPeriodSeconds, requestTimeoutSeconds);
-
     addCorsOrigins(config, commandLineOptions);
     addContainerNetwork(config, container);
     addContainerIpAddress(ipAddress(), container);
@@ -101,6 +102,11 @@ public class GoQuorum extends Web3Provider {
   @Override
   public String getLogs() {
     return DockerLogs.format("GoQuorum", container);
+  }
+
+  @Override
+  protected QbftRpc qbftRpc(final Web3ProviderConfiguration config) {
+    return new QuorumQbftRpcClient(jsonRpcClient);
   }
 
   private AbstractWaitStrategy liveliness() {

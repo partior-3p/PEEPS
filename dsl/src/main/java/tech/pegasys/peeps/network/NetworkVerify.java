@@ -16,6 +16,8 @@ import tech.pegasys.peeps.node.model.Hash;
 import tech.pegasys.peeps.privacy.PrivacyGroupVerify;
 import tech.pegasys.peeps.privacy.model.PrivacyGroup;
 
+import java.util.List;
+
 import org.apache.tuweni.eth.Address;
 
 public class NetworkVerify {
@@ -44,5 +46,9 @@ public class NetworkVerify {
 
   public PrivacyGroupVerify privacyGroup(final PrivacyGroup group) {
     return network.privacyGroup(group);
+  }
+
+  public void consensusOnValidators(final List<Address> validators) {
+    network.verifyConsensusOnValidators(validators);
   }
 }

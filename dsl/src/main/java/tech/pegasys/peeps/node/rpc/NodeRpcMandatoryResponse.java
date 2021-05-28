@@ -21,6 +21,7 @@ import tech.pegasys.peeps.node.model.Transaction;
 import tech.pegasys.peeps.node.model.TransactionReceipt;
 import tech.pegasys.peeps.node.rpc.admin.NodeInfo;
 
+import java.util.List;
 import java.util.Set;
 
 import org.apache.tuweni.eth.Address;
@@ -70,6 +71,20 @@ public class NodeRpcMandatoryResponse implements NodeRpc {
   @Override
   public long getBlockNumber() {
     return awaitData(rpc::getBlockNumber, "Failed to retrieve block number");
+  }
+
+  @Override
+  public boolean qbftProposeValidatorVote(final Address validator, final VoteType vote) {
+    return awaitData(
+        () -> rpc.qbftProposeValidatorVote(validator, vote), "Failed to cast qbft vote");
+  }
+
+  @Override
+  public List<Address> qbftGetValidatorsByBlockBlockNumber(final String blockNumber) {
+    return awaitData(
+        () -> rpc.qbftGetValidatorsByBlockNumber(blockNumber),
+        "Failed to retrieve qbft validators for block %s",
+        blockNumber);
   }
 
   @Override

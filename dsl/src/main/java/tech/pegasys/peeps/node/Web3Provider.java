@@ -17,16 +17,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.peeps.util.Await.await;
 import static tech.pegasys.peeps.util.HexFormatter.removeAnyHexPrefix;
 
+import tech.pegasys.peeps.json.rpc.JsonRpcClient;
 import tech.pegasys.peeps.network.NetworkMember;
 import tech.pegasys.peeps.network.subnet.SubnetAddress;
 import tech.pegasys.peeps.node.model.EnodeHelpers;
 import tech.pegasys.peeps.node.model.Hash;
 import tech.pegasys.peeps.node.model.TransactionReceipt;
+import tech.pegasys.peeps.node.rpc.QbftRpc;
 import tech.pegasys.peeps.node.rpc.admin.NodeInfo;
 import tech.pegasys.peeps.node.verification.AccountValue;
 import tech.pegasys.peeps.node.verification.NodeValueTransition;
 import tech.pegasys.peeps.signer.rpc.SignerRpcClient;
 import tech.pegasys.peeps.signer.rpc.SignerRpcMandatoryResponse;
+import tech.pegasys.peeps.util.AddressConverter;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -42,6 +45,7 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.eth.Address;
 import org.testcontainers.containers.GenericContainer;
 
 public abstract class Web3Provider implements NetworkMember {
@@ -52,8 +56,8 @@ public abstract class Web3Provider implements NetworkMember {
   public static final int CONTAINER_WS_RPC_PORT = 8546;
   public static final int CONTAINER_P2P_PORT = 30303;
 
-  protected final SignerRpcClient signerRpcClient;
   protected final SignerRpcMandatoryResponse signerRpcResponse;
+  protected final JsonRpcClient jsonRpcClient;
 
   protected GenericContainer<?> container;
   private final SubnetAddress ipAddress;
@@ -66,8 +70,9 @@ public abstract class Web3Provider implements NetworkMember {
 
   public Web3Provider(final Web3ProviderConfiguration config, final GenericContainer<?> container) {
     this.container = container;
-    this.signerRpcClient =
-        new SignerRpcClient(config.getVertx(), Duration.ofSeconds(10), dockerLogs());
+    this.jsonRpcClient =
+        new JsonRpcClient(config.getVertx(), Duration.ofSeconds(10), LOG, dockerLogs());
+    final SignerRpcClient signerRpcClient = new SignerRpcClient(jsonRpcClient, qbftRpc(config));
     this.signerRpcResponse = new SignerRpcMandatoryResponse(signerRpcClient);
     this.ipAddress = config.getIpAddress();
 
@@ -75,6 +80,8 @@ public abstract class Web3Provider implements NetworkMember {
     this.pubKey = removeAnyHexPrefix(config.getNodeKeys().publicKey().toHexString());
     this.enodeAddress = enodeAddress(config);
   }
+
+  protected abstract QbftRpc qbftRpc(final Web3ProviderConfiguration config);
 
   @Override
   public void start() {
@@ -84,12 +91,12 @@ public abstract class Web3Provider implements NetworkMember {
       container.followOutput(
           outputFrame -> LOG.info("{}: {}", identity, outputFrame.getUtf8String().stripTrailing()));
 
-      signerRpcClient.bind(
+      jsonRpcClient.bind(
           container.getContainerId(),
           container.getContainerIpAddress(),
           container.getMappedPort(CONTAINER_HTTP_RPC_PORT));
 
-      final NodeInfo info = signerRpcClient.nodeInfo();
+      final NodeInfo info = signerRpcResponse.nodeInfo();
       nodeId = info.getId();
 
       // TODO enode must match enodeAddress - otherwise error
@@ -113,8 +120,8 @@ public abstract class Web3Provider implements NetworkMember {
     if (container != null) {
       container.stop();
     }
-    if (signerRpcClient != null) {
-      signerRpcClient.close();
+    if (jsonRpcClient != null) {
+      jsonRpcClient.close();
     }
   }
 
@@ -148,6 +155,10 @@ public abstract class Web3Provider implements NetworkMember {
     return CONTAINER_P2P_PORT;
   }
 
+  public Address address() {
+    return AddressConverter.fromPublicKey(pubKey);
+  }
+
   public void awaitConnectivity(final Collection<Web3Provider> peers) {
     awaitPeerIdConnections(excludeSelf(expectedEnodes(peers)));
   }
@@ -157,7 +168,7 @@ public abstract class Web3Provider implements NetworkMember {
         () -> {
           final Set<String> peerPubKeys = EnodeHelpers.extractPubKeysFromEnodes(peerEnodes);
           final Set<String> connectedPeerPubKeys =
-              EnodeHelpers.extractPubKeysFromEnodes(signerRpcClient.getConnectedPeerEnodes());
+              EnodeHelpers.extractPubKeysFromEnodes(signerRpcResponse.getConnectedPeerIds());
           LOG.info(
               "Connected peersPubKeys {} expected peersPubKeys {}",
               connectedPeerPubKeys,
@@ -188,7 +199,7 @@ public abstract class Web3Provider implements NetworkMember {
     values.parallelStream().forEach(value -> value.verify(signerRpcResponse));
   }
 
-  private Set<Supplier<String>> dockerLogs() {
+  protected Set<Supplier<String>> dockerLogs() {
     return Set.of(this::getLogs);
   }
 

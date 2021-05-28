@@ -14,6 +14,8 @@ package tech.pegasys.peeps.node;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import tech.pegasys.peeps.node.rpc.BesuQbftRpcClient;
+import tech.pegasys.peeps.node.rpc.QbftRpc;
 import tech.pegasys.peeps.util.DockerLogs;
 
 import java.nio.charset.StandardCharsets;
@@ -73,6 +75,11 @@ public class Besu extends Web3Provider {
   }
 
   @Override
+  protected QbftRpc qbftRpc(final Web3ProviderConfiguration config) {
+    return new BesuQbftRpcClient(jsonRpcClient);
+  }
+
+  @Override
   public String getLogs() {
     return DockerLogs.format("Besu", container);
   }
@@ -99,7 +106,7 @@ public class Besu extends Web3Provider {
         "--rpc-http-enabled",
         "--rpc-ws-enabled",
         "--rpc-http-apis",
-        "ADMIN,ETH,NET,WEB3,EEA,PRIV");
+        "ADMIN,ETH,NET,WEB3,EEA,PRIV,QBFT");
   }
 
   private void addPeerToPeerHost(

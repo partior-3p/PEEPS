@@ -15,9 +15,11 @@ package tech.pegasys.peeps.signer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.peeps.util.Await.await;
 
+import tech.pegasys.peeps.json.rpc.JsonRpcClient;
 import tech.pegasys.peeps.network.NetworkMember;
 import tech.pegasys.peeps.node.Web3Provider;
 import tech.pegasys.peeps.node.model.EnodeHelpers;
+import tech.pegasys.peeps.node.rpc.BesuQbftRpcClient;
 import tech.pegasys.peeps.signer.rpc.SignerRpc;
 import tech.pegasys.peeps.signer.rpc.SignerRpcClient;
 import tech.pegasys.peeps.signer.rpc.SignerRpcMandatoryResponse;
@@ -52,7 +54,7 @@ public class EthSigner implements NetworkMember {
   private static final String CONTAINER_PASSWORD_FILE = "/etc/ethsigner/password_file.txt";
 
   private final GenericContainer<?> ethSigner;
-  private final SignerRpcClient signerRpc;
+  private final JsonRpcClient jsonRpcClient;
   private final SignerRpc rpc;
   private final Web3Provider downstream;
 
@@ -74,7 +76,9 @@ public class EthSigner implements NetworkMember {
     this.ethSigner =
         container.withCommand(commandLineOptions.toArray(new String[0])).waitingFor(liveliness());
 
-    this.signerRpc = new SignerRpcClient(config.getVertx(), DOWNSTREAM_TIMEOUT, dockerLogs());
+    jsonRpcClient = new JsonRpcClient(config.getVertx(), DOWNSTREAM_TIMEOUT, LOG, dockerLogs());
+    final BesuQbftRpcClient qbftRpc = new BesuQbftRpcClient(jsonRpcClient);
+    final SignerRpcClient signerRpc = new SignerRpcClient(jsonRpcClient, qbftRpc);
     this.rpc = new SignerRpcMandatoryResponse(signerRpc);
   }
 
@@ -83,7 +87,7 @@ public class EthSigner implements NetworkMember {
     try {
       ethSigner.start();
 
-      signerRpc.bind(
+      jsonRpcClient.bind(
           ethSigner.getContainerId(),
           ethSigner.getContainerIpAddress(),
           ethSigner.getMappedPort(CONTAINER_HTTP_RPC_PORT));
@@ -104,8 +108,8 @@ public class EthSigner implements NetworkMember {
     if (ethSigner != null) {
       ethSigner.stop();
     }
-    if (signerRpc != null) {
-      signerRpc.close();
+    if (jsonRpcClient != null) {
+      jsonRpcClient.close();
     }
   }
 
@@ -116,7 +120,7 @@ public class EthSigner implements NetworkMember {
   public void awaitConnectivityToDownstream() {
     await(
         () ->
-            assertThat(EnodeHelpers.extractPubKeyFromEnode(signerRpc.nodeInfo().getEnode()))
+            assertThat(EnodeHelpers.extractPubKeyFromEnode(rpc.nodeInfo().getEnode()))
                 .isEqualTo(EnodeHelpers.extractPubKeyFromEnode(downstream.getEnodeId())),
         "Failed to connect to node: %s",
         downstream.getEnodeId());

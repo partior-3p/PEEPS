@@ -86,7 +86,8 @@ public abstract class RpcClient {
       return performPost(relativeUri, requestPojo, clazz);
 
     } catch (final RuntimeException e) {
-      dockerLogs.stream().forEach(dockerLog -> log.error(dockerLog.get()));
+      dockerLogs.forEach(dockerLog -> log.error(dockerLog.get()));
+      log.error("Post request failed", e);
       throw e;
     }
   }
@@ -110,7 +111,12 @@ public abstract class RpcClient {
                           relativeUri,
                           json,
                           body);
-                      future.complete(Json.decode(body, clazz));
+                      try {
+                        future.complete(Json.decode(body, clazz));
+                      } catch (Exception e) {
+                        future.completeExceptionally(
+                            new IllegalStateException("Failed decoding json rpc response", e));
+                      }
                     });
               } else {
                 final String errorMessage =

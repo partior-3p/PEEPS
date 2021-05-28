@@ -12,32 +12,25 @@
  */
 package tech.pegasys.peeps.signer.rpc;
 
+import tech.pegasys.peeps.json.rpc.JsonRpcClient;
 import tech.pegasys.peeps.node.model.Hash;
 import tech.pegasys.peeps.node.rpc.NodeRpcClient;
+import tech.pegasys.peeps.node.rpc.QbftRpc;
 import tech.pegasys.peeps.privacy.model.PrivacyAddreess;
 import tech.pegasys.peeps.signer.rpc.eea.SendPrivacyTransactionRequest;
 import tech.pegasys.peeps.signer.rpc.eea.SendPrivacyTransactionResponse;
 import tech.pegasys.peeps.signer.rpc.eth.SendTransactionRequest;
 import tech.pegasys.peeps.signer.rpc.eth.SendTransactionResponse;
 
-import java.time.Duration;
-import java.util.Set;
-import java.util.function.Supplier;
-
-import io.vertx.core.Vertx;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.eth.Address;
 import org.apache.tuweni.units.ethereum.Wei;
 
 public class SignerRpcClient extends NodeRpcClient {
 
-  private static final Logger LOG = LogManager.getLogger();
   private static final Address NO_RECIPIENT = null;
 
-  public SignerRpcClient(
-      final Vertx vertx, final Duration timeout, final Set<Supplier<String>> dockerLogs) {
-    super(vertx, timeout, LOG, dockerLogs);
+  public SignerRpcClient(final JsonRpcClient jsonRpcClient, final QbftRpc qbftRpc) {
+    super(jsonRpcClient, qbftRpc);
   }
 
   public Hash deployContractToPrivacyGroup(
@@ -45,7 +38,8 @@ public class SignerRpcClient extends NodeRpcClient {
       final String binary,
       final PrivacyAddreess privateSender,
       final PrivacyAddreess... privateRecipients) {
-    return post(
+    return rpcClient
+        .post(
             "eea_sendTransaction",
             SendPrivacyTransactionResponse.class,
             new SendPrivacyTransactionRequest(
@@ -54,7 +48,8 @@ public class SignerRpcClient extends NodeRpcClient {
   }
 
   public Hash transfer(final Address sender, final Address receiver, final Wei amount) {
-    return post(
+    return rpcClient
+        .post(
             "eth_sendTransaction",
             SendTransactionResponse.class,
             new SendTransactionRequest(sender, receiver, null, amount))

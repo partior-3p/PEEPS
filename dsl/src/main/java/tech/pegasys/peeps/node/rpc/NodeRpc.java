@@ -23,7 +23,7 @@ import java.util.Set;
 import org.apache.tuweni.eth.Address;
 import org.apache.tuweni.units.ethereum.Wei;
 
-public interface NodeRpc {
+public interface NodeRpc extends QbftRpc {
 
   Set<String> getConnectedPeerIds();
 
