@@ -1,5 +1,9 @@
 ---
 version: 2.1
+
+orbs:
+  slack: circleci/slack@3.4.2
+
 executors:
   executor_med:  # 2cpu, 4G ram
     docker:
@@ -52,6 +56,13 @@ commands:
       - store_test_results:
           path: build/test-results
 
+  notify:
+    description: "Notify Slack"
+    steps:
+      - slack/status:
+          fail_only: true
+          only_for_branches: 'master'
+
 jobs:
   build:
     executor: executor_machine
@@ -74,6 +85,7 @@ jobs:
           no_output_timeout: 20m
           command: |
             ./gradlew --no-daemon --parallel test
+      - notify
       - capture_test_results
       - save_cache:
           name: Caching gradle dependencies
@@ -107,6 +119,7 @@ jobs:
           no_output_timeout: 20m
           command: |
             ./gradlew --no-daemon --parallel endToEndTest
+      - notify
       - capture_test_results
       - store_artifacts:
           path: end-to-end-tests/build/reports
