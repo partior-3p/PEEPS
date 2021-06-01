@@ -17,8 +17,6 @@ import org.testcontainers.containers.GenericContainer;
 public class Orion extends PrivateTransactionManager {
 
   private static final String CONTAINER_WORKING_DIRECTORY_PREFIX = "/opt/orion/";
-
-  // TODO there should be the 'latest' version
   private static final String ORION_IMAGE = "consensys/quorum-orion:develop";
 
   public Orion(final PrivateTransactionManagerConfiguration config) {

@@ -46,7 +46,6 @@ public class EthSigner implements NetworkMember {
   private static final String AM_I_ALIVE_ENDPOINT = "/upcheck";
   private static final int ALIVE_STATUS_CODE = 200;
 
-  //  private static final String ETH_SIGNER_IMAGE = "pegasyseng/ethsigner:latest";
   private static final String ETH_SIGNER_IMAGE = "consensys/quorum-ethsigner:develop";
   private static final int CONTAINER_HTTP_RPC_PORT = 8545;
   private static final Duration DOWNSTREAM_TIMEOUT = Duration.ofSeconds(10);

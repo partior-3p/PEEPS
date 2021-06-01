@@ -22,7 +22,7 @@ import org.testcontainers.images.PullPolicy;
 public class Tessera extends PrivateTransactionManager {
   private static final String CONTAINER_WORKING_DIRECTORY_PREFIX = "/opt/tessera/";
 
-  private static final String TESSERA_IMAGE = "quorumengineering/tessera:latest";
+  private static final String TESSERA_IMAGE = "quorumengineering/tessera:develop";
 
   private static final int CONTAINER_PEER_TO_PEER_PORT = 8080;
   private static final int CONTAINER_HTTP_RPC_PORT = 8888;
