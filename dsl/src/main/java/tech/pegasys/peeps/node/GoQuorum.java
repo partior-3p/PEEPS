@@ -19,6 +19,7 @@ import tech.pegasys.peeps.util.DockerLogs;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -29,6 +30,7 @@ import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.AbstractWaitStrategy;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.images.PullPolicy;
 import org.testcontainers.utility.MountableFile;
 
 public class GoQuorum extends Web3Provider {
@@ -52,7 +54,10 @@ public class GoQuorum extends Web3Provider {
       final Web3ProviderConfiguration config,
       final int blockPeriodSeconds,
       final int requestTimeoutSeconds) {
-    super(config, new GenericContainer<>(IMAGE_NAME));
+    super(
+        config,
+        new GenericContainer<>(IMAGE_NAME)
+            .withImagePullPolicy(PullPolicy.ageBased(Duration.ofHours(1))));
 
     final List<String> commandLineOptions =
         standardCommandLineOptions(blockPeriodSeconds, requestTimeoutSeconds);

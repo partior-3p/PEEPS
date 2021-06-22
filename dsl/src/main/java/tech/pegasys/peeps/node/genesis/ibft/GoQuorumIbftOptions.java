@@ -12,6 +12,10 @@
  */
 package tech.pegasys.peeps.node.genesis.ibft;
 
+import static tech.pegasys.peeps.node.genesis.bft.BftConfig.DEFAULT_BLOCK_PERIOD_SECONDS;
+import static tech.pegasys.peeps.node.genesis.bft.BftConfig.DEFAULT_EPOCH_LENGTH;
+import static tech.pegasys.peeps.node.genesis.bft.BftConfig.DEFAULT_REQUEST_TIMEOUT_SECONDS;
+
 import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
@@ -26,11 +30,23 @@ public class GoQuorumIbftOptions {
   private final int policy;
 
   public GoQuorumIbftOptions() {
-    this(2, 30000, 10, Optional.empty(), Optional.empty(), 0);
+    this(
+        DEFAULT_BLOCK_PERIOD_SECONDS,
+        DEFAULT_EPOCH_LENGTH,
+        DEFAULT_REQUEST_TIMEOUT_SECONDS,
+        Optional.empty(),
+        Optional.empty(),
+        0);
   }
 
   public static GoQuorumIbftOptions createQbft() {
-    return new GoQuorumIbftOptions(2, 30000, 10, Optional.of(0), Optional.of(0), 0);
+    return new GoQuorumIbftOptions(
+        DEFAULT_BLOCK_PERIOD_SECONDS,
+        DEFAULT_EPOCH_LENGTH,
+        DEFAULT_REQUEST_TIMEOUT_SECONDS,
+        Optional.of(0),
+        Optional.of(0),
+        0);
   }
 
   public GoQuorumIbftOptions(

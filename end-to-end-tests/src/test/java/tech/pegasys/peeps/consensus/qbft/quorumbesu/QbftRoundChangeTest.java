@@ -19,6 +19,7 @@ import tech.pegasys.peeps.network.ConsensusMechanism;
 import tech.pegasys.peeps.network.Network;
 import tech.pegasys.peeps.node.Web3Provider;
 import tech.pegasys.peeps.node.Web3ProviderType;
+import tech.pegasys.peeps.node.genesis.bft.BftConfig;
 import tech.pegasys.peeps.util.Await;
 
 import java.util.List;
@@ -54,38 +55,24 @@ public class QbftRoundChangeTest extends NetworkTest {
     besuNode2.awaitConnectivity(runningNodes);
     quorumNode2.awaitConnectivity(runningNodes);
 
-    final long stalledBlockNumber = quorumNode2.rpc().getBlockNumber();
-
-    Await.await(
-        () ->
-            assertThat(
-                    findRoundChangeLogs(
-                        quorumNode2, "Start new qibft round", "old_seq=", stalledBlockNumber))
-                .isEqualTo(1),
-        "Quorum node not in roundchange");
-    Await.await(
-        () ->
-            assertThat(
-                    findRoundChangeLogs(
-                        besuNode2, "Round has expired", "Sequence=", stalledBlockNumber + 1))
-                .isEqualTo(1),
-        "Besu node not in roundchange");
+    runningNodes.forEach(this::verifyChainStalled);
 
     // network should function and start producing blocks after starting the two stopped nodes
+    final long stalledBlockNumber = quorumNode2.rpc().getBlockNumber();
     besuNode1.start();
     quorumNode1.start();
     verify().consensusOnBlockNumberIsAtLeast(stalledBlockNumber + 1);
   }
 
-  private long findRoundChangeLogs(
-      final Web3Provider web3Provider,
-      final String roundChangeMsg,
-      final String sequenceMsg,
-      final long blockNumber) {
-    return web3Provider
-        .getLogs()
-        .lines()
-        .filter(l -> l.contains(roundChangeMsg) && l.contains(sequenceMsg + blockNumber))
-        .count();
+  private void verifyChainStalled(final Web3Provider web3Provider) {
+    Await.await(
+        () -> {
+          final long startBlockNumber = web3Provider.rpc().getBlockNumber();
+          Thread.sleep(BftConfig.DEFAULT_BLOCK_PERIOD_SECONDS * 2);
+          final long currentBlockNumber = web3Provider.rpc().getBlockNumber();
+          assertThat(currentBlockNumber).isEqualTo(startBlockNumber);
+        },
+        "Node %s has not stalled",
+        web3Provider.getNodeId());
   }
 }

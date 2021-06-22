@@ -12,6 +12,10 @@
  */
 package tech.pegasys.peeps.node.genesis.ibft;
 
+import static tech.pegasys.peeps.node.genesis.bft.BftConfig.DEFAULT_BLOCK_PERIOD_SECONDS;
+import static tech.pegasys.peeps.node.genesis.bft.BftConfig.DEFAULT_EPOCH_LENGTH;
+import static tech.pegasys.peeps.node.genesis.bft.BftConfig.DEFAULT_REQUEST_TIMEOUT_SECONDS;
+
 import com.fasterxml.jackson.annotation.JsonGetter;
 
 public class BesuLegacyIbftOptions {
@@ -21,7 +25,7 @@ public class BesuLegacyIbftOptions {
   private final int requestTimeoutSeconds;
 
   public BesuLegacyIbftOptions() {
-    this(2, 30000, 10);
+    this(DEFAULT_BLOCK_PERIOD_SECONDS, DEFAULT_EPOCH_LENGTH, DEFAULT_REQUEST_TIMEOUT_SECONDS);
   }
 
   public BesuLegacyIbftOptions(

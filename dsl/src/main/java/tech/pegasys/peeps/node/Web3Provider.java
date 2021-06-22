@@ -88,6 +88,11 @@ public abstract class Web3Provider implements NetworkMember {
     try {
       container.start();
 
+      LOG.info(
+          "Started container {} with imageId {}",
+          container.getDockerImageName(),
+          container.getContainerInfo().getImageId());
+
       container.followOutput(
           outputFrame -> LOG.info("{}: {}", identity, outputFrame.getUtf8String().stripTrailing()));
 
