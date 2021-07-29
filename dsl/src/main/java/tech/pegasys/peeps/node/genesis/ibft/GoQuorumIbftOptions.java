@@ -79,7 +79,7 @@ public class GoQuorumIbftOptions {
     return requestTimeoutSeconds;
   }
 
-  @JsonGetter("qbftblock")
+  @JsonGetter("testQBFTBlock")
   public Optional<Integer> getQbftBlock() {
     return qbftBlock;
   }
