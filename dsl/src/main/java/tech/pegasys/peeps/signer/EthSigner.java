@@ -38,6 +38,7 @@ import org.testcontainers.containers.ContainerLaunchException;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.images.PullPolicy;
 
 public class EthSigner implements NetworkMember {
 
@@ -59,7 +60,9 @@ public class EthSigner implements NetworkMember {
 
   public EthSigner(final EthSignerConfiguration config) {
 
-    final GenericContainer<?> container = new GenericContainer<>(ETH_SIGNER_IMAGE);
+    final GenericContainer<?> container =
+        new GenericContainer<>(ETH_SIGNER_IMAGE)
+            .withImagePullPolicy(PullPolicy.ageBased(Duration.ofHours(1)));
     final List<String> commandLineOptions = standardCommandLineOptions();
 
     addChainId(config, commandLineOptions);
@@ -85,6 +88,14 @@ public class EthSigner implements NetworkMember {
   public void start() {
     try {
       ethSigner.start();
+
+      LOG.info(
+          "Started EthSigner container {} with imageId {}",
+          ethSigner.getDockerImageName(),
+          ethSigner.getContainerInfo().getImageId());
+
+      ethSigner.followOutput(
+          outputFrame -> LOG.info("{}", outputFrame.getUtf8String().stripTrailing()));
 
       jsonRpcClient.bind(
           ethSigner.getContainerId(),
