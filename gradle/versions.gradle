@@ -13,26 +13,26 @@
 
 dependencyManagement {
   dependencies {
-  	// Apache Codec (Hex-Base64)
+    // Apache Codec (Hex-Base64)
     dependency 'commons-codec:commons-codec:1.5'
-  
-  	// Apache Tuwnei
-  	dependency 'org.apache.tuweni:tuweni-bytes:0.10.0'
-  	dependency 'org.apache.tuweni:tuweni-bytes:0.10.0'
+
+    // Apache Tuwnei
+    dependency 'org.apache.tuweni:tuweni-bytes:0.10.0'
+    dependency 'org.apache.tuweni:tuweni-bytes:0.10.0'
     dependency 'org.apache.tuweni:tuweni-crypto:0.10.0'
     dependency 'org.apache.tuweni:tuweni-eth:0.10.0'
     dependency 'org.apache.tuweni:tuweni-units:0.10.0'
     dependency 'org.apache.tuweni:tuweni-rlp:0.10.0'
-        
+
     // AssertJ
     dependency 'org.assertj:assertj-core:3.14.0'
 
     // Awaitility
     dependency 'org.awaitility:awaitility:4.0.2'
 
-	// BouncyCastle
+    // BouncyCastle
     dependency 'org.bouncycastle:bcprov-jdk15on:1.64'
-    
+
     // Error prone
     dependency 'com.google.errorprone:error_prone_check_api:2.3.4'
     dependency 'com.google.errorprone:error_prone_core:2.3.4'
@@ -48,13 +48,15 @@ dependencyManagement {
     dependency 'org.junit.jupiter:junit-jupiter-api:5.7.1'
 
     // Log4j
-    dependency 'org.apache.logging.log4j:log4j-api:2.17.0'
-    dependency 'org.apache.logging.log4j:log4j-core:2.17.0'
-    dependency 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
+    dependencySet(group: 'org.apache.logging.log4j', version: '2.17.1') {
+      entry 'log4j-api'
+      entry 'log4j-core'
+      entry 'log4j-slf4j-impl'
+    }
 
-	// Mockito
-	dependency 'org.mockito:mockito-core:3.2.4'
-	dependency 'org.mockito:mockito-junit-jupiter:3.2.4'	
+    // Mockito
+    dependency 'org.mockito:mockito-core:3.2.4'
+    dependency 'org.mockito:mockito-junit-jupiter:3.2.4'
 
     // TestContainers (Docker client wrapper)
     dependency "org.testcontainers:testcontainers:1.15.2"
