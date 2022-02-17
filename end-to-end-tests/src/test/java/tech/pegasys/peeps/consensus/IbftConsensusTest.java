@@ -38,7 +38,7 @@ public class IbftConsensusTest extends NetworkTest {
 
   private Web3Provider alphaNode;
   private final SignerConfiguration signer = FixedSignerConfigs.ALPHA;
-  private static final LocalDate TEST_DISABLE_EXPIRY = LocalDate.of(2022, 2, 15);
+  private static final LocalDate TEST_DISABLE_EXPIRY = LocalDate.of(2022, 3, 31);
 
   @BeforeAll
   public static void disabledUntilGoQuorumComplete() {
