@@ -291,8 +291,9 @@ public class Network implements Closeable {
    * includes a block hash), or exceptions when wait time has been exceeded.
    *
    * @param transaction the hash of the transaction who's receipt is being checked.
+   * @param timeout how long to wait for the transaction hash
    */
-  public void awaitConsensusOnTransactionReceipt(final Hash transaction) {
+  public void awaitConsensusOnTransactionReceipt(final Hash transaction, final int timeout) {
     checkState(nodes.size() > 1, "There must be two or more nodes to be able to wait on consensus");
 
     await(
@@ -312,6 +313,7 @@ public class Network implements Closeable {
             assertThat(receipt).usingRecursiveComparison().isEqualTo(firstReceipt);
           }
         },
+        timeout,
         "Consensus was not reached in time for Transaction Receipt with hash: %s",
         transaction);
   }

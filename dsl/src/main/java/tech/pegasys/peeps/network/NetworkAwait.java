@@ -12,6 +12,8 @@
  */
 package tech.pegasys.peeps.network;
 
+import static tech.pegasys.peeps.util.Await.DEFAULT_TIMEOUT_IN_SECONDS;
+
 import tech.pegasys.peeps.node.model.Hash;
 
 public class NetworkAwait {
@@ -23,6 +25,10 @@ public class NetworkAwait {
   }
 
   public void consensusOnTransactionReceipt(final Hash receipt) {
-    network.awaitConsensusOnTransactionReceipt(receipt);
+    network.awaitConsensusOnTransactionReceipt(receipt, DEFAULT_TIMEOUT_IN_SECONDS);
+  }
+
+  public void consensusOnTransactionReceipt(final Hash receipt, final int timeout) {
+    network.awaitConsensusOnTransactionReceipt(receipt, timeout);
   }
 }
