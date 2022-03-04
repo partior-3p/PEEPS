@@ -24,28 +24,15 @@ import tech.pegasys.peeps.node.verification.ValueReceived;
 import tech.pegasys.peeps.node.verification.ValueSent;
 import tech.pegasys.peeps.signer.SignerConfiguration;
 
-import java.time.LocalDate;
-import java.time.ZoneId;
-
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.eth.Address;
 import org.apache.tuweni.units.ethereum.Wei;
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class IbftConsensusTest extends NetworkTest {
 
   private Web3Provider alphaNode;
   private final SignerConfiguration signer = FixedSignerConfigs.ALPHA;
-  private static final LocalDate TEST_DISABLE_EXPIRY = LocalDate.of(2022, 3, 31);
-
-  @BeforeAll
-  public static void disabledUntilGoQuorumComplete() {
-    Assumptions.assumeTrue(
-        LocalDate.now(ZoneId.of("UTC")).isAfter(TEST_DISABLE_EXPIRY),
-        "Test temporarily disabled until " + TEST_DISABLE_EXPIRY + " for GoQuorum fix");
-  }
 
   @Override
   protected void setUpNetwork(final Network network) {
