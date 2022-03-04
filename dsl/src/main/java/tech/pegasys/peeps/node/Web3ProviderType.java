@@ -12,7 +12,15 @@
  */
 package tech.pegasys.peeps.node;
 
+import java.util.List;
+import java.util.Random;
+
 public enum Web3ProviderType {
   BESU,
-  GOQUORUM
+  GOQUORUM;
+
+  public static Web3ProviderType random() {
+    var typeList = List.of(values());
+    return typeList.get(new Random().nextInt(typeList.size()));
+  }
 }

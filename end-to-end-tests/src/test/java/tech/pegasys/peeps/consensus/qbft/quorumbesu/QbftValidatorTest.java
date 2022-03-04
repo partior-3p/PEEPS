@@ -12,9 +12,8 @@
  */
 package tech.pegasys.peeps.consensus.qbft.quorumbesu;
 
-import static tech.pegasys.peeps.network.ConsensusMechanism.QBFT;
-
 import tech.pegasys.peeps.NetworkTest;
+import tech.pegasys.peeps.network.ConsensusMechanism;
 import tech.pegasys.peeps.network.Network;
 import tech.pegasys.peeps.node.Web3Provider;
 import tech.pegasys.peeps.node.Web3ProviderType;
@@ -27,36 +26,51 @@ import org.junit.jupiter.api.Test;
 
 public class QbftValidatorTest extends NetworkTest {
   private Web3Provider quorumNode1;
+  private Web3Provider quorumNode2;
   private Web3Provider besuNode1;
   private Web3Provider besuNode2;
+
+  private Web3Provider additonalNode;
 
   @Override
   protected void setUpNetwork(final Network network) {
     besuNode1 = network.addNode("besu1", KeyPair.random());
     besuNode2 = network.addNode("besu2", KeyPair.random());
     quorumNode1 = network.addNode("quorum1", KeyPair.random(), Web3ProviderType.GOQUORUM);
-    network.set(QBFT, besuNode1, quorumNode1); // exclude besuNode2 from genesis extraData
+    quorumNode2 = network.addNode("quorum2", KeyPair.random(), Web3ProviderType.GOQUORUM);
+    network.set(ConsensusMechanism.QBFT, besuNode1, besuNode2, quorumNode1, quorumNode2);
+
+    additonalNode = network.addNode("additionalNode", KeyPair.random(), Web3ProviderType.random());
   }
 
   @Test
   public void validatorCanBeAdded() {
     verify().consensusOnBlockNumberIsAtLeast(1);
 
-    besuNode1.rpc().qbftProposeValidatorVote(besuNode2.address(), VoteType.ADD);
-    quorumNode1.rpc().qbftProposeValidatorVote(besuNode2.address(), VoteType.ADD);
+    besuNode1.rpc().qbftProposeValidatorVote(additonalNode.address(), VoteType.ADD);
+    besuNode2.rpc().qbftProposeValidatorVote(additonalNode.address(), VoteType.ADD);
+    quorumNode1.rpc().qbftProposeValidatorVote(additonalNode.address(), VoteType.ADD);
 
     verify()
         .consensusOnValidators(
-            List.of(quorumNode1.address(), besuNode1.address(), besuNode2.address()));
+            List.of(
+                besuNode1.address(),
+                besuNode2.address(),
+                quorumNode1.address(),
+                quorumNode2.address(),
+                additonalNode.address()));
   }
 
   @Test
   void validatorCanBeRemoved() {
     verify().consensusOnBlockNumberIsAtLeast(1);
 
-    besuNode1.rpc().qbftProposeValidatorVote(besuNode1.address(), VoteType.REMOVE);
-    quorumNode1.rpc().qbftProposeValidatorVote(besuNode1.address(), VoteType.REMOVE);
+    besuNode1.rpc().qbftProposeValidatorVote(besuNode2.address(), VoteType.REMOVE);
+    quorumNode1.rpc().qbftProposeValidatorVote(besuNode2.address(), VoteType.REMOVE);
+    quorumNode2.rpc().qbftProposeValidatorVote(besuNode2.address(), VoteType.REMOVE);
 
-    verify().consensusOnValidators(List.of(quorumNode1.address()));
+    verify()
+        .consensusOnValidators(
+            List.of(besuNode1.address(), besuNode2.address(), quorumNode1.address()));
   }
 }
