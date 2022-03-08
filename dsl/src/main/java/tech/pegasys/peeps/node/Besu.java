@@ -31,7 +31,6 @@ import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.images.PullPolicy;
 import org.testcontainers.utility.MountableFile;
 
 public class Besu extends Web3Provider {
@@ -54,7 +53,7 @@ public class Besu extends Web3Provider {
     super(
         config,
         new GenericContainer<>(BESU_IMAGE)
-            .withImagePullPolicy(PullPolicy.ageBased(Duration.ofHours(1))));
+            .withImagePullPolicy(new LocalAgeBasedPullPolicy(Duration.ofHours(1))));
     final List<String> commandLineOptions = standardCommandLineOptions();
 
     addPeerToPeerHost(config, commandLineOptions);
