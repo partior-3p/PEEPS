@@ -17,19 +17,19 @@ import tech.pegasys.peeps.signer.model.SignerPasswordFileResource;
 import tech.pegasys.peeps.signer.model.WalletFileResources;
 
 import org.apache.tuweni.eth.Address;
+import org.web3j.crypto.Credentials;
 
 public class SignerConfiguration {
-
-  private final Address address;
   private final String name;
   private final WalletFileResources resources;
+  private final Credentials credentials;
 
   public SignerConfiguration(
       final String name,
       final String keyResource,
       final String passwordResource,
-      final Address address) {
-    this.address = address;
+      final Credentials credentials) {
+    this.credentials = credentials;
 
     this.resources =
         new WalletFileResources() {
@@ -52,11 +52,15 @@ public class SignerConfiguration {
     return name;
   }
 
-  public Address address() {
-    return address;
-  }
-
   public WalletFileResources resources() {
     return resources;
+  }
+
+  public Credentials getCredentials() {
+    return credentials;
+  }
+
+  public Address address() {
+    return Address.fromHexString(credentials.getAddress());
   }
 }

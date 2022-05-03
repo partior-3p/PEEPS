@@ -47,6 +47,7 @@ import tech.pegasys.peeps.node.genesis.ibft2.GenesisConfigIbft2;
 import tech.pegasys.peeps.node.genesis.ibft2.GenesisExtraDataIbft2;
 import tech.pegasys.peeps.node.genesis.qbft.GenesisConfigQbft;
 import tech.pegasys.peeps.node.genesis.qbft.GenesisExtraDataQbft;
+import tech.pegasys.peeps.node.genesis.qbft.GoQuorumConfigQbft;
 import tech.pegasys.peeps.node.model.GenesisAddress;
 import tech.pegasys.peeps.node.model.Hash;
 import tech.pegasys.peeps.node.model.PrivacyTransactionReceipt;
@@ -74,6 +75,7 @@ import tech.pegasys.peeps.signer.rpc.SignerRpcSenderKnown;
 import tech.pegasys.peeps.util.PathGenerator;
 
 import java.io.Closeable;
+import java.math.BigInteger;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -383,7 +385,7 @@ public class Network implements Closeable {
                         .map(node -> node.rpc().getBlockNumber())
                         .allMatch(block -> block >= blockNumber))
                 .isTrue(),
-        60,
+        120,
         "Failed to achieve consensus on block number being at least %s",
         blockNumber);
   }
@@ -481,6 +483,14 @@ public class Network implements Closeable {
                   }
                   extraData = new GenesisExtraDataQbft(validators);
                   break;
+                case QBFT_TRANSITIONS:
+                  if (e == Web3ProviderType.BESU) {
+                    genesisConfig = new GenesisConfigQbft(chainId, new BftConfig());
+                  } else {
+                    genesisConfig = new GoQuorumConfigQbft(chainId, new BftConfig());
+                  }
+                  extraData = new GenesisExtraDataQbft(validators);
+                  break;
                 case ETH_HASH:
                 default:
                   extraData = null;
@@ -513,5 +523,18 @@ public class Network implements Closeable {
         .distinct()
         .map(PrivateTransactionManager::getPeerNetworkAddress)
         .collect(Collectors.toList());
+  }
+
+  public void setValidatorContractValidatorTransaction(
+      final BigInteger blockNumber, final String contractAddress) {
+    nodes
+        .parallelStream()
+        .forEach(
+            node -> node.setQBFTValidatorSmartContractTransition(blockNumber, contractAddress));
+  }
+
+  public void restart() {
+    everyMember(NetworkMember::stop);
+    everyMember(NetworkMember::start);
   }
 }

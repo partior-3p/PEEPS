@@ -39,7 +39,7 @@ public abstract class NetworkTest {
 
   @TempDir Path configurationDirectory;
 
-  private Network network;
+  public Network network;
   private NetworkAwait await;
   private NetworkVerify verify;
 

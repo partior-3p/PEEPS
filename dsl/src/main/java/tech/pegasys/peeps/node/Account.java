@@ -14,13 +14,13 @@ package tech.pegasys.peeps.node;
 
 import tech.pegasys.peeps.node.genesis.GenesisAccount;
 import tech.pegasys.peeps.node.model.GenesisAddress;
-import tech.pegasys.peeps.util.HexFormatter;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.tuweni.eth.Address;
+import org.web3j.crypto.Credentials;
 
 // TODO split into separate responsibilities - account & the of()
 public enum Account {
@@ -28,30 +28,32 @@ public enum Account {
    * publicKey: "f17f52151ebef6c7334fad080c5704d77216b732"
    * privateKey: "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"
    */
-  ALPHA("f17f52151EbEF6C7334FAD080c5704D77216b732"),
+  ALPHA(
+      "f17f52151EbEF6C7334FAD080c5704D77216b732",
+      "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"),
   /*
    * publicKey: "627306090abab3a6e1400e9345bc60c78a8bef57"
    * privateKey: "c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3"
    */
-  BETA("627306090abaB3A6e1400e9345bC60c78a8BEf57"),
+  BETA(
+      "627306090abaB3A6e1400e9345bC60c78a8BEf57",
+      "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63"),
   /*
    * publicKey: "fe3b557e8fb62b89f4916b721be55ceb828dbd73"
    * privateKey: "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63"
    */
-  GAMMA("fe3b557e8fb62b89f4916b721be55ceb828dbd73");
+  GAMMA(
+      "fe3b557e8fb62b89f4916b721be55ceb828dbd73",
+      "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63");
 
   private static final String DEFAULT_BALANCE = "0xad78ebc5ac6200000";
 
   private final GenesisAddress genesisAddres;
-  private final Address address;
+  private final Credentials credentials;
 
-  Account(final String address) {
+  Account(final String address, final String privateKey) {
     this.genesisAddres = new GenesisAddress(address);
-    this.address = Address.fromHexString(HexFormatter.ensureHexPrefix(address));
-  }
-
-  public Address address() {
-    return address;
+    this.credentials = Credentials.create(privateKey);
   }
 
   public static Map<GenesisAddress, GenesisAccount> of(final Account... accounts) {
@@ -62,5 +64,13 @@ public enum Account {
     }
 
     return Collections.unmodifiableMap(mapped);
+  }
+
+  public Credentials credentials() {
+    return credentials;
+  }
+
+  public Address address() {
+    return Address.fromHexString(credentials.getAddress());
   }
 }

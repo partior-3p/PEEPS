@@ -17,6 +17,7 @@ import tech.pegasys.peeps.node.rpc.QbftRpc;
 import tech.pegasys.peeps.node.rpc.QuorumQbftRpcClient;
 import tech.pegasys.peeps.util.DockerLogs;
 
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -108,6 +109,12 @@ public class GoQuorum extends Web3Provider {
   }
 
   @Override
+  public void setQBFTValidatorSmartContractTransition(
+      final BigInteger blockNumber, final String contractAddress) {
+    throw new RuntimeException("Not implemented yet");
+  }
+
+  @Override
   protected QbftRpc qbftRpc(final Web3ProviderConfiguration config) {
     return new QuorumQbftRpcClient(jsonRpcClient);
   }
@@ -192,11 +199,11 @@ public class GoQuorum extends Web3Provider {
               commandLineOptions.addAll(
                   List.of(
                       "--unlock",
-                      wallet.address().toHexString(),
+                      wallet.getCredentials().getAddress(),
                       "--password",
                       CONTAINER_PASSWORD_FILE));
               commandLineOptions.addAll(
-                  List.of("--miner.etherbase", wallet.address().toHexString()));
+                  List.of("--miner.etherbase", wallet.getCredentials().getAddress()));
             });
   }
 

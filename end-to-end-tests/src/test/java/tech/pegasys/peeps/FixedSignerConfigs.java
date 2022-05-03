@@ -22,12 +22,12 @@ public class FixedSignerConfigs {
           "alpha",
           "signer/account/funded/wallet_a.v3",
           "signer/account/funded/wallet_a.pass",
-          Account.ALPHA.address());
+          Account.ALPHA.credentials());
 
   public static final SignerConfiguration BETA =
       new SignerConfiguration(
           "beta",
           "signer/account/funded/wallet_b.v3",
           "signer/account/funded/wallet_b.pass",
-          Account.BETA.address());
+          Account.BETA.credentials());
 }

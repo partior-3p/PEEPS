@@ -61,9 +61,9 @@ dependencyManagement {
     dependency "org.testcontainers:testcontainers:1.15.2"
 
     // Web3j
-    dependency 'org.web3j:abi:4.5.13'
-    dependency 'org.web3j:core:4.5.13'
-    dependency 'org.web3j:crypto:4.5.13'
+    dependency 'org.web3j:abi:4.9.0'
+    dependency 'org.web3j:core:4.9.0'
+    dependency 'org.web3j:crypto:4.9.0'
 
     // Vertx
     dependency 'io.vertx:vertx-core:3.9.5'

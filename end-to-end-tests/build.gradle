@@ -20,6 +20,7 @@ dependencies {
   testImplementation 'org.apache.tuweni:tuweni-eth'
   testImplementation 'org.apache.tuweni:tuweni-units'
   testImplementation 'commons-codec:commons-codec'
+  testImplementation 'org.web3j:core'
   testImplementation 'org.assertj:assertj-core'
   testImplementation 'org.junit.jupiter:junit-jupiter-api'
   testImplementation 'org.awaitility:awaitility'

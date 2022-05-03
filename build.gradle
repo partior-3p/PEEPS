@@ -12,7 +12,7 @@ plugins {
   id 'com.diffplug.gradle.spotless' version '3.27.0'
   id 'com.jfrog.bintray' version '1.8.4'
   id 'com.github.ben-manes.versions' version '0.21.0'
-  id 'com.github.hierynomus.license' version '0.15.0'
+  id 'com.github.hierynomus.license' version '0.16.1'
   id 'io.spring.dependency-management' version '1.0.7.RELEASE'
   id 'net.ltgt.errorprone' version '1.1.1'
   id 'net.researchgate.release' version '2.7.0'
@@ -86,7 +86,7 @@ allprojects {
       // This path needs to be relative to each project
       target fileTree('.') {
         include '**/*.java'
-        exclude '**/.gradle/**'
+        exclude '**/.gradle/**', '**/build/generated/sources/web3j/**'
       }
       removeUnusedImports()
       googleJavaFormat('1.7')

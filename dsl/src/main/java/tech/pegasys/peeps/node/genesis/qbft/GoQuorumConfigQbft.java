@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 ConsenSys AG.
+ * Copyright 2022 ConsenSys AG.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -14,16 +14,18 @@ package tech.pegasys.peeps.node.genesis.qbft;
 
 import tech.pegasys.peeps.node.genesis.GenesisConfig;
 import tech.pegasys.peeps.node.genesis.bft.BftConfig;
-import tech.pegasys.peeps.node.genesis.transitions.BesuTransitions;
+import tech.pegasys.peeps.node.genesis.transitions.Transition;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 
-public class GenesisConfigQbft extends GenesisConfig {
-
+public class GoQuorumConfigQbft extends GenesisConfig {
   private final BftConfig consensusConfig;
-  public BesuTransitions transitions = new BesuTransitions();
+  private final List<Transition> transitions = new ArrayList<>();
 
-  public GenesisConfigQbft(final long chainId, final BftConfig consensusConfig) {
+  public GoQuorumConfigQbft(final long chainId, final BftConfig consensusConfig) {
     super(chainId);
     this.consensusConfig = consensusConfig;
   }
@@ -34,7 +36,7 @@ public class GenesisConfigQbft extends GenesisConfig {
   }
 
   @JsonGetter("transitions")
-  public BesuTransitions getTransitions() {
+  public List<Transition> getTransitions() {
     return transitions;
   }
 }

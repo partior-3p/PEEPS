@@ -12,6 +12,7 @@
  */
 package tech.pegasys.peeps.consensus.qbft.quorumbesu;
 
+import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import tech.pegasys.peeps.NetworkTest;
@@ -22,6 +23,7 @@ import tech.pegasys.peeps.node.Web3ProviderType;
 import tech.pegasys.peeps.node.genesis.bft.BftConfig;
 import tech.pegasys.peeps.util.Await;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
@@ -68,7 +70,7 @@ public class QbftRoundChangeTest extends NetworkTest {
     Await.await(
         () -> {
           final long startBlockNumber = web3Provider.rpc().getBlockNumber();
-          Thread.sleep(BftConfig.DEFAULT_BLOCK_PERIOD_SECONDS * 2);
+          Thread.sleep(Duration.of(BftConfig.DEFAULT_BLOCK_PERIOD_SECONDS * 2, SECONDS).toMillis());
           final long currentBlockNumber = web3Provider.rpc().getBlockNumber();
           assertThat(currentBlockNumber).isEqualTo(startBlockNumber);
         },

@@ -86,10 +86,12 @@ downloadLicenses {
           ],
           (bsd3Clause): [
                   'BSD 3-Clause',
+                  'BSD-3-Clause',
                   'BSD Licence 3',
                   'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)',
                   license('BSD 3-clause', 'http://opensource.org/licenses/BSD-3-Clause'),
-                  license('BSD 3-Clause', 'http://www.scala-lang.org/license.html')
+                  license('BSD 3-Clause', 'http://www.scala-lang.org/license.html'),
+                  license('BSD-3-Clause', 'http://asm.ow2.org/license.html')
           ],
           (mpl): [
                   'MPL',
@@ -133,14 +135,14 @@ downloadLicenses {
           (group('org.checkerframework')): mit,
           /// Explicilitly declare Apache 2.0 license for javassist
           (group('org.javassist')): apache,
-          (group('javax.ws.rs')): cddl1_1,          
+          (group('javax.ws.rs')): cddl1_1,
           (group('org.glassfish.jersey.bundles.repackaged')): apache,
           (group('org.glassfish.jersey.connectors')): apache,
           (group('com.github.jnr')): epl_2,
           (group('javax.mail')): cddl,
           (group('net.jcip')): apache,
           (group('net.java.dev.jna')): apache,
-          (group('javax.xml.bind')): cddl,                             
+          (group('javax.xml.bind')): cddl,
   ]
 }
 
