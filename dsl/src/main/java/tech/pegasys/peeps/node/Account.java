@@ -24,28 +24,20 @@ import org.web3j.crypto.Credentials;
 
 // TODO split into separate responsibilities - account & the of()
 public enum Account {
-  /*
-   * publicKey: "f17f52151ebef6c7334fad080c5704d77216b732"
-   * privateKey: "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"
-   */
   ALPHA(
-      "f17f52151EbEF6C7334FAD080c5704D77216b732",
-      "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"),
-  /*
-   * publicKey: "627306090abab3a6e1400e9345bc60c78a8bef57"
-   * privateKey: "c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3"
-   */
+      "aa0d0e05224a38ab153f905b84707c1c6ee8ba4e",
+      "9b121f26641894cc0195dd14efd8b2a801556b4835fa2bdb11a8d0372c3bea28"),
+
   BETA(
-      "627306090abaB3A6e1400e9345bC60c78a8BEf57",
-      "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63"),
-  /*
-   * publicKey: "fe3b557e8fb62b89f4916b721be55ceb828dbd73"
-   * privateKey: "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63"
-   */
+      "6af824121a351296311edc611f8c5ed0186b1e9b",
+      "57ae2fde66db7dafd354dc37f6c2ec11ffeba6af94dd7e723276a049a60e0232"),
+
   GAMMA(
       "fe3b557e8fb62b89f4916b721be55ceb828dbd73",
-      "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63");
-
+      "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63"),
+  DELTA(
+      "e6bab007421a837500df3124e53557bf85b6b319",
+      "9eb388ff9aaea5dd4646bed06a684d3b33015678c49349dff48c6088c5838f09");
   private static final String DEFAULT_BALANCE = "0xad78ebc5ac6200000";
 
   private final GenesisAddress genesisAddres;

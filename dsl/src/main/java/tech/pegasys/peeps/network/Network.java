@@ -168,7 +168,9 @@ public class Network implements Closeable {
 
     this.genesisConfigurations.putAll(
         createGenesis(
-            consensus, Account.of(Account.ALPHA, Account.BETA, Account.GAMMA), validators));
+            consensus,
+            Account.of(Account.ALPHA, Account.BETA, Account.GAMMA, Account.DELTA),
+            validators));
   }
 
   public Web3Provider addNode(final String nodeIdentifier, final KeyPair nodeKeys) {
@@ -478,15 +480,6 @@ public class Network implements Closeable {
                   if (e == Web3ProviderType.BESU) {
                     genesisConfig = new GenesisConfigQbft(chainId, new BftConfig());
                   } else {
-                    genesisConfig =
-                        new GoQuorumIbftConfig(chainId, GoQuorumIbftOptions.createQbft());
-                  }
-                  extraData = new GenesisExtraDataQbft(validators);
-                  break;
-                case QBFT_TRANSITIONS:
-                  if (e == Web3ProviderType.BESU) {
-                    genesisConfig = new GenesisConfigQbft(chainId, new BftConfig());
-                  } else {
                     genesisConfig = new GoQuorumConfigQbft(chainId, new BftConfig());
                   }
                   extraData = new GenesisExtraDataQbft(validators);
@@ -527,10 +520,8 @@ public class Network implements Closeable {
 
   public void setValidatorContractValidatorTransaction(
       final BigInteger blockNumber, final String contractAddress) {
-    nodes
-        .parallelStream()
-        .forEach(
-            node -> node.setQBFTValidatorSmartContractTransition(blockNumber, contractAddress));
+    nodes.forEach(
+        node -> node.setQBFTValidatorSmartContractTransition(blockNumber, contractAddress));
   }
 
   public void restart() {

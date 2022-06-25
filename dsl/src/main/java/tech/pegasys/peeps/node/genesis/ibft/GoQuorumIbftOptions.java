@@ -39,16 +39,6 @@ public class GoQuorumIbftOptions {
         0);
   }
 
-  public static GoQuorumIbftOptions createQbft() {
-    return new GoQuorumIbftOptions(
-        DEFAULT_BLOCK_PERIOD_SECONDS,
-        DEFAULT_EPOCH_LENGTH,
-        DEFAULT_REQUEST_TIMEOUT_SECONDS,
-        Optional.of(0),
-        Optional.of(0),
-        0);
-  }
-
   public GoQuorumIbftOptions(
       final int blockPeriodSeconds,
       final int epochLength,

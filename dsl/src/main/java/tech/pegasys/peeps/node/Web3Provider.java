@@ -31,6 +31,7 @@ import tech.pegasys.peeps.signer.rpc.SignerRpcClient;
 import tech.pegasys.peeps.signer.rpc.SignerRpcMandatoryResponse;
 import tech.pegasys.peeps.util.AddressConverter;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
@@ -61,6 +62,7 @@ public abstract class Web3Provider implements NetworkMember {
 
   protected final SignerRpcMandatoryResponse signerRpcResponse;
   protected final JsonRpcClient jsonRpcClient;
+  protected final File genesisFile;
 
   protected GenericContainer<?> container;
   private final SubnetAddress ipAddress;
@@ -73,7 +75,7 @@ public abstract class Web3Provider implements NetworkMember {
   private Web3j web3j;
 
   public Web3Provider(final Web3ProviderConfiguration config, final GenericContainer<?> container) {
-    this.container = container;
+    this.container = container.withLabel("name", config.getIdentity());
     this.jsonRpcClient =
         new JsonRpcClient(config.getVertx(), Duration.ofSeconds(10), LOG, dockerLogs());
     final SignerRpcClient signerRpcClient = new SignerRpcClient(jsonRpcClient, qbftRpc(config));
@@ -83,6 +85,7 @@ public abstract class Web3Provider implements NetworkMember {
     this.identity = config.getIdentity();
     this.pubKey = removeAnyHexPrefix(config.getNodeKeys().publicKey().toHexString());
     this.enodeAddress = enodeAddress(config);
+    this.genesisFile = config.getGenesisFile().toFile();
   }
 
   protected abstract QbftRpc qbftRpc(final Web3ProviderConfiguration config);

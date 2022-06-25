@@ -105,7 +105,7 @@ public abstract class RpcClient {
               if (HTTP_OK_STATUSES.contains(result.statusCode())) {
                 result.bodyHandler(
                     body -> {
-                      log.info(
+                      log.trace(
                           "Container {}, relative URL: {}, request: {}, response: {}",
                           containerId,
                           relativeUri,
@@ -115,7 +115,8 @@ public abstract class RpcClient {
                         future.complete(Json.decode(body, clazz));
                       } catch (Exception e) {
                         future.completeExceptionally(
-                            new IllegalStateException("Failed decoding json rpc response", e));
+                            new IllegalStateException(
+                                String.format("Failed decoding json rpc response %s", body), e));
                       }
                     });
               } else {

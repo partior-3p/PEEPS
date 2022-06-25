@@ -31,11 +31,6 @@ public abstract class GenesisConfig {
     return chainId;
   }
 
-  @JsonGetter("chainid")
-  public long getQuorumChainId() {
-    return chainId;
-  }
-
   @JsonGetter("contractSizeLimit")
   public int getContractSizeLimit() {
     return Integer.MAX_VALUE;

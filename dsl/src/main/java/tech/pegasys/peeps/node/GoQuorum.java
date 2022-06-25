@@ -12,17 +12,21 @@
  */
 package tech.pegasys.peeps.node;
 
-import tech.pegasys.peeps.node.genesis.bft.BftConfig;
 import tech.pegasys.peeps.node.rpc.QbftRpc;
 import tech.pegasys.peeps.node.rpc.QuorumQbftRpcClient;
 import tech.pegasys.peeps.util.DockerLogs;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,20 +50,12 @@ public class GoQuorum extends Web3Provider {
   private static final String CONTAINER_PASSWORD_FILE = KEYSTORE_DIR + "password";
 
   public GoQuorum(final Web3ProviderConfiguration config) {
-    this(config, BftConfig.DEFAULT_BLOCK_PERIOD_SECONDS, BftConfig.DEFAULT_REQUEST_TIMEOUT_SECONDS);
-  }
-
-  public GoQuorum(
-      final Web3ProviderConfiguration config,
-      final int blockPeriodSeconds,
-      final int requestTimeoutSeconds) {
     super(
         config,
         new GenericContainer<>(IMAGE_NAME)
             .withImagePullPolicy(new LocalAgeBasedPullPolicy(Duration.ofHours(1))));
 
-    final List<String> commandLineOptions =
-        standardCommandLineOptions(blockPeriodSeconds, requestTimeoutSeconds);
+    final List<String> commandLineOptions = standardCommandLineOptions();
     addCorsOrigins(config, commandLineOptions);
     addContainerNetwork(config, container);
     addContainerIpAddress(ipAddress(), container);
@@ -86,14 +82,16 @@ public class GoQuorum extends Web3Provider {
             + "\" init "
             + CONTAINER_GENESIS_FILE
             + " && "
-            + " echo '##### GoQuorum INITIALISED #####' && ";
+            + " echo '##### GoQuorum INITIALISED #####\n\n' && ";
 
     addNodePrivateKey(config, commandLineOptions, container);
     //    if (config.isPrivacyEnabled()) {
     //      addPrivacy(config, commandLineOptions, dockerContainer);
     //    }
 
-    final String goCommandLine = initCmd + "geth " + String.join(" ", commandLineOptions);
+    final String goCommandLine =
+        initCmd + "exec geth " + String.join(" ", commandLineOptions) + " 2>&1\n";
+
     LOG.info("GoQuorum command line: {}", goCommandLine);
 
     entryPoint.add(goCommandLine);
@@ -111,7 +109,25 @@ public class GoQuorum extends Web3Provider {
   @Override
   public void setQBFTValidatorSmartContractTransition(
       final BigInteger blockNumber, final String contractAddress) {
-    throw new RuntimeException("Not implemented yet");
+
+    try {
+      final ObjectMapper mapper = new ObjectMapper();
+      JsonNode jsonNode = mapper.readTree(genesisFile);
+
+      ArrayNode transitions = ((ArrayNode) jsonNode.path("config").path("transitions"));
+
+      if (transitions.isEmpty()) {
+        ObjectNode transition = mapper.createObjectNode();
+        transition.put("block", blockNumber);
+        transition.put("validatorselectionmode", "contract");
+        transition.put("validatorcontractaddress", contractAddress);
+        transitions.add(transition);
+      }
+
+      mapper.writeValue(genesisFile, jsonNode);
+    } catch (IOException e) {
+      LOG.error(e);
+    }
   }
 
   @Override
@@ -123,14 +139,11 @@ public class GoQuorum extends Web3Provider {
     return Wait.forLogMessage(".*endpoint=0.0.0.0:8545.*", 1);
   }
 
-  private List<String> standardCommandLineOptions(
-      final int blockPeriodSeconds, final int requestTimeoutSeconds) {
-    final int requestTimeMilliseconds = requestTimeoutSeconds * 1000;
+  private List<String> standardCommandLineOptions() {
     return Lists.newArrayList(
-        "--nousb",
         "--allow-insecure-unlock",
         "--verbosity",
-        "5",
+        "3",
         "--syncmode",
         "full",
         "--mine",
@@ -145,10 +158,7 @@ public class GoQuorum extends Web3Provider {
         // TODO: put back when [Upgrade] Go-Ethereum release v1.10.2 #1391 is merged
         // "--log.debug",
         "--nodiscover",
-        "--istanbul.blockperiod",
-        Integer.toString(blockPeriodSeconds),
-        "--istanbul.requesttimeout",
-        Integer.toString(requestTimeMilliseconds));
+        "--rpc.allow-unprotected-txs");
   }
 
   private void addContainerNetwork(
