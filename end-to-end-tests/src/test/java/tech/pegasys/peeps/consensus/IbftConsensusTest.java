@@ -40,8 +40,8 @@ public class IbftConsensusTest extends NetworkTest {
     final KeyPair betaKeyPair = KeyPair.random();
 
     final Web3Provider betaNode =
-        network.addNode("goquorum", betaKeyPair, Web3ProviderType.GOQUORUM);
-    alphaNode = network.addNode("besu", alphaKeyPair);
+        network.addNode("goquorum", betaKeyPair, Web3ProviderType.GOQUORUM, "22.4.4");
+    alphaNode = network.addNode("besu", alphaKeyPair, Web3ProviderType.BESU, "22.4.4");
     network.set(ConsensusMechanism.IBFT, betaNode);
     network.addSigner(signer.name(), signer.resources(), alphaNode);
   }

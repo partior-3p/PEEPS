@@ -46,7 +46,7 @@ public class Besu extends Web3Provider {
   private static final String AM_I_ALIVE_ENDPOINT = "/liveness";
   private static final int ALIVE_STATUS_CODE = 200;
 
-  private static final String BESU_IMAGE = "hyperledger/besu:22.7.RC1-SNAPSHOT-openjdk-11";
+  private static final String IMAGE_NAME = "hyperledger/besu:%s";
   private static final String CONTAINER_GENESIS_FILE = "/etc/besu/genesis.json";
   private static final String CONTAINER_STATIC_NODES_FILE = "/opt/besu/static-nodes.json";
   private static final String CONTAINER_PRIVACY_PUBLIC_KEY_FILE =
@@ -58,7 +58,7 @@ public class Besu extends Web3Provider {
   public Besu(final Web3ProviderConfiguration config) {
     super(
         config,
-        new GenericContainer<>(BESU_IMAGE)
+        new GenericContainer<>(String.format(IMAGE_NAME, config.getImageVersion()))
             .withImagePullPolicy(new LocalAgeBasedPullPolicy(Duration.ofHours(1))));
     final List<String> commandLineOptions = standardCommandLineOptions();
 

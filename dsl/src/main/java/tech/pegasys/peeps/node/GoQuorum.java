@@ -41,7 +41,7 @@ public class GoQuorum extends Web3Provider {
 
   private static final Logger LOG = LogManager.getLogger();
 
-  private static final String IMAGE_NAME = "quorumengineering/quorum:develop";
+  private static final String IMAGE_NAME = "quorumengineering/quorum:%s";
   private static final String CONTAINER_GENESIS_FILE = "/etc/genesis.json";
   private static final String CONTAINER_STATIC_NODES_FILE = "/eth/geth/static-nodes.json";
   private static final String CONTAINER_NODE_PRIVATE_KEY_FILE = "/etc/keys/node.priv";
@@ -52,7 +52,7 @@ public class GoQuorum extends Web3Provider {
   public GoQuorum(final Web3ProviderConfiguration config) {
     super(
         config,
-        new GenericContainer<>(IMAGE_NAME)
+        new GenericContainer<>(String.format(IMAGE_NAME, config.getImageVersion()))
             .withImagePullPolicy(new LocalAgeBasedPullPolicy(Duration.ofHours(1))));
 
     final List<String> commandLineOptions = standardCommandLineOptions();

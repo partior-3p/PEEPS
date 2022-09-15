@@ -46,6 +46,7 @@ public class Web3ProviderConfigurationBuilder {
   private Network containerNetwork;
   private SubnetAddress ipAddress;
   private Vertx vertx;
+  private String imageVersion = "develop";
 
   public Web3ProviderConfigurationBuilder() {
     this.privacyMarkerSigningPrivateKeyFile = DEFAULT_PRIVACY_MARKER_SIGNER_PRIVATE_KEY_FILE;
@@ -115,6 +116,11 @@ public class Web3ProviderConfigurationBuilder {
     return this;
   }
 
+  public Web3ProviderConfigurationBuilder withImageVersion(final String imageVersion) {
+    this.imageVersion = imageVersion;
+    return this;
+  }
+
   public Web3ProviderConfiguration build() {
     checkNotNull(genesisFile, "A genesis file path is mandatory");
     checkNotNull(identity, "An identity is mandatory");
@@ -137,6 +143,7 @@ public class Web3ProviderConfigurationBuilder {
         nodeKeys,
         bootnodeEnodeAddress,
         wallet,
-        staticNodesFile.getStaticNodesFile());
+        staticNodesFile.getStaticNodesFile(),
+        imageVersion);
   }
 }

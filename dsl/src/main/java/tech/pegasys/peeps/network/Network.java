@@ -188,6 +188,19 @@ public class Network implements Closeable {
 
   public Web3Provider addNode(
       final String nodeIdentifier,
+      final KeyPair nodeKeys,
+      final Web3ProviderType providerType,
+      final String version) {
+    return addNode(
+        new Web3ProviderConfigurationBuilder()
+            .withIdentity(nodeIdentifier)
+            .withNodeKey(nodeKeys)
+            .withImageVersion(version),
+        providerType);
+  }
+
+  public Web3Provider addNode(
+      final String nodeIdentifier,
       final KeyPair nodeKey,
       final Web3ProviderType nodeType,
       final SignerConfiguration wallet) {
