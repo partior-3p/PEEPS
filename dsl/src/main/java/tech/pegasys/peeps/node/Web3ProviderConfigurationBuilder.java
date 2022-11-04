@@ -21,6 +21,7 @@ import tech.pegasys.peeps.signer.SignerConfiguration;
 
 import io.vertx.core.Vertx;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
+import org.apache.tuweni.units.ethereum.Wei;
 import org.testcontainers.containers.Network;
 
 public class Web3ProviderConfigurationBuilder {
@@ -47,6 +48,8 @@ public class Web3ProviderConfigurationBuilder {
   private SubnetAddress ipAddress;
   private Vertx vertx;
   private String imageVersion = "develop";
+
+  private Wei minGasPrice = Wei.valueOf(0);
 
   public Web3ProviderConfigurationBuilder() {
     this.privacyMarkerSigningPrivateKeyFile = DEFAULT_PRIVACY_MARKER_SIGNER_PRIVATE_KEY_FILE;
@@ -121,6 +124,11 @@ public class Web3ProviderConfigurationBuilder {
     return this;
   }
 
+  public Web3ProviderConfigurationBuilder withMinGasPrice(final Wei minGasPrice) {
+    this.minGasPrice = minGasPrice;
+    return this;
+  }
+
   public Web3ProviderConfiguration build() {
     checkNotNull(genesisFile, "A genesis file path is mandatory");
     checkNotNull(identity, "An identity is mandatory");
@@ -144,6 +152,7 @@ public class Web3ProviderConfigurationBuilder {
         bootnodeEnodeAddress,
         wallet,
         staticNodesFile.getStaticNodesFile(),
-        imageVersion);
+        imageVersion,
+        minGasPrice);
   }
 }

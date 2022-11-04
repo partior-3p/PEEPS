@@ -22,6 +22,7 @@ import tech.pegasys.peeps.signer.model.SignerPasswordFileResource;
 import tech.pegasys.peeps.signer.model.WalletFileResources;
 
 import io.vertx.core.Vertx;
+import org.apache.tuweni.units.ethereum.Wei;
 import org.testcontainers.containers.Network;
 
 public class EthSignerConfigurationBuilder {
@@ -38,6 +39,7 @@ public class EthSignerConfigurationBuilder {
   // EthSigner)
   private SignerKeyFileResource keyFile;
   private SignerPasswordFileResource passwordFile;
+  private Wei minGasPrice = Wei.valueOf(0);
 
   public EthSignerConfigurationBuilder withContainerNetwork(final Network containerNetwork) {
     this.containerNetwork = containerNetwork;
@@ -70,6 +72,11 @@ public class EthSignerConfigurationBuilder {
     return this;
   }
 
+  public EthSignerConfigurationBuilder withMinGasPrice(final Wei minGasPrice) {
+    this.minGasPrice = minGasPrice;
+    return this;
+  }
+
   public EthSignerConfiguration build() {
     checkArgument(chainId > 0, "Chain ID must be set as larger than zero");
     checkNotNull(downstream, "Downstream node mandatory");
@@ -80,6 +87,13 @@ public class EthSignerConfigurationBuilder {
     checkNotNull(passwordFile, "The password file resource is mandatory");
 
     return new EthSignerConfiguration(
-        chainId, downstream, containerNetwork, ipAddress, vertx, keyFile, passwordFile);
+        chainId,
+        downstream,
+        containerNetwork,
+        ipAddress,
+        vertx,
+        keyFile,
+        passwordFile,
+        minGasPrice);
   }
 }

@@ -15,6 +15,9 @@ package tech.pegasys.peeps.node;
 import tech.pegasys.peeps.node.model.Hash;
 import tech.pegasys.peeps.node.verification.NodeValueTransition;
 
+import org.apache.tuweni.eth.Address;
+import org.apache.tuweni.units.ethereum.Wei;
+
 public class NodeVerify {
   private final Web3Provider node;
 
@@ -28,5 +31,28 @@ public class NodeVerify {
 
   public void successfulTransactionReceipt(final Hash transaction) {
     node.verifySuccessfulTransactionReceipt(transaction);
+  }
+
+  public void blockRewardsAreTransferredToValidators(
+      final int startBlockNumber, final int endBlockNumber, final Wei blockReward) {
+    for (long blockNumber = startBlockNumber; blockNumber < endBlockNumber; blockNumber++) {
+      node.verifyBlockRewardsAreTransferredToValidatorAtBlock(blockNumber, blockReward);
+    }
+  }
+
+  public void blockRewardsAreTransferredToMiningBeneficiary(
+      final int startBlockNumber,
+      final int endBlockNumber,
+      final Wei blockReward,
+      final Address miningBeneficiary) {
+    for (long blockNumber = startBlockNumber; blockNumber < endBlockNumber; blockNumber++) {
+      node.verifyBlockRewardsAreTransferredToMiningBeneficiary(
+          blockNumber, blockReward, miningBeneficiary);
+    }
+  }
+
+  public void gasRewardsAreTransferredToMiningBeneficiary(
+      final Hash receipt, final Address miningBeneficiary, final Wei blockReward) {
+    node.verifyGasRewardsAreTransferredToMiningBeneficiary(receipt, miningBeneficiary, blockReward);
   }
 }

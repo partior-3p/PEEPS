@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import io.vertx.core.Vertx;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
+import org.apache.tuweni.units.ethereum.Wei;
 import org.testcontainers.containers.Network;
 
 public class Web3ProviderConfiguration {
@@ -40,6 +41,7 @@ public class Web3ProviderConfiguration {
   private final Network containerNetwork;
   private final SubnetAddress ipAddress;
   private final Vertx vertx;
+  private Wei minGasPrice = Wei.valueOf(0);
 
   public Web3ProviderConfiguration(
       final Path genesisFile,
@@ -55,7 +57,8 @@ public class Web3ProviderConfiguration {
       final String bootnodeEnodeAddress,
       final SignerConfiguration wallet,
       final Path staticNodesFile,
-      final String imageVersion) {
+      final String imageVersion,
+      final Wei minGasPrice) {
     this.genesisFile = genesisFile;
     this.enclavePublicKeyResource = privacyManagerPublicKeyResource;
     this.privacyMarkerSigningPrivateKeyFile = privacyMarkerSigningPrivateKeyFile;
@@ -70,6 +73,7 @@ public class Web3ProviderConfiguration {
     this.wallet = Optional.ofNullable(wallet);
     this.staticNodesFile = staticNodesFile;
     this.imageVersion = imageVersion;
+    this.minGasPrice = minGasPrice;
   }
 
   public Path getGenesisFile() {
@@ -131,5 +135,9 @@ public class Web3ProviderConfiguration {
 
   public String getImageVersion() {
     return this.imageVersion;
+  }
+
+  public Wei getMinGasPrice() {
+    return this.minGasPrice;
   }
 }

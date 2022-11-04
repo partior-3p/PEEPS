@@ -51,4 +51,8 @@ public class NetworkVerify {
   public void consensusOnValidators(final List<Address> validators) {
     network.verifyConsensusOnValidators(validators);
   }
+
+  public void gasRewardsAreTransferredToValidator(final Hash receipt) {
+    network.verifyGasRewardsAreTransferredToValidator(receipt);
+  }
 }

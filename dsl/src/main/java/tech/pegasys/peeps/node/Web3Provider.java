@@ -39,6 +39,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -48,8 +49,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.eth.Address;
+import org.apache.tuweni.units.ethereum.Wei;
 import org.testcontainers.containers.GenericContainer;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.http.HttpService;
 
 public abstract class Web3Provider implements NetworkMember {
@@ -78,7 +81,8 @@ public abstract class Web3Provider implements NetworkMember {
     this.container = container.withLabel("name", config.getIdentity());
     this.jsonRpcClient =
         new JsonRpcClient(config.getVertx(), Duration.ofSeconds(10), LOG, dockerLogs());
-    final SignerRpcClient signerRpcClient = new SignerRpcClient(jsonRpcClient, qbftRpc(config));
+    final SignerRpcClient signerRpcClient =
+        new SignerRpcClient(jsonRpcClient, qbftRpc(config), config.getMinGasPrice());
     this.signerRpcResponse = new SignerRpcMandatoryResponse(signerRpcClient);
     this.ipAddress = config.getIpAddress();
 
@@ -293,4 +297,130 @@ public abstract class Web3Provider implements NetworkMember {
 
   public abstract void setQBFTValidatorSmartContractTransition(
       final BigInteger blockNumber, final String contractAddress);
+
+  public void verifyGasRewardsAreTransferredToValidator(final Hash transaction) {
+    try {
+      var transactionReceipt =
+          web3j
+              .ethGetTransactionReceipt(transaction.toString())
+              .send()
+              .getTransactionReceipt()
+              .get();
+      var validator =
+          web3j
+              .ethGetBlockByHash(transactionReceipt.getBlockHash(), true)
+              .send()
+              .getBlock()
+              .getMiner();
+      var balance =
+          web3j
+              .ethGetBalance(
+                  address().toHexString(),
+                  DefaultBlockParameter.valueOf(transactionReceipt.getBlockNumber()))
+              .send()
+              .getBalance();
+
+      if (Objects.equals(address().toHexString(), validator)) {
+        assertThat(balance.longValue()).isEqualTo(21000);
+      } else {
+        assertThat(balance.longValue()).isEqualTo(0);
+      }
+
+    } catch (IOException e) {
+      throw new AssertionError("Could not verify gas rewards");
+    }
+  }
+
+  public void verifyBlockRewardsAreTransferredToValidatorAtBlock(
+      final long blockNumber, final Wei blockReward) {
+
+    try {
+      var minedBlock = DefaultBlockParameter.valueOf(BigInteger.valueOf(blockNumber));
+
+      var validator = web3j.ethGetBlockByNumber(minedBlock, true).send().getBlock().getMiner();
+
+      var previousBalance =
+          web3j
+              .ethGetBalance(
+                  validator, DefaultBlockParameter.valueOf(BigInteger.valueOf(blockNumber - 1)))
+              .send()
+              .getBalance();
+      var minedBalance = web3j.ethGetBalance(validator, minedBlock).send().getBalance();
+
+      assertThat(minedBalance.subtract(previousBalance).longValue())
+          .isEqualTo(blockReward.toLong());
+
+    } catch (IOException e) {
+      throw new AssertionError("Could not verify block rewards");
+    }
+  }
+
+  public void verifyBlockRewardsAreTransferredToMiningBeneficiary(
+      final long blockNumber, final Wei blockReward, final Address miningBeneficiary) {
+    try {
+      var minedBlock = DefaultBlockParameter.valueOf(BigInteger.valueOf(blockNumber));
+
+      var validator = web3j.ethGetBlockByNumber(minedBlock, true).send().getBlock().getMiner();
+
+      assertThat(validator).isNotEqualTo(miningBeneficiary.toHexString());
+
+      var previousBalance =
+          web3j
+              .ethGetBalance(
+                  miningBeneficiary.toHexString(),
+                  DefaultBlockParameter.valueOf(BigInteger.valueOf(blockNumber - 1)))
+              .send()
+              .getBalance();
+      var minedBalance =
+          web3j.ethGetBalance(miningBeneficiary.toHexString(), minedBlock).send().getBalance();
+
+      assertThat(minedBalance.subtract(previousBalance).longValue())
+          .isEqualTo(blockReward.toLong());
+
+    } catch (IOException e) {
+      throw new AssertionError("Could not verify block rewards for mining beneficiary");
+    }
+  }
+
+  public void verifyGasRewardsAreTransferredToMiningBeneficiary(
+      final Hash transaction, final Address miningBeneficiary, final Wei blockReward) {
+    try {
+      var transactionReceipt =
+          web3j
+              .ethGetTransactionReceipt(transaction.toString())
+              .send()
+              .getTransactionReceipt()
+              .get();
+      var validator =
+          web3j
+              .ethGetBlockByHash(transactionReceipt.getBlockHash(), true)
+              .send()
+              .getBlock()
+              .getMiner();
+
+      assertThat(validator).isNotEqualTo(miningBeneficiary.toHexString());
+
+      var previousBalance =
+          web3j
+              .ethGetBalance(
+                  miningBeneficiary.toHexString(),
+                  DefaultBlockParameter.valueOf(
+                      transactionReceipt.getBlockNumber().subtract(BigInteger.ONE)))
+              .send()
+              .getBalance();
+      var balance =
+          web3j
+              .ethGetBalance(
+                  miningBeneficiary.toHexString(),
+                  DefaultBlockParameter.valueOf(transactionReceipt.getBlockNumber()))
+              .send()
+              .getBalance();
+
+      assertThat(balance.subtract(previousBalance).subtract(blockReward.toBigInteger()))
+          .isEqualTo(21000);
+
+    } catch (IOException e) {
+      throw new AssertionError("Could not verify gas rewards");
+    }
+  }
 }

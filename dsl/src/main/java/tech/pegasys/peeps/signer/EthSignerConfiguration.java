@@ -18,6 +18,7 @@ import tech.pegasys.peeps.signer.model.SignerKeyFileResource;
 import tech.pegasys.peeps.signer.model.SignerPasswordFileResource;
 
 import io.vertx.core.Vertx;
+import org.apache.tuweni.units.ethereum.Wei;
 import org.testcontainers.containers.Network;
 
 public class EthSignerConfiguration {
@@ -34,6 +35,7 @@ public class EthSignerConfiguration {
   // EthSigner)
   private final SignerKeyFileResource keyFile;
   private final SignerPasswordFileResource passwordFile;
+  private final Wei minGasPrice;
 
   public EthSignerConfiguration(
       final long chainId,
@@ -42,7 +44,8 @@ public class EthSignerConfiguration {
       final SubnetAddress ipAddress,
       final Vertx vertx,
       final SignerKeyFileResource keyFile,
-      final SignerPasswordFileResource passwordFile) {
+      final SignerPasswordFileResource passwordFile,
+      final Wei minGasPrice) {
     this.chainId = chainId;
     this.downstream = downstream;
     this.containerNetwork = containerNetwork;
@@ -50,6 +53,7 @@ public class EthSignerConfiguration {
     this.vertx = vertx;
     this.keyFile = keyFile;
     this.passwordFile = passwordFile;
+    this.minGasPrice = minGasPrice;
   }
 
   public Network getContainerNetwork() {
@@ -78,5 +82,9 @@ public class EthSignerConfiguration {
 
   public SignerPasswordFileResource getPasswordFile() {
     return passwordFile;
+  }
+
+  public Wei getMinGasPrice() {
+    return minGasPrice;
   }
 }

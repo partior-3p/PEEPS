@@ -28,9 +28,12 @@ import org.apache.tuweni.units.ethereum.Wei;
 public class SignerRpcClient extends NodeRpcClient {
 
   private static final Address NO_RECIPIENT = null;
+  private final Wei minGasPrice;
 
-  public SignerRpcClient(final JsonRpcClient jsonRpcClient, final QbftRpc qbftRpc) {
+  public SignerRpcClient(
+      final JsonRpcClient jsonRpcClient, final QbftRpc qbftRpc, final Wei minGasPrice) {
     super(jsonRpcClient, qbftRpc);
+    this.minGasPrice = minGasPrice;
   }
 
   public Hash deployContractToPrivacyGroup(
@@ -52,7 +55,7 @@ public class SignerRpcClient extends NodeRpcClient {
         .post(
             "eth_sendTransaction",
             SendTransactionResponse.class,
-            new SendTransactionRequest(sender, receiver, null, amount))
+            new SendTransactionRequest(sender, receiver, null, amount, minGasPrice))
         .getResult();
   }
 }

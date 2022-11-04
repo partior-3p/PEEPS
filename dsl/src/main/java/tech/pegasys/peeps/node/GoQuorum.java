@@ -69,6 +69,8 @@ public class GoQuorum extends Web3Provider {
     // stage)
     container.withCopyFileToContainer(
         MountableFile.forHostPath(config.getGenesisFile()), CONTAINER_GENESIS_FILE);
+    addMinGasPrice(config, commandLineOptions);
+
     final List<String> entryPoint = Lists.newArrayList("/bin/sh", "-c");
     final String initCmd =
         "mkdir -p '"
@@ -128,6 +130,17 @@ public class GoQuorum extends Web3Provider {
     } catch (IOException e) {
       LOG.error(e);
     }
+  }
+
+  public void addMinGasPrice(
+      final Web3ProviderConfiguration config, final List<String> commandLineOptions) {
+
+    if (config.getMinGasPrice().toLong() == 0) {
+      return;
+    }
+
+    commandLineOptions.add("--miner.gasprice");
+    commandLineOptions.add(config.getMinGasPrice().toString());
   }
 
   @Override

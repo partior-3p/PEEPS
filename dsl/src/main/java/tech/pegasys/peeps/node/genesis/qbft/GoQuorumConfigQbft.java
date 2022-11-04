@@ -20,14 +20,32 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
+import org.apache.tuweni.eth.Address;
+import org.apache.tuweni.units.ethereum.Wei;
 
 public class GoQuorumConfigQbft extends GenesisConfig {
   private final BftConfig consensusConfig;
   private final List<Transition> transitions = new ArrayList<>();
 
-  public GoQuorumConfigQbft(final long chainId, final BftConfig consensusConfig) {
+  public GoQuorumConfigQbft(
+      final long chainId,
+      final BftConfig consensusConfig,
+      final Wei minGasPrice,
+      final long blockNumber,
+      final Wei blockReward,
+      final long miningBeneficiaryBlock,
+      final Address miningBeneficiary) {
     super(chainId);
     this.consensusConfig = consensusConfig;
+    if (minGasPrice.toLong() > 0) {
+      transitions.add(new GasPriceEnabledTransition(0));
+    }
+    if (blockReward.toLong() > 0) {
+      transitions.add(new BlockRewardTransition(blockNumber, blockReward));
+    }
+    if (miningBeneficiary != null) {
+      transitions.add(new MiningBeneficiaryTransition(miningBeneficiaryBlock, miningBeneficiary));
+    }
   }
 
   @JsonGetter("qbft")

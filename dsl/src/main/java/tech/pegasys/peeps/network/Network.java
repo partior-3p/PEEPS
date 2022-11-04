@@ -90,6 +90,7 @@ import com.google.common.annotations.VisibleForTesting;
 import io.vertx.core.Vertx;
 import org.apache.tuweni.crypto.SECP256K1.KeyPair;
 import org.apache.tuweni.eth.Address;
+import org.apache.tuweni.units.ethereum.Wei;
 
 public class Network implements Closeable {
 
@@ -106,6 +107,11 @@ public class Network implements Closeable {
 
   private final NetworkState state;
   private final Map<Web3ProviderType, Genesis> genesisConfigurations = new HashMap<>();
+  private Wei minGasPrice = Wei.valueOf(0);
+  private long blockRewardTransitionBlock;
+  private Wei blockReward = Wei.valueOf(0);
+  private long miningBeneficiaryBlock;
+  private Address miningBeneficiary;
 
   public Network(final Path configurationDirectory, final Subnet subnet) {
     checkArgument(configurationDirectory != null, "Path to configuration directory is mandatory");
@@ -169,6 +175,7 @@ public class Network implements Closeable {
     this.genesisConfigurations.putAll(
         createGenesis(
             consensus,
+            minGasPrice,
             Account.of(Account.ALPHA, Account.BETA, Account.GAMMA, Account.DELTA),
             validators));
   }
@@ -183,6 +190,20 @@ public class Network implements Closeable {
       final String nodeIdentifier, final KeyPair nodeKeys, final Web3ProviderType providerType) {
     return addNode(
         new Web3ProviderConfigurationBuilder().withIdentity(nodeIdentifier).withNodeKey(nodeKeys),
+        providerType);
+  }
+
+  public Web3Provider addNode(
+      final String nodeIdentifier,
+      final KeyPair nodeKeys,
+      final Web3ProviderType providerType,
+      final Wei minGasPrice) {
+    this.minGasPrice = minGasPrice;
+    return addNode(
+        new Web3ProviderConfigurationBuilder()
+            .withIdentity(nodeIdentifier)
+            .withNodeKey(nodeKeys)
+            .withMinGasPrice(minGasPrice),
         providerType);
   }
 
@@ -289,6 +310,33 @@ public class Network implements Closeable {
                 .withContainerNetwork(subnet.network())
                 .withIpAddress(subnet.getAddressAndIncrement())
                 .withDownstream(downstream)
+                .withChainId(
+                    genesisConfigurations
+                        .get(Web3ProviderType.BESU)
+                        .getConfig()
+                        .getChainId()) // yeah, this is a bit of a hack.
+                .witWallet(resources)
+                .build());
+
+    signers.put(wallet, signer);
+    members.add(signer);
+
+    return signer;
+  }
+
+  public EthSigner addSigner(
+      final String wallet,
+      final WalletFileResources resources,
+      final Web3Provider downstream,
+      final Wei minGasPrice) {
+    final EthSigner signer =
+        new EthSigner(
+            new EthSignerConfigurationBuilder()
+                .withVertx(vertx)
+                .withContainerNetwork(subnet.network())
+                .withIpAddress(subnet.getAddressAndIncrement())
+                .withDownstream(downstream)
+                .withMinGasPrice(minGasPrice)
                 .withChainId(
                     genesisConfigurations
                         .get(Web3ProviderType.BESU)
@@ -421,6 +469,10 @@ public class Network implements Closeable {
         expectedValidators);
   }
 
+  public void verifyGasRewardsAreTransferredToValidator(final Hash receipt) {
+    nodes.forEach(node -> node.verifyGasRewardsAreTransferredToValidator(receipt));
+  }
+
   // TODO these Mediator method could be refactored elsewhere?
   public NodeVerify verify(final Web3Provider node) {
     return new NodeVerify(node);
@@ -460,6 +512,7 @@ public class Network implements Closeable {
 
   private Map<Web3ProviderType, Genesis> createGenesis(
       final ConsensusMechanism consensus,
+      final Wei minGasPrice,
       final Map<GenesisAddress, GenesisAccount> genesisAccounts,
       final Web3Provider... validators) {
     final long chainId = Math.round(Math.random() * Long.MAX_VALUE);
@@ -491,9 +544,24 @@ public class Network implements Closeable {
                   break;
                 case QBFT:
                   if (e == Web3ProviderType.BESU) {
-                    genesisConfig = new GenesisConfigQbft(chainId, new BftConfig());
+                    genesisConfig =
+                        new GenesisConfigQbft(
+                            chainId,
+                            new BftConfig(),
+                            blockRewardTransitionBlock,
+                            blockReward,
+                            miningBeneficiaryBlock,
+                            miningBeneficiary);
                   } else {
-                    genesisConfig = new GoQuorumConfigQbft(chainId, new BftConfig());
+                    genesisConfig =
+                        new GoQuorumConfigQbft(
+                            chainId,
+                            new BftConfig(),
+                            minGasPrice,
+                            blockRewardTransitionBlock,
+                            blockReward,
+                            miningBeneficiaryBlock,
+                            miningBeneficiary);
                   }
                   extraData = new GenesisExtraDataQbft(validators);
                   break;
@@ -540,5 +608,17 @@ public class Network implements Closeable {
   public void restart() {
     everyMember(NetworkMember::stop);
     everyMember(NetworkMember::start);
+  }
+
+  public void addBlockRewardTransition(
+      final long blockRewardTransitionBlock, final Wei blockReward) {
+    this.blockRewardTransitionBlock = blockRewardTransitionBlock;
+    this.blockReward = blockReward;
+  }
+
+  public void addMiningBeneficiaryTransition(
+      final long miningBeneficiaryBlock, final Address miningBeneficiary) {
+    this.miningBeneficiaryBlock = miningBeneficiaryBlock;
+    this.miningBeneficiary = miningBeneficiary;
   }
 }

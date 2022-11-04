@@ -63,6 +63,7 @@ public class Besu extends Web3Provider {
     final List<String> commandLineOptions = standardCommandLineOptions();
 
     addPeerToPeerHost(config, commandLineOptions);
+    addMinGasPrice(config, commandLineOptions);
     addCorsOrigins(config, commandLineOptions);
     addContainerNetwork(config, container);
     addContainerIpAddress(config.getIpAddress(), container);
@@ -77,6 +78,12 @@ public class Besu extends Web3Provider {
 
     LOG.info("Besu command line: {}", commandLineOptions);
     container.withCommand(commandLineOptions.toArray(new String[0])).waitingFor(liveliness());
+  }
+
+  private void addMinGasPrice(
+      final Web3ProviderConfiguration config, final List<String> commandLineOptions) {
+    commandLineOptions.add("--min-gas-price");
+    commandLineOptions.add(config.getMinGasPrice().toString());
   }
 
   @Override
@@ -130,8 +137,6 @@ public class Besu extends Web3Provider {
         "--miner-enabled",
         "--miner-coinbase",
         "1b23ba34ca45bb56aa67bc78be89ac00ca00da00",
-        "--min-gas-price",
-        "0",
         "--host-whitelist",
         "*",
         "--sync-mode",

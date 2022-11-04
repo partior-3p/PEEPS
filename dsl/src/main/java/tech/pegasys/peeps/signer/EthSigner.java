@@ -80,7 +80,8 @@ public class EthSigner implements NetworkMember {
 
     jsonRpcClient = new JsonRpcClient(config.getVertx(), DOWNSTREAM_TIMEOUT, LOG, dockerLogs());
     final BesuQbftRpcClient qbftRpc = new BesuQbftRpcClient(jsonRpcClient);
-    final SignerRpcClient signerRpc = new SignerRpcClient(jsonRpcClient, qbftRpc);
+    final SignerRpcClient signerRpc =
+        new SignerRpcClient(jsonRpcClient, qbftRpc, config.getMinGasPrice());
     this.rpc = new SignerRpcMandatoryResponse(signerRpc);
   }
 

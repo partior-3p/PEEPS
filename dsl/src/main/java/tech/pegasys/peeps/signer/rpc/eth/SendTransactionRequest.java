@@ -20,8 +20,7 @@ import org.apache.tuweni.units.ethereum.Wei;
 
 @JsonInclude(Include.NON_NULL)
 public class SendTransactionRequest {
-  /* Default gas price of 1000 wei.*/
-  private static final String DEFAULT_GAS_PRICE = "0x0";
+  private final Wei gasPrice;
 
   /* Default gas limit of 3000000 wei. */
   private static final String DEFAULT_GAS_LIMIT = "0x2DC6C0";
@@ -32,11 +31,16 @@ public class SendTransactionRequest {
   private final Wei value;
 
   public SendTransactionRequest(
-      final Address sender, final Address recipient, final String data, final Wei value) {
+      final Address sender,
+      final Address recipient,
+      final String data,
+      final Wei value,
+      final Wei gasPrice) {
     this.sender = sender;
     this.recipient = recipient;
     this.data = data;
     this.value = value;
+    this.gasPrice = gasPrice;
   }
 
   @JsonGetter("from")
@@ -67,7 +71,11 @@ public class SendTransactionRequest {
 
   @JsonGetter("gasPrice")
   public String getGasPrice() {
-    return DEFAULT_GAS_PRICE;
+    if (gasPrice.toLong() > 0) {
+      return gasPrice.toShortHexString();
+    } else {
+      return null;
+    }
   }
 
   @JsonGetter("value")

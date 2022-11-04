@@ -17,15 +17,29 @@ import tech.pegasys.peeps.node.genesis.bft.BftConfig;
 import tech.pegasys.peeps.node.genesis.transitions.BesuTransitions;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
+import org.apache.tuweni.eth.Address;
+import org.apache.tuweni.units.ethereum.Wei;
 
 public class GenesisConfigQbft extends GenesisConfig {
 
   private final BftConfig consensusConfig;
   public BesuTransitions transitions = new BesuTransitions();
 
-  public GenesisConfigQbft(final long chainId, final BftConfig consensusConfig) {
+  public GenesisConfigQbft(
+      final long chainId,
+      final BftConfig consensusConfig,
+      final long blockRewardBlockNumber,
+      final Wei blockReward,
+      final long miningBeneficiaryBlock,
+      final Address miningBeneficiary) {
     super(chainId);
     this.consensusConfig = consensusConfig;
+    if (blockReward.toLong() > 0) {
+      transitions.add(new BlockRewardTransition(blockRewardBlockNumber, blockReward));
+    }
+    if (miningBeneficiary != null) {
+      transitions.add(new MiningBeneficiaryTransition(miningBeneficiaryBlock, miningBeneficiary));
+    }
   }
 
   @JsonGetter("qbft")
