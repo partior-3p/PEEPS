@@ -36,8 +36,9 @@ public class QbftConsensusTest extends NetworkTest {
   @Override
   protected void setUpNetwork(final Network network) {
     alphaNode = network.addNode("alpha", KeyPair.random());
-    network.addNode("beta", KeyPair.random());
-    network.set(ConsensusMechanism.QBFT, alphaNode);
+    var beta = network.addNode("beta", KeyPair.random());
+    var gamma = network.addNode("gamma", KeyPair.random());
+    network.set(ConsensusMechanism.QBFT, alphaNode, beta, gamma);
     network.addSigner(signer.name(), signer.resources(), alphaNode);
   }
 

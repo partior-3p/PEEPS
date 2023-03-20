@@ -38,7 +38,8 @@ public class QbftConsensusTest extends NetworkTest {
   protected void setUpNetwork(final Network network) {
     final Web3Provider besuNode = network.addNode("besu", KeyPair.random());
     quorumNode = network.addNode("quorum", KeyPair.random(), Web3ProviderType.GOQUORUM, signer);
-    network.set(ConsensusMechanism.QBFT, besuNode, quorumNode);
+    var gammaNode = network.addNode("quorum", KeyPair.random(), Web3ProviderType.GOQUORUM, signer);
+    network.set(ConsensusMechanism.QBFT, besuNode, quorumNode, gammaNode);
   }
 
   @Test
