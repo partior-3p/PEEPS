@@ -21,6 +21,10 @@ web3j {
   generatedPackageName = 'tech.pegasys.peeps.contract'
 }
 
+solidity {
+  evmVersion = 'BYZANTIUM'
+}
+
 sourceSets.main.solidity.srcDirs = ["$projectDir/contracts"]
 
 jar {
