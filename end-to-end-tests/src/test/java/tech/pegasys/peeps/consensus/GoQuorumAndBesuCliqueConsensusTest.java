@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Test;
 public class GoQuorumAndBesuCliqueConsensusTest extends NetworkTest {
 
   private Web3Provider alphaNode;
+  private Web3Provider besuNode;
   private final SignerConfiguration signer = FixedSignerConfigs.ALPHA;
 
   @Override
@@ -39,7 +40,7 @@ public class GoQuorumAndBesuCliqueConsensusTest extends NetworkTest {
     alphaNode =
         network.addNode(
             "alpha", KeyPair.random(), Web3ProviderType.GOQUORUM, FixedSignerConfigs.ALPHA);
-    final Web3Provider besuNode = network.addNode("beta", KeyPair.random());
+    besuNode = network.addNode("beta", KeyPair.random(), Web3ProviderType.BESU);
     network.set(ConsensusMechanism.CLIQUE, besuNode);
   }
 

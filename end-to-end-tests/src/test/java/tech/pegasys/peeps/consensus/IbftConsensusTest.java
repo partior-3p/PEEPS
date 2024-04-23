@@ -39,6 +39,7 @@ public class IbftConsensusTest extends NetworkTest {
     final KeyPair alphaKeyPair = KeyPair.random();
     final KeyPair betaKeyPair = KeyPair.random();
 
+    // IBFT1.0 only supported <= v22.4.4
     final Web3Provider betaNode =
         network.addNode("goquorum", betaKeyPair, Web3ProviderType.GOQUORUM, "22.4.4");
     alphaNode = network.addNode("besu", alphaKeyPair, Web3ProviderType.BESU, "22.4.4");

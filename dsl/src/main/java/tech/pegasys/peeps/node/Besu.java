@@ -47,6 +47,7 @@ public class Besu extends Web3Provider {
   private static final int ALIVE_STATUS_CODE = 200;
 
   private static final String IMAGE_NAME = "hyperledger/besu:%s";
+  private static final String IMAGE_VERSION = "23.4.0"; // fix besu version
   private static final String CONTAINER_GENESIS_FILE = "/etc/besu/genesis.json";
   private static final String CONTAINER_STATIC_NODES_FILE = "/opt/besu/static-nodes.json";
   private static final String CONTAINER_PRIVACY_PUBLIC_KEY_FILE =
@@ -54,17 +55,20 @@ public class Besu extends Web3Provider {
   private static final String CONTAINER_NODE_PRIVATE_KEY_FILE = "/etc/besu/keys/node.priv";
   private static final String CONTAINER_PRIVACY_SIGNING_PRIVATE_KEY_FILE =
       "/etc/besu/keys/pmt_signing.priv";
+  private static final String DATA_STORAGE_FORMAT="FOREST"; // Bonsai cannot be enabled with privacy
 
   public Besu(final Web3ProviderConfiguration config) {
     super(
         config,
-        new GenericContainer<>(String.format(IMAGE_NAME, config.getImageVersion()))
+        new GenericContainer<>(String.format(IMAGE_NAME, config.getImageVersion().
+                equalsIgnoreCase("develop") ? IMAGE_VERSION : config.getImageVersion()))
             .withImagePullPolicy(new LocalAgeBasedPullPolicy(Duration.ofHours(1))));
     final List<String> commandLineOptions = standardCommandLineOptions();
 
     addPeerToPeerHost(config, commandLineOptions);
     addMinGasPrice(config, commandLineOptions);
     addCorsOrigins(config, commandLineOptions);
+    addDataStorageTypeHost(commandLineOptions);
     addContainerNetwork(config, container);
     addContainerIpAddress(config.getIpAddress(), container);
     addNodePrivateKey(config, commandLineOptions, container);
@@ -233,5 +237,10 @@ public class Besu extends Web3Provider {
         config.getPrivacyMarkerSigningPrivateKeyFile().get(),
         CONTAINER_PRIVACY_SIGNING_PRIVATE_KEY_FILE,
         BindMode.READ_ONLY);
+  }
+
+  private void addDataStorageTypeHost(final List<String> commandLineOptions) {
+    commandLineOptions.add("--data-storage-format");
+    commandLineOptions.add(DATA_STORAGE_FORMAT);
   }
 }
