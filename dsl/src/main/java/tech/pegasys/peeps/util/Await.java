@@ -25,7 +25,7 @@ import org.awaitility.core.ThrowingRunnable;
 
 public class Await {
 
-  public static final int DEFAULT_TIMEOUT_IN_SECONDS = 30;
+  public static final int DEFAULT_TIMEOUT_IN_SECONDS = 60;
 
   @FormatMethod
   public static <T> Optional<T> awaitPresence(

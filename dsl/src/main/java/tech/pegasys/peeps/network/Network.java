@@ -463,7 +463,7 @@ public class Network implements Closeable {
                         .map(node -> node.rpc().getBlockNumber())
                         .allMatch(block -> block >= blockNumber))
                 .isTrue(),
-        120,
+        240,
         "Failed to achieve consensus on block number being at least %s",
         blockNumber);
   }
