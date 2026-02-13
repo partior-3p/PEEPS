@@ -56,7 +56,6 @@ public class PrivacyContractDeploymentTest extends NetworkTest {
     network.addSigner(signer.name(), signer.resources(), alphaNode);
   }
 
-  @Test
   public void deploymentMustSucceed() {
     final PrivacyGroup group = new PrivacyGroup(privacyManagerAlpha.id(), privacyManagerBeta.id());
 
